@@ -5,6 +5,7 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, cur
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import timedelta
 
 
 
@@ -37,6 +38,7 @@ def create_user_registration():
     app.config['SECRET_KEY'] = 'user_registration_athirah'
     app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://athirah:Tiya071!@localhost/CareerTrack_Database"
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=15)
 
     db.init_app(app)
     login_manager.init_app(app)
@@ -154,15 +156,8 @@ def create_user_registration():
         return render_template('login.html', errors=errors)
     
 
-    @login_manager.user_loader
-    def load_user(user_id):
-        return User.query.get(int(user_id))
     
-    @app.route("/logout")
-    def logout():
-        logout_user()
-        flash("You have been logged out", "success")
-        return redirect(url_for("index"))
+
 
     with app.app_context():
         db.create_all()
