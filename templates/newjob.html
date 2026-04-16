@@ -1,10 +1,26 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title> New Job Applications</title>
+    <title>Job Application</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <h1>New Job Applications</h1>
+
+    <h1>Add Job Application</h1>
+
+    <form action="/action_page.php">
+  <label for="cname">Company Name</label>
+  <input type="text" id="cname" name="companyname" placeholder="Company name">
+
+    <form>
+        <label>Company:</label><br>
+        <input type="text" name="company"><br><br>
+
+        <label>Position:</label><br>
+        <input type="text" name="position"><br><br>
+
+        <button type="submit">Add</button>
+    </form>
+
 </body>
 </html>
