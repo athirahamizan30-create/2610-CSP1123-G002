@@ -1,7 +1,7 @@
 import re
-from flask import Flask, render_template, url_for, request, redirect
+from flask import Flask, render_template, url_for, request, redirect, flash
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, UserMixin, login_user
+from flask_login import LoginManager, UserMixin, login_user, login_required, current_user, logout_user
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -58,9 +58,10 @@ def create_user_registration():
     
 
 
-    @app.route('/menu')
-    def menu():
-        return render_template('menu.html')
+    @app.route('/dashboard')
+    @login_required
+    def dashboard():
+        return render_template('dashboard.html')
     
 
 
@@ -117,7 +118,7 @@ def create_user_registration():
         return render_template('register.html', errors=errors)
     
 
-    @app.route('/login')
+    @app.route('/login', methods=["POST", "GET"])
     def login():
 
         errors = []
@@ -135,25 +136,29 @@ def create_user_registration():
             if not errors:
                 user = User.query.filter_by(email=email).first()
 
-            if not user or not check_password_hash(user.password, password):
+            if not user or not check_password_hash(user.password_hash, password):
                 errors.append("Invalid password or email")
 
             else:
                 login_user(user)
-                return redirect(url_for("menu", errors=errors))
+                return redirect(url_for("dashboard"))
             
 
 
 
 
-        return render_template('login.html')
+        return render_template('login.html', errors=errors)
     
 
     @login_manager.user_loader
     def load_user(user_id):
-        return User.query.get(int(user_id)). current_user
+        return User.query.get(int(user_id))
     
-    
+    @app.route("/logout")
+    def logout():
+        logout_user()
+        flash("You have been logged out", "success")
+        return redirect(url_for("index"))
 
     with app.app_context():
         db.create_all()
@@ -161,7 +166,7 @@ def create_user_registration():
     return app
 
 
-  
+   
 
 
 
