@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <link rel="stylesheet" href="/static/test.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='test.css') }}">
     <title>Job Application</title>
 </head>
 <body>
@@ -30,7 +30,7 @@
 
         </select>
 
-        <input type="add" value="Add">
+        <input type="submit" value="Add">
     </form>
 
 </body>
