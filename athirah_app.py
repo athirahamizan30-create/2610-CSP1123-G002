@@ -1,8 +1,11 @@
-from flask import Flask, render_template, url_for, request
+import re
+from flask import Flask, render_template, url_for, request, redirect
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin
 from sqlalchemy import text
-import re
+from sqlalchemy.exc import IntegrityError
+from werkzeug.security import generate_password_hash
+
 
 
 
@@ -70,7 +73,6 @@ def create_user_registration():
             if not (3 <= len(username) <= 80):
                 errors.append("Username must be between 3 and 80 characters")
 
-
             if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email):
                 errors.append("Please enter a valid email address")
 
@@ -81,12 +83,28 @@ def create_user_registration():
                 errors.append("Password don't match")
 
             if not errors:
-                return f"valid input received - {email}"
+                
+                try:
+                    pw_hash = generate_password_hash(password)
+                    user = User(username=username, email=email, password_hash=pw_hash)
+                    db.session.add(user)
+                    db.session.commit()
+
+                    return redirect(url_for('login'))
+                
+                except IntegrityError:
+                    db.session.rollback()
+                    errors.append("that username or email is already registered")
+
+
+
 
             if errors:
                 return render_template("register.html", errors=errors)
 
             return f"Received data - {email}"
+        
+            
 
 
         return render_template('register.html', errors=errors)
