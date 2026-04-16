@@ -15,16 +15,14 @@
 /*Sidebar content*/
 .sidebar a {
   padding: 8px 8px 8px 32px;
-  text-decoration: none;
-  font-size: 25px;
-  color: #a12020;
-  font-weight: 900;
   display: block;
-  transition: 0.3s;
+  transition: 0.5s;
   text-decoration: underline;
+  color: #a12020;
 }
 
-.sidebar .Indent {
+/*indented content in sidebar */
+.sidebar .indent {
     font-size: 20px;
     padding-left: 40px;
     color: #6c6767;
@@ -33,13 +31,15 @@
     text-decoration: none;
 }
 
+/*main content in side bar*/
 .division {
     font-size: large;
+    font-weight: 900;
 }
 
-/* When you mouse over the navigation links, change their color */
+/* change colour of sidebar content when hover */
 .sidebar a:hover {
-  color: #f1f1f1;
+  color: #1951c8;
 }
 
 /* Position and style the close button (top right corner) */
@@ -60,21 +60,30 @@
   color: white;
   padding: 10px 15px;
   border: none;
-  border-radius: 10px
+  border-radius: 10px;
+  float: left;
+  margin-right: 30px; 
 }
 
 .openbtn:hover {
-  background-color: #444;
+  background-color: #545454;
 }
 
-/* Style page content - use this if you want to push the page content to the right when you open the side navigation */
+/*  push the page content to the right when open the side navigation */
 #main {
-  transition: margin-left .5s; /* If you want a transition effect */
+  transition: margin-left .5s;
   padding: 20px;
 }
 
-/* On smaller screens, where height is less than 450px, change the style of the sidenav (less padding and a smaller font size) */
+/* On smaller screens, where height is less than 450px, change the style of the sidebar */
 @media screen and (max-height: 450px) {
   .sidebar {padding-top: 15px;}
   .sidebar a {font-size: 18px;}
+}
+
+
+
+h1 {
+  font-size: 50px;
+  text-decoration: underline;
 }
