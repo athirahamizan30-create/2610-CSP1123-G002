@@ -140,10 +140,14 @@ def create_user_registration():
                 errors.append("Invalid password or email")
 
             else:
-                login_user(user)
+
+                remember_me = request.form.get("remember") == "1"
+
+                login_user(user, remember=remember_me)
                 return redirect(url_for("dashboard"))
             
-
+                
+            
 
 
 
