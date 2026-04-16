@@ -1,10 +1,11 @@
 import re
 from flask import Flask, render_template, url_for, request, redirect
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, UserMixin
+from flask_login import LoginManager, UserMixin, login_user
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
+
 
 
 
@@ -55,7 +56,13 @@ def create_user_registration():
     def index():
         return render_template('index.html')
     
+
+
+    @app.route('/menu')
+    def menu():
+        return render_template('menu.html')
     
+
 
 
 
@@ -112,12 +119,40 @@ def create_user_registration():
 
     @app.route('/login')
     def login():
+
+        errors = []
+
+        if request.method == "POST":
+            email = (request.form.get("email") or "").strip()
+            password = request.form.get("password") or ""
+
+            if not email:
+                errors.append("Email is required")
+
+            if not password:
+                errors.append("Password is required")
+
+            if not errors:
+                user = User.query.filter_by(email=email).first()
+
+            if not user or not check_password_hash(user.password, password):
+                errors.append("Invalid password or email")
+
+            else:
+                login_user(user)
+                return redirect(url_for("menu", errors=errors))
+            
+
+
+
+
         return render_template('login.html')
     
 
     @login_manager.user_loader
     def load_user(user_id):
-        return None
+        return User.query.get(int(user_id)). current_user
+    
     
 
     with app.app_context():
