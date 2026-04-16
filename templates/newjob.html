@@ -2,24 +2,35 @@
 <html>
 <head>
     <title>Job Application</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
     <h1>Add Job Application</h1>
 
     <form action="/action_page.php">
-  <label for="cname">Company Name</label>
-  <input type="text" id="cname" name="companyname" placeholder="Company name">
+        <label for="cname">Company Name</label>
+        <input type="text" id="cname" name="companyname" placeholder="Company name">
 
-    <form>
-        <label>Company:</label><br>
-        <input type="text" name="company"><br><br>
+        <label for="position">Job Position</label>
+        <input type="text" id="position" name="jobposition" placeholder="Job Position">
 
-        <label>Position:</label><br>
-        <input type="text" name="position"><br><br>
+        <label for ='location'>Location</label>
+        <input type="text" id="location" name="location" placeholder="Location">
 
-        <button type="submit">Add</button>
+        <label for="status">Job Status</label>
+        <select id="status" name="status">
+            <option value="interested">Interested</option>
+            <option value="applied">Applied</option>
+            <option value="rejected">Rejected</option>
+            <option value="stage1">Stage 1</option>
+            <option value="stage2">Stage 2</option>
+            <option value="interview">Interview</option>
+            <option value="accepted">Accepted</option>
+
+        </select>
+
+        <input type="add" value="Add">
     </form>
 
 </body>
