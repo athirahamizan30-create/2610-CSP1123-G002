@@ -71,7 +71,7 @@ def create_user_registration():
                 errors.append("Username must be between 3 and 80 characters")
 
 
-            if not re.match(r"^[@\s]+@[@\s]+\.[@\s]+$", email):
+            if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email):
                 errors.append("Please enter a valid email address")
 
             if len(password) < 6:
@@ -83,7 +83,8 @@ def create_user_registration():
             if not errors:
                 return f"valid input received - {email}"
 
-
+            if errors:
+                return render_template("register.html", errors=errors)
 
             return f"Received data - {email}"
 

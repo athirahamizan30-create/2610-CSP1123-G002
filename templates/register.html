@@ -12,22 +12,16 @@
 	<h1 class="text-2xl font-semibold">Create your account</h1>
 	
 	{% if errors %}
-	<div >
-
+	<div class="alert alert-danger">
 		<ul >
-
 		{% for e in errors %}
-
 		<li>{{e}}</li>
-
 		{% endfor %}
-
 		</ul>
-
 	</div>
 	{% endif %}
 
-	
+
 	<h2>User Registration</h2>
 	<form action="{{ url_for('register') }}" method="post">
 
