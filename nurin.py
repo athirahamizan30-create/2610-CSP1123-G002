@@ -7,4 +7,4 @@ def index():
     return render_template('job.html')
 
 if __name__ == '__main__':
-    app.run(debug=True) # debug=True helps catch errors live!
+    app.run(debug=True)
