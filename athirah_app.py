@@ -5,8 +5,9 @@ from sqlalchemy import text
 
 
 
-
 app = Flask(__name__)
+
+
 
 db= SQLAlchemy()
 login_manager = LoginManager()
@@ -25,6 +26,7 @@ class User(UserMixin, db.Model):
 
 
 def create_user_registration():
+
     app = Flask(__name__)
 
     app.config['SECRET_KEY'] = 'user_registration_athirah'
@@ -35,7 +37,15 @@ def create_user_registration():
     login_manager.init_app(app)
     login_manager.login_view = "login"
 
-    @app.route('/')
+    @app.route("/health/db")
+    def health_db():
+        try:
+            db.session.execute(text('SELECT 1'))
+            return {"db":"ok"}, 200
+        except Exception as e:
+            return {"db":"error", "detail": str(e)}, 500
+
+
 
     @app.route('/')
     def index():
@@ -56,13 +66,9 @@ def create_user_registration():
     def load_user(user_id):
         return None
     
+
     with app.app_context():
         db.create_all()
-
-
-
-    
-    
     
     return app
 
@@ -72,9 +78,8 @@ def create_user_registration():
 
 
 
-@app.route('/')
-def index():
-    return render_template('index.html')
+
 
 if __name__ == '__main__':
+    app = create_user_registration()
     app.run(debug=True)
