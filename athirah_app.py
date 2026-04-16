@@ -1,7 +1,8 @@
-from flask import Flask, render_template, url_for
+from flask import Flask, render_template, url_for, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin
 from sqlalchemy import text
+import re
 
 
 
@@ -51,10 +52,43 @@ def create_user_registration():
     def index():
         return render_template('index.html')
     
+    
 
-    @app.route('/register')
+
+
+    @app.route('/register', methods=["GET", "POST"])
     def register():
-        return render_template('register.html')
+        errors = []
+
+
+        if request.method == "POST":
+            username = (request.form.get("username") or "").strip()
+            email = (request.form.get("email")or "").strip()
+            password = request.form.get("password")or ""
+            confirm = request.form.get("confirm_password")or ""
+
+            if not (3 <= len(username) <= 80):
+                errors.append("Username must be between 3 and 80 characters")
+
+
+            if not re.match(r"^[@\s]+@[@\s]+\.[@\s]+$", email):
+                errors.append("Please enter a valid email address")
+
+            if len(password) < 6:
+                errors.append("Password needs to be atleast 6 characters")
+
+            if password != confirm:
+                errors.append("Password don't match")
+
+            if not errors:
+                return f"valid input received - {email}"
+
+
+
+            return f"Received data - {email}"
+
+
+        return render_template('register.html', errors=errors)
     
 
     @app.route('/login')
