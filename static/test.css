@@ -1,12 +1,14 @@
 body {
-    font-family: Arial;
-    background-color: red;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    background-color: rgb(221, 208, 208);
     text-align: center;
 }
 
 form {
-  border-radius: 5px;
-  background-color: #f2f2f2;
+  width: 350px; 
+  margin: 60px auto;
+  border-radius: 12px;
+  background-color: rgb(197, 181, 93);
   padding: 20px;
 }
 
@@ -24,7 +26,7 @@ input[type=text], select {
 
 input[type=submit] {
   width: 100%;
-  background-color: #4CAF50;
+  background-color: #7dd7d4;
   color: white;
   padding: 14px;
   margin: 8px 0;
@@ -34,5 +36,5 @@ input[type=submit] {
 }
 
 input[type=submit]:hover {
-  background-color: #45a049;
+  background-color: #3f8f8c;
 }
