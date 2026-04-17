@@ -6,8 +6,7 @@ from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import timedelta
-from flask_mail import Mail, Message
-from itsdangerous import URLSafeTimedSerializer
+
 
 
 
