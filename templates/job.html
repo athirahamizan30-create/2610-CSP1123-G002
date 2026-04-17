@@ -7,10 +7,37 @@
     <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
     <!-- Filled Icons -->
     <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
-    <!-- Brand Icons -->
-    <link href="https://cdn.boxicons.com/3.0.8/fonts/brands/boxicons-brands.min.css" rel="stylesheet">
     <title>New Application</title>
 </head>
+
+<script>
+function addDate() {
+    const container = document.getElementById("dates-container");
+
+    const div = document.createElement("div");
+    div.classList.add("date-row");
+
+    div.innerHTML = `
+        <select name="date_type[]">
+            <option>Application</option>
+            <option>Interview</option>
+            <option>Deadline</option>
+            <option>Offer</option>
+        </select>
+
+        <input type="date" name="dates[]">
+
+        <button type="button" onclick="removeDate(this)" class="icon-btn"><i class="bxf bx-x-square bx-sm"></i></button>
+    `;
+
+    container.appendChild(div);
+}
+
+function removeDate(button) {
+    button.parentElement.remove();
+}
+</script>
+
 <body>
 
     <h1>Add New Application</h1>
@@ -24,22 +51,27 @@
 
         <i class="bx-pull-left bxf bx-location bx-sm"></i><label for ='location'>Location</label>
         <input type="text" id="location" name="location" placeholder="Location">
+        
+        <h3>Important Dates</h3>
 
-        <div class="date-card">
-            <h3>Important Dates</h3>
+        <div id="dates-container">
+            <div class="date-row">
+                <select name="date_type[]">
+                    <option>Application</option>
+                    <option>Interview</option>
+                    <option>Deadline</option>
+                    <option>Offer</option>
+                </select>
 
-            <div class="date-group">
-                <label>Application</label>
-                <input type="date" name="applicationdate">
-            </div>
+                <input type="date" name="dates[]">
 
-            <div class="date-group">
-                <label>Deadline</label>
-                <input type="date" name="deadline">
+                <button type="button" onclick="removeDate(this)" class="icon-btn"><i class="bxf bx-x-square bx-sm"></i></button>
             </div>
         </div>
 
-        <i class="bx-pull-left bxf bx-chart-bar-big-columns bx-sm"></i><label for="status">Job Status</label>
+        <button type="button" onclick="addDate()" class="icon-btn"><i class="bxf bx-plus-square bx-sm"></i></button>
+
+        <label for="status">Job Status</label>
         <select id="status" name="status">
             <option value="interested">Interested</option>
             <option value="applied">Applied</option>
