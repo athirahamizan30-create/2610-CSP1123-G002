@@ -14,6 +14,7 @@ form {
 
 h1 {
     margin-top: 40px;
+    font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
 }
 
 label {
@@ -56,9 +57,14 @@ input[type=date] {
     padding: 8px;
     border-radius: 10px;
     margin-top: 10px;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
 }
 
 .date-group {
     margin-bottom: 10px;
+}
+
+h3{
+  text-align: left;
+  font-family: Arial, Helvetica, sans-serif;
 }
