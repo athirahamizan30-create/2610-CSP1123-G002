@@ -18,13 +18,19 @@
         <label for ='location'>Location</label>
         <input type="text" id="location" name="location" placeholder="Location">
 
-        <h3>Important dates:</h3>
+        <div class="date-card">
+            <h3>Important Dates</h3>
 
-        <button type="button">+</button> <!-- just design, no function -->
+            <div class="date-group">
+                <label>Application</label>
+                <input type="date" name="applicationdate">
+            </div>
 
-        <input type="date" name="date1">
-        <input type="date" name="date2">
-        <input type="date" name="date3">
+            <div class="date-group">
+                <label>Deadline</label>
+                <input type="date" name="deadline">
+            </div>
+        </div>
 
         <label for="status">Job Status</label>
         <select id="status" name="status">
