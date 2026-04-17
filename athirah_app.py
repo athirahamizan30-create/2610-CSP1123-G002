@@ -7,10 +7,6 @@ from sqlalchemy.exc import IntegrityError
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import timedelta
 
-
-
-
-
 app = Flask(__name__)
 
 
@@ -148,12 +144,25 @@ def create_user_registration():
                 login_user(user, remember=remember_me)
                 return redirect(url_for("dashboard"))
             
-                
-            
-
-
 
         return render_template('login.html', errors=errors)
+
+
+
+                
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.query.get(int(user_id))
+    
+    @app.route("/logout")
+    def logout():
+        logout_user()
+        flash("You have been logged out", "success")
+        return redirect(url_for("index"))            
+
+
+
+        
     
 
     
