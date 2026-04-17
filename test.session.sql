@@ -1,10 +1,8 @@
 --@block
-CREATE TABLE upload(
-    docs LONGBLOB,
-)
+CREATE TABLE IF NOT EXISTS files (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
---@block
-INSERT INTO upload (docs)
-VALUES (
-    
-)
+

@@ -21,6 +21,7 @@
                 document.getElementById("mySidebar").style.width = "250px";
                 document.getElementById("main").style.marginLeft = "250px";
                 }
+
             <!--push back the content to the left -->
                 function closeNav() {
                 document.getElementById("mySidebar").style.width = "0";
@@ -34,7 +35,7 @@
             <h1>Documents</h1>
 
             <div class="uploadbtn">
-                <form action="upload.php" method="post" enctype="multipart/form-data">
+                <form action="/uploads/" method="post" enctype="multipart/form-data">
                     <input type="file" id="myFile" name="filename">
                     <input type="submit" value="Upload file">
                 </form>
