@@ -6,10 +6,13 @@ from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import timedelta
+from flask_mail import Mail, Message
+from itsdangerous import URLSafeTimedSerializer
+
+
+
 
 app = Flask(__name__)
-
-
 
 db= SQLAlchemy()
 login_manager = LoginManager()
@@ -22,12 +25,12 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
 
     def __repr__(self):
-        return f"<User {self.username}>"
-    
+        return f"<User {self.username}>" 
     
 
+    
 
-def create_user_registration():
+def create_app():
 
     app = Flask(__name__)
 
@@ -39,14 +42,8 @@ def create_user_registration():
     db.init_app(app)
     login_manager.init_app(app)
     login_manager.login_view = "login"
+    
 
-    @app.route("/health/db")
-    def health_db():
-        try:
-            db.session.execute(text('SELECT 1'))
-            return {"db":"ok"}, 200
-        except Exception as e:
-            return {"db":"error", "detail": str(e)}, 500
 
 
 
@@ -54,17 +51,11 @@ def create_user_registration():
     def index():
         return render_template('index.html')
     
-
-
     @app.route('/dashboard')
     @login_required
     def dashboard():
         return render_template('dashboard.html')
     
-
-
-
-
     @app.route('/register', methods=["GET", "POST"])
     def register():
         errors = []
@@ -147,27 +138,20 @@ def create_user_registration():
 
         return render_template('login.html', errors=errors)
 
-
-
-                
-    @login_manager.user_loader
-    def load_user(user_id):
-        return User.query.get(int(user_id))
-    
     @app.route("/logout")
     def logout():
         logout_user()
         flash("You have been logged out", "success")
         return redirect(url_for("index"))            
+                                     
 
-
+    
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.query.get(int(user_id))
+    
 
         
-    
-
-    
-
-
     with app.app_context():
         db.create_all()
     
@@ -182,5 +166,5 @@ def create_user_registration():
 
 
 if __name__ == '__main__':
-    app = create_user_registration()
+    app = create_app()
     app.run(debug=True)
