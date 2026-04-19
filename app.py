@@ -16,6 +16,7 @@ app = Flask(__name__)
 app.config.from_object(Config)
 db= SQLAlchemy()
 login_manager = LoginManager()
+bcrypt = Bcrypt()
 
 @staticmethod
 class User(UserMixin, db.Model):
@@ -44,7 +45,7 @@ class PasswordResetId(db.Model):
     )
 
     created_at = db.Column(
-        db.Datetime(timezone=True),
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
         nullable=False
     )
@@ -61,6 +62,7 @@ def create_app():
 
     app = Flask(__name__)
     mail = Mail(app)
+    bcrypt.init_app(app)
 
     app.config['SECRET_KEY'] = 'user_registration_athirah'
     app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://athirah:Tiya071!@localhost/CareerTrack_Database"
@@ -173,7 +175,7 @@ def create_app():
         return redirect(url_for("index"))            
                                      
 
-    @app.route('/forgot-password', methods=['POST', 'GET'])
+    @app.route('/forgot_password', methods=['POST', 'GET'])
     def forgot_password():
 
         if request.method == 'POST':
@@ -185,9 +187,9 @@ def create_app():
 
             if not user:
                 flash("No user with that email found", "error")
-                return redirect(url_for("forgot_passowrd"))
+                return redirect(url_for("forgot_password"))
             
-            user.password.reset_ids.clear()
+            user.password_reset_ids.clear()
 
             new_password_reset_id = PasswordResetId(user=user)
             db.session.add(new_password_reset_id)
@@ -211,9 +213,11 @@ def create_app():
                 return render_template("forgot_password.html", reset_sent=False, **context)
             except Exception as e:
                 print(f"Error: {e}")
+
+        return render_template("forgot_password.html")
     
 
-    @app.route('/reset-password/<reset_id', methods=['POST', 'GET'])
+    @app.route('/reset_password/<reset_id>', methods=['POST', 'GET'])
     def reset_password(reset_id):
 
         reset_id_object = db.session.scalar(
@@ -245,7 +249,7 @@ def create_app():
                 return redirect(url_for('reset_password', reset_id=reset_id))
             
             user = reset_id_object.user
-            user.password = Bcrypt.generate_password_hash(password).decode('utf-8')
+            user.password = bcrypt.generate_password_hash(password).decode('utf-8')
             db.session.commit()
 
             db.session.delete(reset_id_object)
