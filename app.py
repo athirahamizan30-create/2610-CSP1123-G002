@@ -5,14 +5,14 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, cur
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import timedelta
+from datetime import timedelta, datetime, timezone
 from itsdangerous import URLSafeTimedSerializer as Serializer
-
-
+from config import Config
+from flask_mail import Mail, Message
 
 
 app = Flask(__name__)
-
+app.config.from_object(Config)
 db= SQLAlchemy()
 login_manager = LoginManager()
 
@@ -23,9 +23,30 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
 
+    password_reset_ids = db.relationship(
+        "PasswordResetId",
+        backref="User",
+        cascade="all, delete-orphan"
+    )
 
     def __repr__(self):
         return f"<User {self.username}>" 
+    
+class PasswordResetId(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+
+    reset_id = db.Column(
+        db.String(36)
+        nullable=False
+        default=lambda: str(uuid.uuid4())
+    )
+
+    created_at = db.Column(
+        db.Datetime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False
+    )
     
 
 
@@ -36,6 +57,7 @@ class User(UserMixin, db.Model):
 def create_app():
 
     app = Flask(__name__)
+    mail = Mail(app)
 
     app.config['SECRET_KEY'] = 'user_registration_athirah'
     app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://athirah:Tiya071!@localhost/CareerTrack_Database"
@@ -161,6 +183,14 @@ def create_app():
             if not user:
                 flash("No user with that email found", "error")
                 return redirect(url_for("forgot_passowrd"))
+            
+            user.password.reset_ids.clear()
+
+            new_password_reset_id = PasswordResetId(user=user)
+            db.session.add(new_password_reset_id)
+            db.session.commit()
+
+            password_reset_link = url_for("reset_password", reset_id=new_password_reset_id.reset_id , _external=True)
 
         return render_template("forgot_password.html", reset_sent=False)
     
