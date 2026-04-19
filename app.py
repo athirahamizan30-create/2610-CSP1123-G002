@@ -2,7 +2,7 @@ import re
 from flask import Flask, render_template, url_for, request, redirect, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, current_user, logout_user
-from sqlalchemy import text
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import timedelta
@@ -150,6 +150,18 @@ def create_app():
 
     @app.route('/forgot-password', methods=['POST', 'GET'])
     def forgot_password():
+
+        if request.method == 'POST':
+            email = request.form.get("email")
+
+            user = db.session.scalar(
+                select(User).where(User.email == email)
+            )
+
+            if not user:
+                flash("No user with that email found", "error")
+                return redirect(url_for("forgot_passowrd"))
+
         return render_template("forgot_password.html", reset_sent=False)
     
 
