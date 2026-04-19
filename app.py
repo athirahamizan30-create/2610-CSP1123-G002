@@ -7,9 +7,9 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import timedelta, datetime, timezone
-from itsdangerous import URLSafeTimedSerializer as Serializer
 from config import Config
 from flask_mail import Mail, Message
+from flask_bcrypt import Bcrypt
 
 
 app = Flask(__name__)
@@ -49,7 +49,9 @@ class PasswordResetId(db.Model):
         nullable=False
     )
     
-
+    def is_expired(self):
+        expires_at = self.created_at + timedelta(minutes=10)
+        return datetime.now(timezone.utc) > expires_at
 
     
 
@@ -213,6 +215,46 @@ def create_app():
 
     @app.route('/reset-password/<reset_id', methods=['POST', 'GET'])
     def reset_password(reset_id):
+
+        reset_id_object = db.session.scalar(
+            select(PasswordResetId).where(PasswordResetId.reset_id == reset_id)
+        )
+
+        if not reset_id_object:
+            flash('Invalid reset link', "error")
+            return redirect(url_for("forgot_password"))
+        
+        if reset_id_object.is_expired():
+            db.session.delete(reset_id)
+            db.session.commit()
+
+            flash("Expired reset link", "error")
+            return redirect(url_for('forgot_password'))
+        
+        if request.method == "POST":
+
+            password = request.form.get("password")
+            confirm_password = request.form.get("confirm_password")
+
+            if len(password) < 5:
+                flash("Password must be at least 5 characters long", "error")
+                return redirect(url_for('reset_password', reset_id=reset_id))
+            
+            if password != confirm_password:
+                flash("Passwords do not match", "error")
+                return redirect(url_for('reset_password', reset_id=reset_id))
+            
+            user = reset_id_object.user
+            user.password = Bcrypt.generate_password_hash(password).decode('utf-8')
+            db.session.commit()
+
+            db.session.delete(reset_id_object)
+            db.session.commit()
+
+            flash("Password changed successfully. Login", "success")
+            return redirect(url_for('login'))
+
+
         return render_template("reset_password.html")
 
 
