@@ -6,7 +6,7 @@ from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import timedelta
-
+from itsdangerous import URLSafeTimedSerializer as Serializer
 
 
 
@@ -16,15 +16,19 @@ app = Flask(__name__)
 db= SQLAlchemy()
 login_manager = LoginManager()
 
-
+@staticmethod
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
 
+
     def __repr__(self):
         return f"<User {self.username}>" 
+    
+
+
     
 
     
@@ -144,17 +148,30 @@ def create_app():
         return redirect(url_for("index"))            
                                      
 
+    @app.route('/forgot-password', methods=['POST', 'GET'])
+    def forgot_password():
+        return render_template("forgot_password.html", reset_sent=False)
     
+
+    @app.route('/reset-password/<reset_id', methods=['POST', 'GET'])
+    def reset_password(reset_id):
+        return render_template("reset_password.html")
+
+
     @login_manager.user_loader
     def load_user(user_id):
         return User.query.get(int(user_id))
-    
 
-        
+
+
+
+
     with app.app_context():
         db.create_all()
     
     return app
+
+
 
 
    
@@ -167,3 +184,12 @@ def create_app():
 if __name__ == '__main__':
     app = create_app()
     app.run(debug=True)
+
+
+
+    #landing page - index.html
+    #connect database dgn page
+    #flask working
+    #database nnti share je ngan org laen, nnti bagi org laen download kat clickup
+    #tkyah tambah yg feature nk tambah kat storyboard
+    #bole pkai java nnti tambah kat click up
