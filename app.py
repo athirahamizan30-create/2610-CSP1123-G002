@@ -1,4 +1,5 @@
 import re
+import uuid
 from flask import Flask, render_template, url_for, request, redirect, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, current_user, logout_user
@@ -37,8 +38,8 @@ class PasswordResetId(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
 
     reset_id = db.Column(
-        db.String(36)
-        nullable=False
+        db.String(36),
+        nullable=False,
         default=lambda: str(uuid.uuid4())
     )
 
@@ -192,7 +193,22 @@ def create_app():
 
             password_reset_link = url_for("reset_password", reset_id=new_password_reset_id.reset_id , _external=True)
 
-        return render_template("forgot_password.html", reset_sent=False)
+            msg = Message(
+                subject = "Reset your password",
+                recipients = [email],
+                body = f"Reset your password using the link below\n\n{password_reset_link}"
+            )
+            try:
+                mail.send(msg)
+
+                context = {
+                    "reset_sent": True,
+                    "email": email
+                }
+
+                return render_template("forgot_password.html", reset_sent=False, **context)
+            except Exception as e:
+                print(f"Error: {e}")
     
 
     @app.route('/reset-password/<reset_id', methods=['POST', 'GET'])
