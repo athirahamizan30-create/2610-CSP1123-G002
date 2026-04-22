@@ -35,7 +35,7 @@
     <div id="main">
             <button class="openbtn" onclick="openNav()">&#9776;</button>
             <h1>Documents</h1>
-            <a href="test.html">Test</a>
+            <a href="file_upload.html">Test</a>
    
 
         <div class="uploadbtn">
@@ -44,5 +44,11 @@
             <input type="submit" value="Upload file">
         </form>
     </div>
+
+    <h1>File Upload</h1>
+    <form method="POST" action= "{{ url_for("file_upload") }}" enctype="multipart/form-data">
+        <input type="file" name="file" accept=".xlsx, .xls, .pdf, .doc, .docx, .png, .jpg, .jpeg"> required="required">
+        <input type="submit" value="upload file">
+    </form>
 </body>
 </html>
