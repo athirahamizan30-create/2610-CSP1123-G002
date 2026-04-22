@@ -33,53 +33,51 @@
     </div>
 
     <div id="main">
+        <div class ="header-section">
             <button class="openbtn" onclick="openNav()">&#9776;</button>
             <h1>Documents</h1>
-    </div>
+        </div>
 
-    <div>
-        <h1>File Upload</h1>
-        <form method="POST" action= "{{ url_for("file_upload") }}" enctype="multipart/form-data">
-            <input type="file" name="file" accept=".xlsx, .xls, .pdf, .doc, .docx, .png, .jpg, .jpeg" required="required">
-            <input type="submit" value="upload file">
-        </form>
-    </div>
-
-    <div>
-        <h3>Your Uploaded Documents</h3>
-        <ul>
-            {% for doc in docs %}
-            <li>
-                <a href="{{ url_for('static', filename='uploads/' + doc.filename) }}" target="_blank">
-                {{ doc.filename }}
-                </a> 
-                <small>(Uploaded on: {{ doc.date_uploaded.strftime('%Y-%m-%d') }})</small>
-            </li>
-            {% endfor %}
-        </ul>
-    </div>
-
-    <div>
-        <table style="width:100%; border-collapse: collapse; margin-top: 20px;">
-            <thead>
-                <tr style="background-color: #f2f2f2; text-align: left;">
-                    <th style="padding: 10px; border-bottom: 2px solid #ddd;">File Name</th>
-                    <th style="padding: 10px; border-bottom: 2px solid #ddd;">Date Uploaded</th>
-                    <th style="padding: 10px; border-bottom: 2px solid #ddd;">Action</th>
-                </tr>
-            </thead>
-            <tbody>
+        <div class="upload-container">
+            <h1>File Upload</h1>
+            <form method="POST" action= "{{ url_for("file_upload") }}" enctype="multipart/form-data">
+                <input type="file" name="file" accept=".xlsx, .xls, .pdf, .doc, .docx, .png, .jpg, .jpeg" required="required">
+                <input type="submit" value="upload file">
+            </form>
+    
+        <div class="Table-container">
+            <h3>Your Uploaded Documents</h3>
+            <ul>
                 {% for doc in docs %}
-                <tr>
-                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">{{ doc.filename }}</td>
-                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">{{ doc.date_uploaded.strftime('%d %b %Y') }}</td>
-                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">
-                        <a href="{{ url_for('static', filename='uploads/' + doc.filename) }}" target="_blank" style="color: blue; text-decoration: none;">View File</a>
-                    </td>
-                </tr>
+                <li>
+                    <a href="{{ url_for('static', filename='uploads/' + doc.filename) }}" target="_blank">
+                    {{ doc.filename }}
+                    </a> 
+                    <small>(Uploaded on: {{ doc.date_uploaded.strftime('%Y-%m-%d') }})</small>
+                </li>
                 {% endfor %}
-            </tbody>
-        </table>
+            </ul>
+
+            <table style="width:100%; border-collapse: collapse; margin-top: 20px;">
+                <thead>
+                    <tr style="background-color: #f2f2f2; text-align: left;">
+                        <th style="padding: 10px; border-bottom: 2px solid #ddd;">File Name</th>
+                        <th style="padding: 10px; border-bottom: 2px solid #ddd;">Date Uploaded</th>
+                        <th style="padding: 10px; border-bottom: 2px solid #ddd;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for doc in docs %}
+                    <tr>
+                        <td style="padding: 10px; border-bottom: 1px solid #ddd;">{{ doc.filename }}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #ddd;">{{ doc.date_uploaded.strftime('%d %b %Y') }}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #ddd;">
+                        <a href="{{ url_for('static', filename='uploads/' + doc.filename) }}" target="_blank" style="color: blue; text-decoration: none;">View File</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
     </div>
 </body>
 </html>
