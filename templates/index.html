@@ -1,9 +1,38 @@
+<!DOCTYPE html>
 <html>
 <head>
-    <title>INDEX</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css">
+    <title>
+        Document Organiser
+    </title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styleDocument.css') }}">
 </head>
+
 <body>
-     <h1>INDEX PAGE</h1>
+    <div id="mySidebar" class="sidebar">
+        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+        <a class="division">New Job</a>
+        <a class="division">Documents</a>
+        <a class="division">Reminders</a>
+
+        <!--to move the sidebar and push the main content -->
+        <script>
+            function openNav() {
+            document.getElementById("mySidebar").style.width = "250px";
+            document.getElementById("main").style.marginLeft = "250px";
+            }
+
+        <!--push back the content to the left -->
+            function closeNav() {
+            document.getElementById("mySidebar").style.width = "0";
+            document.getElementById("main").style.marginLeft = "0";
+            }
+        </script>
+    </div>
+
+    <div id="main">
+            <button class="openbtn" onclick="openNav()">&#9776;</button>
+            
+
+    </div>
 </body>
 </html>
