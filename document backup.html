@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>
+        Document Organiser
+    </title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styleDocument.css') }}">
+</head>
+
+<body>
+    <div id="mySidebar" class="sidebar">
+        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+        <a class="division">New Job</a>
+        <a class="indent">-Full Time</a>
+        <a class="indent">-Part Time</a>
+        <a class="indent">-Internship</a>
+        <a class="division">Documents</a>
+        <a class="division">Reminders</a>
+
+        <!--to move the sidebar and push the main content -->
+        <script>
+            function openNav() {
+            document.getElementById("mySidebar").style.width = "250px";
+            document.getElementById("main").style.marginLeft = "250px";
+            }
+
+        <!--push back the content to the left -->
+            function closeNav() {
+            document.getElementById("mySidebar").style.width = "0";
+            document.getElementById("main").style.marginLeft = "0";
+            }
+        </script>
+    </div>
+
+    <div id="main">
+            <button class="openbtn" onclick="openNav()">&#9776;</button>
+            <h1>Documents</h1>
+            <a href="file_upload.html">Test</a>
+   
+
+        <div class="uploadbtn">
+        <form action="/uploads/" method="post" enctype="multipart/form-data">
+            <input type="file" id="myFile" name="filename">
+            <input type="submit" value="Upload file">
+        </form>
+    </div>
+
+    <h1>File Upload</h1>
+    <form method="POST" action= "{{ url_for("file_upload") }}" enctype="multipart/form-data">
+        <input type="file" name="file" accept=".xlsx, .xls, .pdf, .doc, .docx, .png, .jpg, .jpeg" required="required">
+        <input type="submit" value="upload file">
+    </form>
+</body>
+</html>
+
+
+
+from flask import Flask, render_template, url_for, redirect, request
+
+#create app
+app = Flask(__name__, template_folder="templates", static_folder="static")
+
+#index function map with default route (/)
+@app.route ('/')
+def index ():
+    return render_template("document.html")
+
+@app.route ('/file_upload', methods =["POST"])
+def file_upload():
+    file = request.files['file']
+    filename =file.filename.lower()
+
+    if filename.endswith ((".xlsx", ".xls", ".pdf", ".doc", ".docx", ".png", ".jpg", ".jpeg")):
+        return "Hi"
+
+#run app with local host (0.0.0.0) and port 5555, set debug to true, does not have to reset app everytime theres error
+if __name__ == "__main__":
+    app.run (host="0.0.0.0", port=5555, debug=True)
+
+this is app.py
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>
+        Document Organiser
+    </title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styleDocument.css') }}">
+</head>
+
+<body>
+    <div id="mySidebar" class="sidebar">
+        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+        <a class="division">New Job</a>
+        <a class="indent">-Full Time</a>
+        <a class="indent">-Part Time</a>
+        <a class="indent">-Internship</a>
+        <a class="division">Documents</a>
+        <a class="division">Reminders</a>
+
+        <!--to move the sidebar and push the main content -->
+        <script>
+            function openNav() {
+            document.getElementById("mySidebar").style.width = "250px";
+            document.getElementById("main").style.marginLeft = "250px";
+            }
+
+        <!--push back the content to the left -->
+            function closeNav() {
+            document.getElementById("mySidebar").style.width = "0";
+            document.getElementById("main").style.marginLeft = "0";
+            }
+        </script>
+    </div>
+
+    <div id="main">
+            <button class="openbtn" onclick="openNav()">&#9776;</button>
+            <h1>Documents</h1>
+    </div>
+
+    <h1>File Upload</h1>
+    <form method="POST" action= "{{ url_for("file_upload") }}" enctype="multipart/form-data">
+        <input type="file" name="file" accept=".xlsx, .xls, .pdf, .doc, .docx, .png, .jpg, .jpeg" required="required">
+        <input type="submit" value="upload file">
+    </form>
+</body>
+</html>
+this is document.html
+
+how to connect database for user to be able to upload files into the website
