@@ -15,6 +15,10 @@ def get_db_connection():
 def home():
     return render_template('job.html')
 
+@app.route('/dashboard')
+def dashboard():
+    return render_template('dashboard.html')
+
 @app.route('/add_job', methods=['GET', 'POST'])
 def add_job():
     if request.method == 'POST':
