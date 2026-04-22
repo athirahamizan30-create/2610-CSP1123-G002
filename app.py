@@ -30,7 +30,7 @@ with app.app_context():
 @app.route('/')
 def index():
     # Fetch all uploaded documents to display them
-    docs = Document.query.all()
+    docs = Document.query.order_by(Document.filename.asc()).all()
     return render_template("document.html", docs=docs)
 
 @app.route('/file_upload', methods=["POST"])
