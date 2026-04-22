@@ -94,3 +94,40 @@ h1 {
   margin-top: 45px;
   margin-left: 300px;
 }
+
+.header-section {
+  display: flex;
+    align-items: center;
+    gap: 20px; /* Space between sidebar button and title */
+    margin-bottom: 20px;
+}
+
+.upload-container {
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+}
+
+/* Table Styling */
+.styled-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    font-family: sans-serif;
+}
+
+.styled-table thead tr {
+    background-color: #009879; /* A professional green color */
+    color: #ffffff;
+    text-align: left;
+}
+
+.styled-table th, .styled-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #dddddd;
+}
+
+.styled-table tbody tr:nth-of-type(even) {
+    background-color: #f3f3f3;
+}
