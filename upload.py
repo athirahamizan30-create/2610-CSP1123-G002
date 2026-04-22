@@ -9,7 +9,6 @@ if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
 @app.route('/upload', methods=['POST'])
-@app.route('/')
 def index():
     return render_template('document.html')
 def upload_file():
