@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>
+        Document Organiser
+    </title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styleDocument.css') }}">
+</head>
+
+<body>
+    <div id="mySidebar" class="sidebar">
+        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+        <a class="division">New Job</a>
+        <a class="indent">-Full Time</a>
+        <a class="indent">-Part Time</a>
+        <a class="indent">-Internship</a>
+        <a class="division">Documents</a>
+        <a class="division">Reminders</a>
+
+        <!--to move the sidebar and push the main content -->
+        <script>
+            function openNav() {
+            document.getElementById("mySidebar").style.width = "250px";
+            document.getElementById("main").style.marginLeft = "250px";
+            }
+
+        <!--push back the content to the left -->
+            function closeNav() {
+            document.getElementById("mySidebar").style.width = "0";
+            document.getElementById("main").style.marginLeft = "0";
+            }
+        </script>
+    </div>
+
+    <div id="main">
+            <button class="openbtn" onclick="openNav()">&#9776;</button>
+            <h1>Documents</h1>
+   
+
+        <div class="uploadbtn">
+        <form action="/uploads/" method="post" enctype="multipart/form-data">
+            <input type="file" id="myFile" name="filename">
+            <input type="submit" value="Upload file">
+        </form>
+    </div>
+</body>
+</html>

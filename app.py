@@ -1,13 +1,13 @@
-from flask import Flask, request, make_response
+from flask import Flask, render_template
 
 #create app
-app = Flask(__name__)
+app = Flask(__name__, template_folder="templates")
 
 
 #index function map with default route (/)
 @app.route ('/')
 def index ():
-    return "<h1>Hello Word</h1>"
+    return render_template("document.html")
 
 #go to other page/route connected to web, <> is a variable, can be added in function
 @app.route('/greet/<int:num1>/<int:num2>')
