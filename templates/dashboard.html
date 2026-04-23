@@ -1,5 +1,3 @@
-<!DOCTYPE html>
-<html>
 <head>
     <title>Job Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
@@ -10,72 +8,19 @@
 
 <body>
     <div id="overlay" onclick="toggleSidebar()"></div>
-
-    <div class="sidebar" id="sidebar">
+<div class="sidebar" id="sidebar">
         <h2>Menu</h2>
-        <a href="{{ url_for('home') }}">New Job</a>
+        <a href="/">New Job</a>
         <a href="#">Documents</a>
         <a href="#">Reminders</a>
         <a href="#">Log Out</a>
-
-    <div class="sidebar">
-        <h2>My Jobs</h2>
-
-        <a href="/">Dashboard</a>
-        <a href="/add_job">Add Job</a>
-        <a href="#">Applied</a>
-        <a href="#">Interview</a>
-        <a href="#">Rejected</a>
-<<<<<<< HEAD
-        <a href="/document">Add Documents</a>
-=======
-        <a href="/document">Add document</a>
->>>>>>> main
-        <a href="/logout">logout</a>
-    </div>
+</div>
 
     <div class="main">
-        <button class="menu-btn" onclick="toggleSidebar()"><i class="bx bx-menu bx-sm"></i></button>
+ <button class="menu-btn" onclick="toggleSidebar()"><i class="bx bx-menu bx-sm"></i></button>
 
-        <h1>CareerTrack</h1>
+        <h1>Dashboard</h1>
         <p>Welcome to your job tracker!</p>
     </div>
-
-    <div class="card-container">
-
-        {% for job in jobs %}
-        <div class="card">
-            <h2>{{ job.company_name }}</h2>
-            <p><strong>Job Position:</strong> {{ job.job_position }}</p>
-            <p><strong>Location:</strong> {{ job.location }}</p>
-            <p><strong>Job Status:</strong> {{ job.job_status.capitalize() }}</p>
-
-            <div class="dates">
-                <h4>Important Dates</h4>
-
-                {% if job.dates %}
-                    {% for d in job.dates %}
-                        <p>
-                            <strong>{{ d.date_type }}:</strong>
-                            {{ d.date_value }}
-                        </p>
-                    {% endfor %}
-                {% else %}
-                    <p>No dates added</p>
-                {% endif %}
-            </div>
-
-        </div>
-        {% endfor %}
-
-    </div>
-
-    <script>
-        function toggleSidebar() {
-            document.getElementById("sidebar").classList.toggle("active");
-            document.getElementById("overlay").classList.toggle("active");
-        }
-    </script>
-
 </body>
 </html>

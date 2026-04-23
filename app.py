@@ -56,9 +56,25 @@ class PasswordResetId(db.Model):
         nullable=False
     )
     
-    def is_expired(self):
-        expires_at = self.created_at + timedelta(minutes=10)
-        return datetime.now(timezone.utc) > expires_at
+class Job(db.Model):
+    __bind_key__ = 'jobs_db'   
+    __tablename__ = 'new_job'
+
+    id = db.Column(db.Integer, primary_key=True)
+    company_name = db.Column(db.String(255))
+    job_position = db.Column(db.String(255))
+    location = db.Column(db.String(255))
+    job_status = db.Column(db.String(50))
+
+class JobDate(db.Model):
+    __bind_key__ = 'jobs_db'
+    __tablename__ = 'job_dates'
+
+    id = db.Column(db.Integer, primary_key=True)
+    job_id = db.Column(db.Integer)
+    date_type = db.Column(db.String(50))
+    date_value = db.Column(db.Date)
+
 
 def create_app():
 
@@ -66,6 +82,7 @@ def create_app():
 
     app.config['SECRET_KEY'] = 'user_registration_athirah'
     app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://athirah:Tiya071!@localhost/CareerTrack_Database"
+    app.config['SQLALCHEMY_BINDS'] = {"second_db": "mysql+pymysql://nurin:password@localhost/CareerTrack_Database"}
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=15)
     app.config['UPLOAD_FOLDER'] = 'static/uploads'
@@ -76,15 +93,7 @@ def create_app():
     db.init_app(app)
     login_manager.init_app(app)
     login_manager.login_view = "login"
-    
-    def get_db_connection():
-        return mysql.connector.connect(
-            host="localhost",
-            user="root",
-            password="N&j@1209",
-            database="add_job"
-        )
- 
+
     @app.route('/', methods=['GET', 'POST'])
     def index():
         errors = []
@@ -128,41 +137,33 @@ def create_app():
     
     @app.route('/dashboard')
     @login_required
-    def dashboard():
-        db = get_db_connection()
-        cursor = db.cursor(dictionary=True)
+    def dashboard():  
 
-        cursor.execute("""
-            SELECT n.*, d.date_type, d.date_value
-            FROM new_job n
-            LEFT JOIN job_dates d ON n.id = d.job_id
-         """)
-
-        rows = cursor.fetchall()
+        jobs_data = Job.query.all()
+        dates_data = JobDate.query.all()
 
         jobs = {}
 
-        for row in rows:
-            job_id = row['id']
-
-        if job_id not in jobs:
-            jobs[job_id] = {
-                'id': job_id,
-                'company_name': row['company_name'],
-                'job_position': row['job_position'],
-                'location': row['location'],
-                'job_status': row['job_status'],
+        for job in jobs_data:
+            jobs[job.id] = {
+                'id': job.id,
+                'company_name': job.company_name,
+                'job_position': job.job_position,
+                'location': job.location,
+                'job_status': job.job_status,
                 'dates': []
             }
-        if row['date_type']:
-            jobs[job_id]['dates'].append({
-                'date_type': row['date_type'],
-                'date_value': row['date_value']
-            })
-        cursor.close()
-        db.close()
+
+        for d in dates_data:
+            if d.job_id in jobs:
+                jobs[d.job_id]['dates'].append({
+                    'date_type': d.date_type,
+                    'date_value': d.date_value
+                })
 
         return render_template('dashboard.html', jobs=list(jobs.values()))
+
+      
 
     
     @app.route('/register', methods=["GET", "POST"])
@@ -278,37 +279,35 @@ def create_app():
     
     @app.route('/add_job', methods=['POST'])
     def add_job():
-        db = get_db_connection()
-        cursor = db.cursor()
 
         company = request.form['company_name']
         position = request.form['job_position']
         location = request.form['location']
         status = request.form['job_status']
 
-        # Insert job
-        cursor.execute("""
-            INSERT INTO new_job (company_name, job_position, location, job_status)
-            VALUES (%s, %s, %s, %s)
-        """, (company, position, location, status))
+        job = Job(
+            company_name=company,
+            job_position=position,
+            location=location,
+            job_status=status
+        )
 
-        job_id = cursor.lastrowid
+        db.session.add(job)
+        db.session.commit()
 
-        # Insert dates
         date_types = request.form.getlist('date_type[]')
         date_values = request.form.getlist('date_value[]')
 
-        for date_type, date_value in zip(date_types, date_values):
-            if date_value:
-                cursor.execute("""
-                    INSERT INTO job_dates (job_id, date_type, date_value)
-                    VALUES (%s, %s, %s)
-                """, (job_id, date_type, date_value))
+        for dt, dv in zip(date_types, date_values):
+            if dv:
+                new_date = JobDate(
+                    job_id=job.id,
+                    date_type=dt,
+                    date_value=dv
+                )
+                db.session.add(new_date)
 
-        db.commit()
-        cursor.close()
-        db.close()
-
+        db.session.commit()
         return redirect('/dashboard')
 
     @login_manager.user_loader
@@ -321,4 +320,4 @@ def create_app():
 
 if __name__ == '__main__':
     app = create_app()
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
