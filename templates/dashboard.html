@@ -3,11 +3,20 @@
 <head>
     <title>Job Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+    <link href="https://cdn.boxicons.com/transformations.min.css" rel="stylesheet">
+    <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
+    <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
 </head>
 
 <body>
+    <div id="overlay" onclick="toggleSidebar()"></div>
 
-<div class="container">
+    <div class="sidebar" id="sidebar">
+        <h2>Menu</h2>
+        <a href="{{ url_for('home') }}">New Job</a>
+        <a href="#">Documents</a>
+        <a href="#">Reminders</a>
+        <a href="#">Log Out</a>
 
     <div class="sidebar">
         <h2>My Jobs</h2>
@@ -17,28 +26,56 @@
         <a href="#">Applied</a>
         <a href="#">Interview</a>
         <a href="#">Rejected</a>
+<<<<<<< HEAD
         <a href="/document">Add Documents</a>
+=======
+        <a href="/document">Add document</a>
+>>>>>>> main
         <a href="/logout">logout</a>
     </div>
 
     <div class="main">
-        <h1>Dashboard</h1>
+        <button class="menu-btn" onclick="toggleSidebar()"><i class="bx bx-menu bx-sm"></i></button>
 
-        <div class="card">
-            <h3>Total Applications</h3>
-        </div>
+        <h1>CareerTrack</h1>
+        <p>Welcome to your job tracker!</p>
+    </div>
 
-        <div class="card">
-            <h3>Interviews</h3>
-        </div>
+    <div class="card-container">
 
+        {% for job in jobs %}
         <div class="card">
-            <h3>Offers</h3>
+            <h2>{{ job.company_name }}</h2>
+            <p><strong>Job Position:</strong> {{ job.job_position }}</p>
+            <p><strong>Location:</strong> {{ job.location }}</p>
+            <p><strong>Job Status:</strong> {{ job.job_status.capitalize() }}</p>
+
+            <div class="dates">
+                <h4>Important Dates</h4>
+
+                {% if job.dates %}
+                    {% for d in job.dates %}
+                        <p>
+                            <strong>{{ d.date_type }}:</strong>
+                            {{ d.date_value }}
+                        </p>
+                    {% endfor %}
+                {% else %}
+                    <p>No dates added</p>
+                {% endif %}
+            </div>
+
         </div>
+        {% endfor %}
 
     </div>
 
-</div>
+    <script>
+        function toggleSidebar() {
+            document.getElementById("sidebar").classList.toggle("active");
+            document.getElementById("overlay").classList.toggle("active");
+        }
+    </script>
 
 </body>
 </html>
