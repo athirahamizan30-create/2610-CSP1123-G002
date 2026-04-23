@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title> Landing Page</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styleDocument.css') }}">
+  
+</head>
+<body>  
+    <div class="main">
+        <div class="navbar">
+            <div class="icon">
+                <h2 class="logo">CareerTrack</h2>
+                    <div class="menu">
+                        <ul>
+                            <li><a href="/index">HOME</a></li>
+                            <li><a href="#">ABOUT</a></li>
+                            <li><a href="#">CONTACT</a></li>
+                            <li><a href="/login">LOGIN</a></li>
+                            <li><a href="/register">REGISTER</a></li>
+                        </ul>
+                    </div>
+            </div>
+        </div>
+
+
+
+        <div class="content">
+            <h1>Introduction to <br><span>CareerTrack</span></h1>
+            <p class="par">The process of finding a job could be a bit difficult to handle for some people. <br> people might lose track of the jobs that they have already applied for, <br>
+                which may cause them to lose the opportunities that they supposed to grab. <br>
+                Therefore, a web-based application called <br>
+                CareerTrack to help users to track their application status, <br>
+                record important details of the jobs and organise essential documents. <br>
+                This system also includes the ability to set the important dates and also categorise <br> the job based on the type of employment.</p>
+                
+                <button class="cn"><a href="/register">JOIN US</a></button>
+
+
+
+                <form action="{{ url_for('index') }}" method="post">
+                <div class="form">
+                    <h2>User Registration</h2>
+                    <input type="text" class="form-control" id="username" name="username" placeholder="Enter Username Here">
+                    <input type="email" class="form-control" id="email" name="email" placeholder="Enter Email Here" required>
+                    <input type="password" class="form-control" id="password" name="password" placeholder="Enter Password Here" required>
+                    <input type="password" class="form-control" id="confirm_password" name="confirm_password" placeholder="Enter confirm Password Here" required>
+                    <button type="submit" class="btnn">Create account</button>
+                    
+                    <p class="link">
+                    Already have an account?
+                    <a href="/login" class="liw">Sign in</a>.
+                    </p>
+                    
+                </div>
+                </form>
+         </div>
+    </div>
+    <script></script>
+
+
+</body>
+</html>
