@@ -5,29 +5,28 @@ from flask_sqlalchemy import SQLAlchemy
 #create app
 app = Flask(__name__, template_folder="templates", static_folder="static")
 
-# Database & Upload Configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///documents.db'
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 db = SQLAlchemy(app)
 
-# Create the upload folder if it doesn't exist
+# create upload folder if it does not exist in os
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
 
-# Database Model
+# database class
 class Document(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(100), nullable=False)
     file_path = db.Column(db.String(200), nullable=False)
 
-# Create the database file
+# create the database file
 with app.app_context():
     db.create_all()
 
 #index function map with default route (/)
 @app.route('/')
 def index():
-    # Fetch all uploaded documents to display them
+    # to display docs
     docs = Document.query.order_by(Document.filename.asc()).all()
     return render_template("document.html", docs=docs)
 
@@ -40,7 +39,7 @@ def file_upload():
         save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(save_path)
 
-        # 2. Save the metadata (path) to SQLite
+        # 2. Save the data to SQLite
         new_doc = Document(filename=filename, file_path=save_path)
         db.session.add(new_doc)
         db.session.commit()

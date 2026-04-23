@@ -86,14 +86,6 @@ h1 {
   float:left;
 }
 
-/*upload button*/
-.uploadbtn {
-  display: flex;
-  align-items: center;
-  gap: 40px;
-  margin-top: 45px;
-  margin-left: 300px;
-}
 
 .header-section {
   display: flex;
