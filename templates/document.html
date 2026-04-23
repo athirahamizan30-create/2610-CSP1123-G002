@@ -39,24 +39,12 @@
         </div>
 
         <div class="upload-container">
-            <h1>File Upload</h1>
             <form method="POST" action= "{{ url_for("file_upload") }}" enctype="multipart/form-data">
                 <input type="file" name="file" accept=".xlsx, .xls, .pdf, .doc, .docx, .png, .jpg, .jpeg" required="required">
                 <input type="submit" value="upload file">
             </form>
     
         <div class="Table-container">
-            <h3>Your Uploaded Documents</h3>
-            <ul>
-                {% for doc in docs %}
-                <li>
-                    <a href="{{ url_for('static', filename='uploads/' + doc.filename) }}" target="_blank">
-                    {{ doc.filename }}
-                    </a> 
-                </li>
-                {% endfor %}
-            </ul>
-
             <table style="width:100%; border-collapse: collapse; margin-top: 20px;">
                 <thead>
                     <tr style="background-color: #f2f2f2; text-align: left;">
