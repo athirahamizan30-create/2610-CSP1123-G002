@@ -56,9 +56,14 @@ class PasswordResetId(db.Model):
         nullable=False
     )
     
-    def is_expired(self):
-        expires_at = self.created_at + timedelta(minutes=10)
-        return datetime.now(timezone.utc) > expires_at
+def get_db_connection():
+    return mysql.connector.connect(
+    host="localhost",
+    user="root",
+    password="N&j@1209",
+    database="add_job"
+    )
+
 
 def create_app():
 
@@ -76,15 +81,7 @@ def create_app():
     db.init_app(app)
     login_manager.init_app(app)
     login_manager.login_view = "login"
-    
-    def get_db_connection():
-        return mysql.connector.connect(
-            host="localhost",
-            user="root",
-            password="N&j@1209",
-            database="add_job"
-        )
- 
+
     @app.route('/', methods=['GET', 'POST'])
     def index():
         errors = []
@@ -127,42 +124,10 @@ def create_app():
         return render_template('index.html', errors=errors)
     
     @app.route('/dashboard')
-    @login_required
     def dashboard():
-        db = get_db_connection()
-        cursor = db.cursor(dictionary=True)
+        return render_template('dashboard.html')
 
-        cursor.execute("""
-            SELECT n.*, d.date_type, d.date_value
-            FROM new_job n
-            LEFT JOIN job_dates d ON n.id = d.job_id
-         """)
-
-        rows = cursor.fetchall()
-
-        jobs = {}
-
-        for row in rows:
-            job_id = row['id']
-
-        if job_id not in jobs:
-            jobs[job_id] = {
-                'id': job_id,
-                'company_name': row['company_name'],
-                'job_position': row['job_position'],
-                'location': row['location'],
-                'job_status': row['job_status'],
-                'dates': []
-            }
-        if row['date_type']:
-            jobs[job_id]['dates'].append({
-                'date_type': row['date_type'],
-                'date_value': row['date_value']
-            })
-        cursor.close()
-        db.close()
-
-        return render_template('dashboard.html', jobs=list(jobs.values()))
+      
 
     
     @app.route('/register', methods=["GET", "POST"])
@@ -272,44 +237,44 @@ def create_app():
             return redirect(url_for('document'))
         return "Upload Failed"
       
-    @app.route('/addjob')
-    def home():
-      return render_template('job.html')
     
-    @app.route('/add_job', methods=['POST'])
+    @app.route('/add_job', methods=['GET', 'POST'])
     def add_job():
-        db = get_db_connection()
-        cursor = db.cursor()
+        if request.method == 'POST':
 
-        company = request.form['company_name']
-        position = request.form['job_position']
-        location = request.form['location']
-        status = request.form['job_status']
+            db = get_db_connection
+            cursor = db.cursor()
 
-        # Insert job
-        cursor.execute("""
-            INSERT INTO new_job (company_name, job_position, location, job_status)
-            VALUES (%s, %s, %s, %s)
-        """, (company, position, location, status))
+            company = request.form['company_name']
+            position = request.form['job_position']
+            location = request.form['location']
+            status = request.form['job_status']
 
-        job_id = cursor.lastrowid
+            cursor.execute("""
+                INSERT INTO new_job (company_name, job_position, location, job_status)
+                VALUES (%s, %s, %s, %s)
+            """, (company, position, location, status))
 
-        # Insert dates
-        date_types = request.form.getlist('date_type[]')
-        date_values = request.form.getlist('date_value[]')
+            job_id = cursor.lastrowid
 
-        for date_type, date_value in zip(date_types, date_values):
-            if date_value:
-                cursor.execute("""
-                    INSERT INTO job_dates (job_id, date_type, date_value)
-                    VALUES (%s, %s, %s)
-                """, (job_id, date_type, date_value))
+            date_types = request.form.getlist('date_type[]')
+            date_values = request.form.getlist('date_value[]')
 
-        db.commit()
-        cursor.close()
-        db.close()
+            for date_type, date_value in zip(date_types, date_values):
+                if date_value:
+                    cursor.execute("""
+                        INSERT INTO job_dates (job_id, date_type, date_value)
+                        VALUES (%s, %s, %s)
+                    """, (job_id, date_type, date_value))
 
-        return redirect('/dashboard')
+            db.commit()
+            cursor.close()
+            db.close()
+
+            return redirect('/')
+
+        return render_template('job.html')
+
 
     @login_manager.user_loader
     def load_user(user_id):
@@ -321,4 +286,4 @@ def create_app():
 
 if __name__ == '__main__':
     app = create_app()
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
