@@ -1,3 +1,0 @@
-1. tambah flash kat html
-2. test balek
-3. fix yg mail2 tu
