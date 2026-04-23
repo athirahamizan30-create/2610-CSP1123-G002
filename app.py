@@ -78,12 +78,12 @@ def create_app():
     login_manager.login_view = "login"
     
     def get_db_connection():
-    return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="N&j@1209",
-        database="add_job"
-    )
+        return mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="N&j@1209",
+            database="add_job"
+        )
  
     @app.route('/', methods=['GET', 'POST'])
     def index():
@@ -129,21 +129,21 @@ def create_app():
     @app.route('/dashboard')
     @login_required
     def dashboard():
-    db = get_db_connection()
-    cursor = db.cursor(dictionary=True)
+        db = get_db_connection()
+        cursor = db.cursor(dictionary=True)
 
-    cursor.execute("""
-       SELECT n.*, d.date_type, d.date_value
-       FROM new_job n
-       LEFT JOIN job_dates d ON n.id = d.job_id
-    """)
+        cursor.execute("""
+            SELECT n.*, d.date_type, d.date_value
+            FROM new_job n
+            LEFT JOIN job_dates d ON n.id = d.job_id
+         """)
 
-    rows = cursor.fetchall()
+        rows = cursor.fetchall()
 
-    jobs = {}
+        jobs = {}
 
-    for row in rows:
-        job_id = row['id']
+        for row in rows:
+            job_id = row['id']
 
         if job_id not in jobs:
             jobs[job_id] = {
@@ -159,10 +159,10 @@ def create_app():
                 'date_type': row['date_type'],
                 'date_value': row['date_value']
             })
-    cursor.close()
-    db.close()
+        cursor.close()
+        db.close()
 
-    return render_template('dashboard.html', jobs=list(jobs.values()))
+        return render_template('dashboard.html', jobs=list(jobs.values()))
 
     
     @app.route('/register', methods=["GET", "POST"])
@@ -201,8 +201,8 @@ def create_app():
                     errors.append("that username or email is already registered")
             if errors:
                 return render_template("register.html", errors=errors)
-
-            return f"Received data - {email}
+            return f"Received data - {email}"
+        
         return render_template('register.html', errors=errors)
     
 
@@ -311,11 +311,11 @@ def create_app():
 
         return redirect('/dashboard')
 
-     @login_manager.user_loader
-      def load_user(user_id):
+    @login_manager.user_loader
+    def load_user(user_id):
         return User.query.get(int(user_id))
 
-        with app.app_context():
+    with app.app_context():
         db.create_all()
         return app
 
