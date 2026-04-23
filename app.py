@@ -77,9 +77,53 @@ def create_app():
 
 
 
-    @app.route('/')
+    @app.route('/', methods=['GET', 'POST'])
     def index():
-        return render_template('index.html')
+        errors = []
+
+
+        if request.method == "POST":
+            username = (request.form.get("username") or "").strip()
+            email = (request.form.get("email")or "").strip()
+            password = request.form.get("password")or ""
+            confirm = request.form.get("confirm_password")or ""
+
+            if not (3 <= len(username) <= 80):
+                errors.append("Username must be between 3 and 80 characters")
+
+            if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email):
+                errors.append("Please enter a valid email address")
+
+            if len(password) < 6:
+                errors.append("Password needs to be atleast 6 characters")
+
+            if password != confirm:
+                errors.append("Password don't match")
+
+            if not errors:
+                
+                try:
+                    pw_hash = generate_password_hash(password)
+                    user = User(username=username, email=email, password_hash=pw_hash)
+                    db.session.add(user)
+                    db.session.commit()
+
+                    return redirect(url_for('login'))
+                
+                except IntegrityError:
+                    db.session.rollback()
+                    errors.append("that username or email is already registered")
+
+
+
+
+            if errors:
+                return render_template("index.html", errors=errors)
+
+            return f"Received data - {email}"
+
+
+        return render_template('index.html', errors=errors)
     
     @app.route('/dashboard')
     @login_required

@@ -117,7 +117,7 @@ ul li a:hover{
 
 .form{
   width: 260px;
-  height: 380px;
+  height: 410px;
   background: linear-gradient(to top, rgba(0,0,0,0.8)50%, rgba(0,0,0,0.8)50%);
   position: absolute;
   top: 150px;
@@ -198,3 +198,11 @@ ul li a:hover{
   text-decoration: none;
   color: #ff720f;
 }
+
+.liw{
+  padding-top: 15px;
+  padding-bottom: 10px;
+  
+}
+
+
