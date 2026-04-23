@@ -10,13 +10,13 @@ body {
     top: 0;
     width: 250px;
     height: 100%;
-    background: #9fa4e7;  /* your color */
+    background: #edeeca;  /* your color */
     transition: left 0.3s ease;
 }
 
 .sidebar a {
     display: block;
-    color: white;
+    color: black;
     margin: 10px 0;
     text-decoration: none;
 }
@@ -55,4 +55,39 @@ body {
 
 #overlay.active {
     display: block;
+}
+
+.card-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 20px;
+}
+
+.card {
+    background: white;
+    width: 250px;
+    padding: 15px;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    transition: 0.3s;
+}
+
+.card:hover {
+    transform: scale(1.05);
+}
+
+.card h2 {
+    margin: 0;
+}
+
+.dates {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #ddd;
+}
+
+.dates p {
+    font-size: 14px;
+    margin: 5px 0;
 }

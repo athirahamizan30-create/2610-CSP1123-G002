@@ -13,7 +13,7 @@
 
     <div class="sidebar" id="sidebar">
         <h2>Menu</h2>
-        <a href="/">New Job</a>
+        <a href="{{ url_for('home') }}">New Job</a>
         <a href="#">Documents</a>
         <a href="#">Reminders</a>
         <a href="#">Log Out</a>
@@ -23,8 +23,37 @@
     <div class="main">
         <button class="menu-btn" onclick="toggleSidebar()"><i class="bx bx-menu bx-sm"></i></button>
 
-        <h1>Dashboard</h1>
+        <h1>CareerTrack</h1>
         <p>Welcome to your job tracker!</p>
+    </div>
+
+    <div class="card-container">
+
+        {% for job in jobs %}
+        <div class="card">
+            <h2>{{ job.company_name }}</h2>
+            <p><strong>Job Position:</strong> {{ job.job_position }}</p>
+            <p><strong>Location:</strong> {{ job.location }}</p>
+            <p><strong>Job Status:</strong> {{ job.job_status.capitalize() }}</p>
+
+            <div class="dates">
+                <h4>Important Dates</h4>
+
+                {% if job.dates %}
+                    {% for d in job.dates %}
+                        <p>
+                            <strong>{{ d.date_type }}:</strong>
+                            {{ d.date_value }}
+                        </p>
+                    {% endfor %}
+                {% else %}
+                    <p>No dates added</p>
+                {% endif %}
+            </div>
+
+        </div>
+        {% endfor %}
+
     </div>
 
     <script>
