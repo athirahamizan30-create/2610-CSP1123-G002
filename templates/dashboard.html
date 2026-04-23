@@ -1,26 +1,43 @@
+<!DOCTYPE html>
+<html>
 <head>
     <title>Job Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
-    <link href="https://cdn.boxicons.com/transformations.min.css" rel="stylesheet">
-    <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
-    <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
 </head>
 
 <body>
-    <div id="overlay" onclick="toggleSidebar()"></div>
-<div class="sidebar" id="sidebar">
-        <h2>Menu</h2>
-        <a href="/">New Job</a>
-        <a href="#">Documents</a>
-        <a href="#">Reminders</a>
-        <a href="#">Log Out</a>
-</div>
+
+<div class="container">
+
+    <div class="sidebar">
+        <h2>My Jobs</h2>
+
+        <a href="/">Dashboard</a>
+        <a href="/add_job">Add Job</a>
+        <a href="#">Applied</a>
+        <a href="#">Interview</a>
+        <a href="#">Rejected</a>
+        <a href="/document">Add Document</a>
+    </div>
 
     <div class="main">
- <button class="menu-btn" onclick="toggleSidebar()"><i class="bx bx-menu bx-sm"></i></button>
-
         <h1>Dashboard</h1>
-        <p>Welcome to your job tracker!</p>
+
+        <div class="card">
+            <h3>Total Applications</h3>
+        </div>
+
+        <div class="card">
+            <h3>Interviews</h3>
+        </div>
+
+        <div class="card">
+            <h3>Offers</h3>
+        </div>
+
     </div>
+
+</div>
+
 </body>
 </html>
