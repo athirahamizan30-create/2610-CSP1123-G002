@@ -7,11 +7,20 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import timedelta, datetime, timezone
+import os
 
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder="templates", static_folder="static")
 db= SQLAlchemy()
 login_manager = LoginManager()
+
+
+
+
+class Document(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(100), nullable=False)
+    file_path = db.Column(db.String(200), nullable=False)
 
 
 class User(UserMixin, db.Model):
@@ -61,6 +70,10 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://athirah:Tiya071!@localhost/CareerTrack_Database"
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=15)
+    app.config['UPLOAD_FOLDER'] = 'static/uploads'
+
+    if not os.path.exists(app.config['UPLOAD_FOLDER']):
+        os.makedirs(app.config['UPLOAD_FOLDER'])
 
     db.init_app(app)
     login_manager.init_app(app)
@@ -219,6 +232,26 @@ def create_app():
     @app.route('/reset_password')
     def reset_password():
         return render_template("reset_password.html")
+    
+    @app.route('/document')
+    def document():
+        docs = Document.query.order_by(Document.filename.asc()).all()
+        return render_template("document.html", docs=docs)
+
+    @app.route('/file_upload', methods=["POST"])
+    def file_upload():
+        file = request.files['file']
+        if file:
+            filename = file.filename
+            save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(save_path)
+
+            new_doc = Document(filename=filename, file_path=save_path)
+            db.session.add(new_doc)
+            db.session.commit()
+
+            return redirect(url_for('document'))
+        return "Upload Failed"
 
     
 
@@ -258,114 +291,19 @@ if __name__ == '__main__':
     #tkyah tambah yg feature nk tambah kat storyboard
     #bole pkai java nnti tambah kat click up
     
-from flask import Flask, render_template, request, redirect
-import mysql.connector
 
-app = Flask(__name__)
 
-def get_db_connection():
-    return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="N&j@1209",
-        database="add_job"
-    )
 
-@app.route('/')
-def home():
-    return render_template('job.html')
 
-@app.route('/dashboard')
-def dashboard():
-    return render_template('dashboard.html')
 
-@app.route('/add_job', methods=['GET', 'POST'])
-def add_job():
-    if request.method == 'POST':
 
-        db = get_db_connection()
-        cursor = db.cursor()
 
-        company = request.form['company_name']
-        position = request.form['job_position']
-        location = request.form['location']
-        status = request.form['job_status']
 
-        cursor.execute("""
-            INSERT INTO new_job (company_name, job_position, location, job_status)
-            VALUES (%s, %s, %s, %s)
-        """, (company, position, location, status))
 
-        job_id = cursor.lastrowid
 
-        date_types = request.form.getlist('date_type[]')
-        date_values = request.form.getlist('date_value[]')
 
-        for date_type, date_value in zip(date_types, date_values):
-            if date_value:
-                cursor.execute("""
-                    INSERT INTO job_dates (job_id, date_type, date_value)
-                    VALUES (%s, %s, %s)
-                """, (job_id, date_type, date_value))
 
-        db.commit()
-        cursor.close()
-        db.close()
 
-        return redirect('/')
 
-    return render_template('job.html')
 
-app.run(debug=True)
-import os
-from flask import Flask, render_template, url_for, redirect, request
-from flask_sqlalchemy import SQLAlchemy
 
-#create app
-app = Flask(__name__, template_folder="templates", static_folder="static")
-
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///documents.db'
-app.config['UPLOAD_FOLDER'] = 'static/uploads'
-db = SQLAlchemy(app)
-
-# create upload folder if it does not exist in os
-if not os.path.exists(app.config['UPLOAD_FOLDER']):
-    os.makedirs(app.config['UPLOAD_FOLDER'])
-
-# database class
-class Document(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    filename = db.Column(db.String(100), nullable=False)
-    file_path = db.Column(db.String(200), nullable=False)
-
-# create the database file
-with app.app_context():
-    db.create_all()
-
-#index function map with default route (/)
-@app.route('/')
-def index():
-    # to display docs
-    docs = Document.query.order_by(Document.filename.asc()).all()
-    return render_template("document.html", docs=docs)
-
-@app.route('/file_upload', methods=["POST"])
-def file_upload():
-    file = request.files['file']
-    if file:
-        filename = file.filename
-        # 1. Save the physical file to the 'static/uploads' folder
-        save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(save_path)
-
-        # 2. Save the data to SQLite
-        new_doc = Document(filename=filename, file_path=save_path)
-        db.session.add(new_doc)
-        db.session.commit()
-
-        return redirect(url_for('index'))
-    return "Upload Failed"
-
-#run app with local host (0.0.0.0) and port 5555, set debug to true, does not have to reset app everytime theres error
-if __name__ == "__main__":
-    app.run (host="0.0.0.0", port=5555, debug=True)
