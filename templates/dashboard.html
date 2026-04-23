@@ -1,17 +1,42 @@
+<!DOCTYPE html>
 <html>
 <head>
-    <title>Dashboard</title>
+    <title>Job Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
 </head>
+
 <body>
-     <h1>Welcome {{current_user.username}}</h1>
 
-    <a href="/logout">logout</a>
+<div class="container">
 
+    <div class="sidebar">
+        <h2>My Jobs</h2>
 
+        <a href="/">Dashboard</a>
+        <a href="/add_job">Add Job</a>
+        <a href="#">Applied</a>
+        <a href="#">Interview</a>
+        <a href="#">Rejected</a>
+    </div>
 
+    <div class="main">
+        <h1>Dashboard</h1>
 
+        <div class="card">
+            <h3>Total Applications</h3>
+        </div>
 
+        <div class="card">
+            <h3>Interviews</h3>
+        </div>
 
+        <div class="card">
+            <h3>Offers</h3>
+        </div>
+
+    </div>
+
+</div>
 
 </body>
 </html>
