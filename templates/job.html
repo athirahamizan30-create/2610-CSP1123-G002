@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link href="https://cdn.boxicons.com/transformations.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='test.css') }}">
+    <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
+    <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
+    <title>New Application</title>
+</head>
+
+<script>
+function addDate() {
+    const container = document.getElementById("dates-container");
+
+    const div = document.createElement("div");
+    div.classList.add("date-row");
+
+    div.innerHTML = `
+        <select name="date_type[]">
+            <option>Application</option>
+            <option>Interview</option>
+            <option>Deadline</option>
+            <option>Offer</option>
+        </select>
+
+        <button type="button" onclick="removeDate(this)" class="icon-btn"><i class="bxf bx-x-square bx-sm"></i></button>
+    `;
+
+    container.appendChild(div);
+}
+
+function removeDate(button) {
+    button.parentElement.remove();
+}
+</script>
+
+<body>
+
+    <h1>Add New Application</h1>
+
+    <form action="/add_job" method="POST">
+        <i class="bx-pull-left bxf bx-buildings bx-sm"></i><label for="cname">Company Name</label>
+        <input type="text" id="cname" name="company_name" placeholder="Company Name">
+
+        <i class="bx-pull-left bxf bx-user-id-card bx-sm"></i><label for="position">Job Position</label>
+        <input type="text" id="position" name="job_position" placeholder="Job Position">
+
+        <i class="bx-pull-left bxf bx-location bx-sm"></i><label for ='location'>Location</label>
+        <input type="text" id="location" name="location" placeholder="Location">
+        
+        <h3>Important Dates</h3>
+
+        <div id="dates-container">
+            <div class="date-row">
+                <select name="date_type[]">
+                    <option value="Applied">Applied</option>
+                    <option value="Interview">Interview</option>
+                    <option value="Deadline">Deadline</option>
+                    <option value="Offer">Offer</option>
+                </select>
+
+                <input type="date" name="date_value[]">
+
+                <button type="button" onclick="removeDate(this)" class="icon-btn"><i class="bxf bx-x-square bx-sm"></i></button>
+            </div>
+        </div>
+
+        <button type="button" onclick="addDate()" class="icon-btn"><i class="bxf bx-plus-square bx-sm"></i></button>
+
+        <label for="status">Job Status</label>
+        <select id="status" name="job_status">
+            <option value="interested">Interested</option>
+            <option value="applied">Applied</option>
+            <option value="rejected">Rejected</option>
+            <option value="stage1">Stage 1</option>
+            <option value="stage2">Stage 2</option>
+            <option value="interview">Interview</option>
+            <option value="accepted">Accepted</option>
+
+        </select>
+
+        <input type="submit" value="Add Application">
+    </form>
+
+</body>
+</html>
