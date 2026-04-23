@@ -1,7 +1,6 @@
 import os
 from flask import Flask, render_template, url_for, redirect, request
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
 
 #create app
 app = Flask(__name__, template_folder="templates", static_folder="static")
@@ -20,7 +19,6 @@ class Document(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(100), nullable=False)
     file_path = db.Column(db.String(200), nullable=False)
-    date_uploaded = db.Column(db.DateTime, default=datetime.utcnow)
 
 # Create the database file
 with app.app_context():
