@@ -1,208 +1,96 @@
-*{
-  margin: 0;
-  padding: 0;
+/* The sidebar menu */
+.sidebar {
+  height: 100%; 
+  width: 0; 
+  position: fixed; 
+  z-index: 1; 
+  top: 0;
+  left: 0;
+  background-color: #bfbfbf; 
+  overflow-x: hidden; 
+  padding-top: 60px;
+  transition: 0.5s; 
 }
 
-.main{
-  width: 100%;
-  background: linear-gradient(to top, rgba(0,0,0,0.5)50%,  rgba(0,0,0,0.5)50%), url(1.jpg);
-  background-position: center;
-  background-size: cover;
-  height: 109vh;
-  position: relative;
-}
-
-.navbar{
-  width: 200px;
-  height: 100px;
-  margin: 0;
-}
-
-.icon{
-  width: 200px;
-  float: left;
-  height: 70px;
-}
-
-.logo{
-  color: #ff720f;
-  font-size: 35px;
-  font-family: Arial;
-  padding-left: 20px;
-  float: left;
-  padding-top: 10px;
-}
-
-.menu{
-  width: 400px;
-  float:left;
-  height: 70px;
-}
-
-ul{
-  float: left;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-left: 60%;
-  margin-bottom: 90%;
-}
-
-ul li{
-  list-style: none;
-  margin-left: 62px;
-  margin-top: 27px;
-  font-size: 20px;
-}
-
-ul li a{
-  text-decoration: none;
-  color: white;
-  font-family: Arial;
-  font-weight: bold;
-  transition: 0.4s ease-in-out;
-}
-
-ul li a:hover{
-  color: #ff720f;
-}
-
-.content{
-  color: white;
-}
-
-.content .par{
-  padding-left: 20px;
-  padding-bottom: 25px;
-  font-family: Arial;
-  letter-spacing: 1.2px;
-  line-height: 30px;
-}
-
-.content h1{
-  font-family: 'Times New Roman';
-  font-size: 50px;
-  padding-left: 20px;
-  margin-top: 9%;
-  letter-spacing: 2px;
-}
-
-.content .cn{
-  width: 160px;
-  height: 40px;
-  background: #ff720f;
-  border: none;
-  margin-bottom: 10px;
-  margin-left: 20px;
-  font-size: 18px;
-  border-radius: 10px;
+/*Sidebar content*/
+.sidebar a {
+  padding: 8px 8px 8px 32px;
+  display: block;
+  transition: 0.5s;
+  text-decoration: underline;
+  color: #000000;
   cursor: pointer;
-  transition: .4s ease;
 }
 
-.content .cn a{
-  text-decoration: none;
-  color: black;
-  transition: .3s ease;
+/*indented content in sidebar */
+.sidebar .indent {
+    font-size: 20px;
+    padding-left: 40px;
+    color: #685f5f;
+    display: block;
+    font-weight: 500;
+    text-decoration: none;
 }
 
-.cn:hover{
-  background-color: white;
+/*main content in side bar*/
+.division {
+    font-size: larger;
+    font-weight: 900;
 }
 
-.content span{
-  color: #ff720f;
-  font-size: 60px;
+/* change colour of sidebar content when hover */
+.sidebar a:hover {
+  color: #1951c8;
 }
 
-.form{
-  width: 260px;
-  height: 410px;
-  background: linear-gradient(to top, rgba(0,0,0,0.8)50%, rgba(0,0,0,0.8)50%);
+/* Position and style the close button (top right corner) */
+.sidebar .closebtn {
   position: absolute;
-  top: 150px;
-  right: 160px;
+  top: 0;
+  right: 25px;
+  font-size: 36px;
+  margin-left: 50px;
+  text-decoration: none;
+}
+
+/* The button used to open the sidebar */
+.openbtn {
+  font-size: 20px;
+  cursor: pointer;
+  background-color: #2f2f2f;
+  color: white;
+  padding: 10px 15px;
+  border: none;
   border-radius: 10px;
+  float: left;
+  margin-right: 30px; 
+}
+
+.openbtn:hover {
+  background-color: #545454;
+}
+
+/*  push the page content to the right when open the side navigation */
+#main {
+  transition: margin-left .5s;
   padding: 20px;
 }
 
-.form h2{
-  width: 220px;
-  font-family: sans-serif;
-  text-align: center;
-  color: #ff720f;
-  font-size: 22px;
-  background-color: white;
-  border-radius: 10px;
-  margin: 2px;
-  padding: 8px;
+/* Main Heading */
+h1 {
+  font-size: 40px;
+  text-decoration: underline;
+  display:flex;
+  align-items: center;
+  gap: 20px;
+  float:left;
 }
 
-.form input{
-  width: 240px;
-  height: 35px;
-  background: transparent;
-  border-bottom: 1px solid #ff720f;
-  border-top: none;
-  border-right: none;
-  border-left: none;
-  color: white;
-  font-size: 15px;
-  letter-spacing: 1px;
-  margin-top: 30px;
-  font-family: sans-serif;
+/*upload button*/
+.uploadbtn {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  margin-top: 45px;
+  margin-left: 300px;
 }
-
-.form input:focus{
-  outline: none;
-
-}
-
-::placeholder{
-  color: white;
-  font-family: Arial;
-}
-
-.btnn{
-  width: 240px;
-  height: 40px;
-  background-color: #ff720f;
-  border: none;
-  margin-top: 30px;
-  font-size: 18px;
-  border-radius: 10px;
-  cursor: pointer;
-  color: white;
-  transition: 0.4s ease;
-}
-
-.btnn:hover{
-  background: white;
-  color: #ff720f;
-}
-
-.btnn a{
-  text-decoration: none;
-  color: black;
-  font-weight: bold;
-}
-
-.form .link{
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 17px;
-  padding-top: 20px;
-  text-align: center;
-}
-
-.form .link a{
-  text-decoration: none;
-  color: #ff720f;
-}
-
-.liw{
-  padding-top: 15px;
-  padding-bottom: 10px;
-  
-}
-
-
