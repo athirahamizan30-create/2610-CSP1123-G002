@@ -13,10 +13,26 @@
 
     <div class="sidebar" id="sidebar">
         <h2>Menu</h2>
-        <a href="{{ url_for('home') }}">New Job</a>
-        <a href="#">Documents</a>
-        <a href="#">Reminders</a>
-        <a href="#">Log Out</a>
+
+        <a href="{{ url_for('home') }}">
+            <i class="bxf bx-plus-square"></i>
+            New Job
+        </a>
+
+        <a href="#">
+            <i class="bxf bx-folder"></i>
+            Documents
+        </a>
+
+        <a href="#">
+            <i class='bxf bx-bell'></i>
+            Reminders
+        </a>
+
+        <a href="#">
+            <i class="bxf bx-arrow-out-right-square-half"></i>
+            Log Out
+        </a>
     </div>
 
     <div class="main">
@@ -24,9 +40,7 @@
             <i class="bx bx-menu bx-sm"></i>
         </button>
 
-        <h1>CareerTrack</h1>
-        <p>Job Applications</p>
-    </div>
+        <h1>Your Job Applications</h1>
 
     <div class="tabs">
     <button class="tab-btn active" onclick="openTab(event, 'full')">Full-Time</button>
@@ -112,6 +126,7 @@
                 </div>
             {% endfor %}
         </div>
+    </div>
     </div>
 
     <script>

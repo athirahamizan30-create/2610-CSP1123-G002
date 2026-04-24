@@ -21,6 +21,15 @@ body {
     text-decoration: none;
 }
 
+.sidebar h2,
+.sidebar a {
+    padding-left: 15px;
+}
+
+.sidebar a i {
+    font-size: 20px;
+}
+
 .sidebar.active {
     left: 0;
 }
@@ -61,7 +70,6 @@ body {
     display: flex;
     flex-wrap: wrap;
     gap: 20px;
-    padding: 20px;
 }
 
 .card {
@@ -92,12 +100,10 @@ body {
     margin: 5px 0;
 }
 
-/* Tabs */
 .tabs {
   display: flex;
   gap: 10px;
   margin-bottom: 20px;
-  margin-left: 20px;
 }
 
 .tab-btn {
@@ -114,7 +120,6 @@ body {
   color: white;
 }
 
-/* Tab content */
 .tab-content {
   display: none;
 }
@@ -125,7 +130,6 @@ body {
   gap: 15px;
 }
 
-/* Cards */
 .card {
   background: white;
   padding: 15px;

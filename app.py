@@ -66,8 +66,6 @@ def dashboard():
         intern=intern
     )
 
-    return render_template('dashboard.html', jobs=list(jobs.values()))
-
 @app.route('/add_job', methods=['POST'])
 def add_job():
     db = get_db_connection()
@@ -79,7 +77,6 @@ def add_job():
     status = request.form['job_status']
     job_type = request.form['job_type']
 
-    # Insert job
     cursor.execute("""
         INSERT INTO new_job (company_name, job_position, location, job_status, job_type)
         VALUES (%s, %s, %s, %s, %s)
@@ -87,7 +84,6 @@ def add_job():
 
     job_id = cursor.lastrowid
 
-    # Insert dates
     date_types = request.form.getlist('date_type[]')
     date_values = request.form.getlist('date_value[]')
 
