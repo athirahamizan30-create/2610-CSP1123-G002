@@ -17,13 +17,17 @@ function addDate() {
 
     div.innerHTML = `
         <select name="date_type[]">
-            <option>Application</option>
-            <option>Interview</option>
-            <option>Deadline</option>
-            <option>Offer</option>
+            <option value="Applied">Applied</option>
+            <option value="Interview">Interview</option>
+            <option value="Deadline">Deadline</option>
+            <option value="Offer">Offer</option>
         </select>
 
-        <button type="button" onclick="removeDate(this)" class="icon-btn"><i class="bxf bx-x-square bx-sm"></i></button>
+        <input type="date" name="date_value[]">
+
+        <button type="button" onclick="removeDate(this)" class="icon-btn">
+            <i class="bxf bx-x-square bx-sm"></i>
+        </button>
     `;
 
     container.appendChild(div);
@@ -77,6 +81,13 @@ function removeDate(button) {
             <option value="interview">Interview</option>
             <option value="accepted">Accepted</option>
 
+        </select>
+
+        <label>Job Type</label>
+        <select name="job_type" required>
+            <option value="Full-Time">Full-Time</option>
+            <option value="Part-Time">Part-Time</option>
+            <option value="Intern/Trainee">Intern</option>
         </select>
 
         <input type="submit" value="Add Application">

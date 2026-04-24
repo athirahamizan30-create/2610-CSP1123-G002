@@ -25,36 +25,93 @@
         </button>
 
         <h1>CareerTrack</h1>
-        <p>Welcome to your job tracker!</p>
+        <p>Job Applications</p>
     </div>
 
-    <div class="card-container">
+    <div class="tabs">
+    <button class="tab-btn active" onclick="openTab(event, 'full')">Full-Time</button>
+    <button class="tab-btn" onclick="openTab(event, 'part')">Part-Time</button>
+    <button class="tab-btn" onclick="openTab(event, 'intern')">Intern</button>
+    </div>
 
-        {% for job in jobs %}
-        <div class="card">
-            <h2>{{ job.company_name }}</h2>
-            <p><strong>Job Position:</strong> {{ job.job_position }}</p>
-            <p><strong>Location:</strong> {{ job.location }}</p>
-            <p><strong>Job Status:</strong> {{ job.job_status.capitalize() }}</p>
+    <div id="full" class="tab-content active">
+        <div class="card-container">
+            {% for job in full_time %}
+                <div class="card">
+                    <h2>{{ job.company_name }}</h2>
 
-            <div class="dates">
-                <h4>Important Dates</h4>
+                    <p><strong>Job Position:</strong> {{ job.job_position }}</p>
+                    <p><strong>Location:</strong> {{ job.location }}</p>
+                    <p><strong>Job Status:</strong> {{ job.job_status.capitalize() }}</p>
 
-                {% if job.dates %}
-                    {% for d in job.dates %}
-                        <p>
-                            <strong>{{ d.date_type }}:</strong>
-                            {{ d.date_value }}
-                        </p>
-                    {% endfor %}
-                {% else %}
-                    <p>No dates added</p>
-                {% endif %}
-            </div>
+                    <div class="dates">
+                        <h4>Important Dates</h4>
 
+                        {% if job.dates %}
+                            {% for d in job.dates %}
+                                <p><strong>{{ d.date_type }}:</strong> {{ d.date_value }}</p>
+                            {% endfor %}
+                        {% else %}
+                            <p>No dates added</p>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
         </div>
-        {% endfor %}
+    </div>
 
+    <div id="part" class="tab-content">
+        <div class="card-container">
+            {% for job in part_time %}
+                <div class="card">
+                    <h2>{{ job.company_name }}</h2>
+
+
+                    <p><strong>Job Position:</strong> {{ job.job_position }}</p>
+                    <p><strong>Location:</strong> {{ job.location }}</p>
+                    <p><strong>Job Status:</strong> {{ job.job_status.capitalize() }}</p>
+
+                    <div class="dates">
+                        <h4>Important Dates</h4>
+
+                        {% if job.dates %}
+                            {% for d in job.dates %}
+                                <p><strong>{{ d.date_type }}:</strong> {{ d.date_value }}</p>
+                            {% endfor %}
+                        {% else %}
+                            <p>No dates added</p>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div id="intern" class="tab-content">
+        <div class="card-container">
+            {% for job in intern %}
+                <div class="card">
+                    <h2>{{ job.company_name }}</h2>
+
+
+                    <p><strong>Job Position:</strong> {{ job.job_position }}</p>
+                    <p><strong>Location:</strong> {{ job.location }}</p>
+                    <p><strong>Job Status:</strong> {{ job.job_status.capitalize() }}</p>
+
+                    <div class="dates">
+                        <h4>Important Dates</h4>
+
+                        {% if job.dates %}
+                            {% for d in job.dates %}
+                                <p><strong>{{ d.date_type }}:</strong> {{ d.date_value }}</p>
+                            {% endfor %}
+                        {% else %}
+                            <p>No dates added</p>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
     </div>
 
     <script>
@@ -62,6 +119,24 @@
             document.getElementById("sidebar").classList.toggle("active");
             document.getElementById("overlay").classList.toggle("active");
         }
+    </script>
+
+    <script>
+    function openTab(evt, tabName) {
+        let contents = document.getElementsByClassName("tab-content");
+        let buttons = document.getElementsByClassName("tab-btn");
+
+        for (let i = 0; i < contents.length; i++) {
+            contents[i].classList.remove("active");
+        }
+
+        for (let i = 0; i < buttons.length; i++) {
+            buttons[i].classList.remove("active");
+        }
+
+        document.getElementById(tabName).classList.add("active");
+        evt.currentTarget.classList.add("active");
+    }
     </script>
 
 </body>

@@ -40,6 +40,7 @@ def dashboard():
                 'job_position': row['job_position'],
                 'location': row['location'],
                 'job_status': row['job_status'],
+                'job_type': row['job_type'],
                 'dates': []
             }
 
@@ -52,6 +53,19 @@ def dashboard():
     cursor.close()
     db.close()
 
+    all_jobs = list(jobs.values())
+
+    full_time = [j for j in all_jobs if j['job_type'] == 'Full-Time']
+    part_time = [j for j in all_jobs if j['job_type'] == 'Part-Time']
+    intern = [j for j in all_jobs if j['job_type'] == 'Intern/Trainee']
+
+    return render_template(
+        'dashboard.html',
+        full_time=full_time,
+        part_time=part_time,
+        intern=intern
+    )
+
     return render_template('dashboard.html', jobs=list(jobs.values()))
 
 @app.route('/add_job', methods=['POST'])
@@ -63,12 +77,13 @@ def add_job():
     position = request.form['job_position']
     location = request.form['location']
     status = request.form['job_status']
+    job_type = request.form['job_type']
 
     # Insert job
     cursor.execute("""
-        INSERT INTO new_job (company_name, job_position, location, job_status)
-        VALUES (%s, %s, %s, %s)
-    """, (company, position, location, status))
+        INSERT INTO new_job (company_name, job_position, location, job_status, job_type)
+        VALUES (%s, %s, %s, %s, %s)
+    """, (company, position, location, status, job_type))
 
     job_id = cursor.lastrowid
 
