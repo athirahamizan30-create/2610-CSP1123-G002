@@ -11,19 +11,14 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import timedelta, datetime, timezone
 import os
 
-
 app = Flask(__name__, template_folder="templates", static_folder="static")
 db= SQLAlchemy()
 login_manager = LoginManager()
-
-
-
 
 class Document(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(100), nullable=False)
     file_path = db.Column(db.String(200), nullable=False)
-
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -64,8 +59,6 @@ def get_db_connection():
     database="add_job"
     )
 
-
-
 def create_app():
 
     app = Flask(__name__)
@@ -86,7 +79,6 @@ def create_app():
     @app.route('/', methods=['GET', 'POST'])
     def index():
         errors = []
-
 
         if request.method == "POST":
             username = (request.form.get("username") or "").strip()
@@ -127,14 +119,10 @@ def create_app():
     @app.route('/dashboard')
     def dashboard():
         return render_template('dashboard.html')
-
-      
-
     
     @app.route('/register', methods=["GET", "POST"])
     def register():
         errors = []
-
 
         if request.method == "POST":
             username = (request.form.get("username") or "").strip()
@@ -170,7 +158,6 @@ def create_app():
             return f"Received data - {email}"
         
         return render_template('register.html', errors=errors)
-    
 
     @app.route('/login', methods=["POST", "GET"])
     def login():
@@ -238,7 +225,6 @@ def create_app():
             return redirect(url_for('document'))
         return "Upload Failed"
       
-    
     @app.route('/add_job', methods=['GET', 'POST'])
     def add_job():
         if request.method == 'POST':
@@ -275,7 +261,6 @@ def create_app():
             return redirect('/')
 
         return render_template('job.html')
-
 
     @login_manager.user_loader
     def load_user(user_id):
