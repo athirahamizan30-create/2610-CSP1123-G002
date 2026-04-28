@@ -14,12 +14,12 @@
     <div class="sidebar" id="sidebar">
         <h2>Menu</h2>
 
-        <a href="{{ url_for('home') }}">
+        <a href="#" onclick="openPopup()">
             <i class="bxf bx-plus-square"></i>
             New Job
         </a>
 
-        <a href="#">
+        <a href="/templates/document.html">
             <i class="bxf bx-folder"></i>
             Documents
         </a>
@@ -127,6 +127,71 @@
             {% endfor %}
         </div>
     </div>
+
+    <div id="popupForm" class="popup">
+
+        <div class="popup-content">
+
+            <span class="close" onclick="closePopup()">&times;</span>
+
+            <h2>Add New Job</h2>
+
+            <form action="/add_job" method="POST">
+
+                <i class="bx-pull-left bxf bx-buildings bx-sm"></i><label for="cname">Company Name</label>
+                <input type="text" id="cname" name="company_name" placeholder="Company Name">
+
+                <i class="bx-pull-left bxf bx-user-id-card bx-sm"></i><label for="position">Job Position</label>
+                <input type="text" id="position" name="job_position" placeholder="Job Position">
+
+                <i class="bx-pull-left bxf bx-location bx-sm"></i><label for ='location'>Location</label>
+                <input type="text" id="location" name="location" placeholder="Location">
+
+                <h3>Important Dates</h3>
+
+                <div id="dates-container">
+                    <div class="date-row">
+                        <select name="date_type[]">
+                            <option value="Applied">Applied</option>
+                            <option value="Interview">Interview</option>
+                            <option value="Deadline">Deadline</option>
+                            <option value="Offer">Offer</option>
+                        </select>
+
+                        <input type="date" name="date_value[]">
+
+                        <button type="button" onclick="removeDate(this)" class="icon-btn"><i class="bxf bx-x-square bx-sm"></i></button>
+                    </div>
+                </div>
+
+                <button type="button" onclick="addDate()" class="icon-btn"><i class="bxf bx-plus-square bx-sm"></i></button>
+
+                <label for="status">Job Status</label>
+                <select id="status" name="job_status">
+                    <option value="interested">Interested</option>
+                    <option value="applied">Applied</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="stage1">Stage 1</option>
+                    <option value="stage2">Stage 2</option>
+                    <option value="interview">Interview</option>
+                    <option value="accepted">Accepted</option>
+
+                </select>
+
+                <label>Job Type</label>
+                <select name="job_type" required>
+                    <option value="Full-Time">Full-Time</option>
+                    <option value="Part-Time">Part-Time</option>
+                    <option value="Intern/Trainee">Intern</option>
+                </select>
+
+                <input type="submit" value="Save Job">
+
+            </form>
+
+        </div>
+
+    </div>
     </div>
 
     <script>
@@ -151,6 +216,54 @@
 
         document.getElementById(tabName).classList.add("active");
         evt.currentTarget.classList.add("active");
+    }
+    </script>
+
+    <script>
+    function openPopup() {
+        const popup = document.getElementById("popupForm");
+        popup.classList.add("show");
+    }
+
+    function closePopup() {
+        const popup = document.getElementById("popupForm");
+        popup.classList.remove("show");
+    }
+
+    // click outside to close
+    window.onclick = function(event) {
+        let popup = document.getElementById("popupForm");
+        if (event.target == popup) {
+            popup.classList.remove("show");
+        }
+    }
+    </script>
+
+    <script>
+    function addDate() {
+        const container = document.getElementById("dates-container");
+
+        const div = document.createElement("div");
+        div.classList.add("date-row");
+
+        div.innerHTML = `
+            <select name="date_type[]">
+                <option value="Applied">Applied</option>
+                <option value="Interview">Interview</option>
+                <option value="Deadline">Deadline</option>
+                <option value="Offer">Offer</option>
+            </select>
+
+            <input type="date" name="date_value[]">
+
+            <button type="button" onclick="removeDate(this)">❌</button>
+        `;
+
+        container.appendChild(div);
+    }
+
+    function removeDate(btn) {
+        btn.parentElement.remove();
     }
     </script>
 

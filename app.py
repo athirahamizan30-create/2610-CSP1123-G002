@@ -1,15 +1,35 @@
 from flask import Flask, render_template, request, redirect
-import mysql.connector
+from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
 
 app = Flask(__name__)
 
-def get_db_connection():
-    return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="N&j@1209",
-        database="add_job"
-    )
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://nurin:N%26j%401209@localhost/add_job'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db = SQLAlchemy(app)
+
+
+class NewJob(db.Model):
+    __tablename__ = 'new_job'
+
+    id = db.Column(db.Integer, primary_key=True)
+    company_name = db.Column(db.String(255))
+    job_position = db.Column(db.String(255))
+    location = db.Column(db.String(255))
+    job_status = db.Column(db.String(50))
+    job_type = db.Column(db.String(50))
+
+    ddates = db.relationship('JobDate', backref='job', lazy=True, cascade="all, delete")
+
+
+class JobDate(db.Model):
+    __tablename__ = 'job_date'
+
+    id = db.Column(db.Integer, primary_key=True)
+    job_id = db.Column(db.Integer, db.ForeignKey('new_job.id'))
+    date_type = db.Column(db.String(50))
+    date_value = db.Column(db.Date)
 
 @app.route('/')
 def home():
@@ -17,47 +37,9 @@ def home():
 
 @app.route('/dashboard')
 def dashboard():
-    db = get_db_connection()
-    cursor = db.cursor(buffered=True, dictionary=True)
-
-    cursor.execute("""
-        SELECT n.*, d.date_type, d.date_value
-        FROM new_job n
-        LEFT JOIN job_dates d ON n.id = d.job_id
-    """)
-
-    rows = cursor.fetchall()
-
-    jobs = {}
-
-    for row in rows:
-        job_id = row['id']
-
-        if job_id not in jobs:
-            jobs[job_id] = {
-                'id': job_id,
-                'company_name': row['company_name'],
-                'job_position': row['job_position'],
-                'location': row['location'],
-                'job_status': row['job_status'],
-                'job_type': row['job_type'],
-                'dates': []
-            }
-
-        if row['date_type']:
-            jobs[job_id]['dates'].append({
-                'date_type': row['date_type'],
-                'date_value': row['date_value']
-            })
-
-    cursor.close()
-    db.close()
-
-    all_jobs = list(jobs.values())
-
-    full_time = [j for j in all_jobs if j['job_type'] == 'Full-Time']
-    part_time = [j for j in all_jobs if j['job_type'] == 'Part-Time']
-    intern = [j for j in all_jobs if j['job_type'] == 'Intern/Trainee']
+    full_time = NewJob.query.filter_by(job_type='Full-Time').all()
+    part_time = NewJob.query.filter_by(job_type='Part-Time').all()
+    intern = NewJob.query.filter_by(job_type='Intern/Trainee').all()
 
     return render_template(
         'dashboard.html',
@@ -68,37 +50,34 @@ def dashboard():
 
 @app.route('/add_job', methods=['POST'])
 def add_job():
-    db = get_db_connection()
-    cursor = db.cursor()
+    new_job = NewJob(
+        company_name=request.form['company_name'],
+        job_position=request.form['job_position'],
+        location=request.form['location'],
+        job_status=request.form['job_status'],
+        job_type=request.form['job_type']
+    )
 
-    company = request.form['company_name']
-    position = request.form['job_position']
-    location = request.form['location']
-    status = request.form['job_status']
-    job_type = request.form['job_type']
-
-    cursor.execute("""
-        INSERT INTO new_job (company_name, job_position, location, job_status, job_type)
-        VALUES (%s, %s, %s, %s, %s)
-    """, (company, position, location, status, job_type))
-
-    job_id = cursor.lastrowid
+    db.session.add(new_job)
+    db.session.commit()
 
     date_types = request.form.getlist('date_type[]')
     date_values = request.form.getlist('date_value[]')
 
     for date_type, date_value in zip(date_types, date_values):
         if date_value:
-            cursor.execute("""
-                INSERT INTO job_dates (job_id, date_type, date_value)
-                VALUES (%s, %s, %s)
-            """, (job_id, date_type, date_value))
+            new_date = JobDate(
+                job_id=new_job.id,
+                date_type=date_type,
+                date_value=datetime.strptime(date_value, "%Y-%m-%d")
+            )
+            db.session.add(new_date)
 
-    db.commit()
-    cursor.close()
-    db.close()
+    db.session.commit()
 
     return redirect('/dashboard')
 
-if __name__ == '__main__':
+if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()
     app.run(debug=True)
