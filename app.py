@@ -268,16 +268,15 @@ def create_app():
                     flash("Passwords do not match", "error")
                     return redirect(url_for('reset_password', reset_id=reset_id))
                 
-                user = reset_id_object.user
-                user.password_hash = generate_password_hash(password)
-                db.session.commit()
-
-                db.session.delete(reset_id_object)
-                db.session.commit()
-
-                flash("Password changed successfully. Login", "success")
-                return redirect(url_for('login'))
-
+                user = User.query.get(reset_id_object.user_id)
+                if user:
+                    user.password_hash = generate_password_hash(password)
+                    db.session.delete(reset_id_object)
+                    db.session.commit()
+                    flash("Password changed successfully. Login", "success")
+                    return redirect(url_for('login'))
+                else:
+                    flash("User not found", "error")
 
             return render_template("reset_password.html")
 
