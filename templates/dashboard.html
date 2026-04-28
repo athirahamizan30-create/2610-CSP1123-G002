@@ -195,10 +195,10 @@
     </div>
 
     <script>
-        function toggleSidebar() {
-            document.getElementById("sidebar").classList.toggle("active");
-            document.getElementById("overlay").classList.toggle("active");
-        }
+    function toggleSidebar() {
+        document.getElementById("sidebar").classList.toggle("active");
+        document.getElementById("overlay").classList.toggle("active");
+    }
     </script>
 
     <script>
@@ -220,51 +220,37 @@
     </script>
 
     <script>
-    function openPopup() {
-        const popup = document.getElementById("popupForm");
-        popup.classList.add("show");
-    }
+    document.addEventListener("DOMContentLoaded", function () {
 
-    function closePopup() {
         const popup = document.getElementById("popupForm");
-        popup.classList.remove("show");
-    }
+        const sidebar = document.getElementById("sidebar");
+        const overlay = document.getElementById("overlay");
 
-    // click outside to close
-    window.onclick = function(event) {
-        let popup = document.getElementById("popupForm");
-        if (event.target == popup) {
-            popup.classList.remove("show");
+        window.openPopup = function () {
+            popup.classList.add("show");
+
+            sidebar.classList.remove("active");
+            overlay.classList.remove("active");
         }
-    }
-    </script>
 
-    <script>
-    function addDate() {
-        const container = document.getElementById("dates-container");
+        window.closePopup = function () {
+            popup.classList.remove("show");
+            sidebar.classList.remove("active");
+            overlay.classList.remove("active");
+        }
 
-        const div = document.createElement("div");
-        div.classList.add("date-row");
+        popup.addEventListener("click", function (event) {
+            if (event.target === popup) {
+                closePopup();
+            }
+        });
 
-        div.innerHTML = `
-            <select name="date_type[]">
-                <option value="Applied">Applied</option>
-                <option value="Interview">Interview</option>
-                <option value="Deadline">Deadline</option>
-                <option value="Offer">Offer</option>
-            </select>
+        window.toggleSidebar = function () {
+            sidebar.classList.toggle("active");
+            overlay.classList.toggle("active");
+        }
 
-            <input type="date" name="date_value[]">
-
-            <button type="button" onclick="removeDate(this)">❌</button>
-        `;
-
-        container.appendChild(div);
-    }
-
-    function removeDate(btn) {
-        btn.parentElement.remove();
-    }
+    });
     </script>
 
 </body>
