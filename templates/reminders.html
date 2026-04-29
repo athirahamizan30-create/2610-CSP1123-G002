@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Job Dashboard</title>
+    <title>Reminders</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
     <link href="https://cdn.boxicons.com/transformations.min.css" rel="stylesheet">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
@@ -14,6 +14,11 @@
     <div class="sidebar" id="sidebar">
         <h2>Menu</h2>
 
+        <a href="/dashboard" class="{% if active_page == 'dashboard' %}active{% endif %}">
+            <i class="bxf bx-home-circle"></i>
+            Dashboard
+        </a>
+
         <a href="#" onclick="openPopup()">
             <i class="bxf bx-plus-square"></i>
             New Application
@@ -24,7 +29,7 @@
             Documents
         </a>
 
-        <a href="/reminders">
+        <a href="/reminders" class="{% if active_page == 'reminders' %}active{% endif %}">
             <i class='bxf bx-bell'></i>
             Reminders
         </a>
@@ -42,9 +47,9 @@
 
         <h1>Upcoming Reminders</h1>
 
-        {% if dates %}
+        {% if important_dates %}
             <ul>
-                {% for d in dates %}
+                {% for d in important_dates %}
                     <li>
                         <strong>{{ d.date_type }}</strong> - 
                         {{ d.date_value }} 
