@@ -20,11 +20,11 @@ class NewJob(db.Model):
     job_status = db.Column(db.String(50))
     job_type = db.Column(db.String(50))
 
-    ddates = db.relationship('JobDate', backref='job', lazy=True, cascade="all, delete")
+    dates = db.relationship('JobDate', backref='job', lazy=True, cascade="all, delete")
 
 
 class JobDate(db.Model):
-    __tablename__ = 'job_date'
+    __tablename__ = 'job_dates'
 
     id = db.Column(db.Integer, primary_key=True)
     job_id = db.Column(db.Integer, db.ForeignKey('new_job.id'))
@@ -76,6 +76,14 @@ def add_job():
     db.session.commit()
 
     return redirect('/dashboard')
+
+@app.route('/reminders')
+def reminders():
+    today = datetime.today().date()
+
+    upcoming_dates = JobDate.query.filter(JobDate.date_value >= today).order_by(JobDate.date_value).all()
+
+    return render_template('reminders.html', dates=upcoming_dates)
 
 if __name__ == "__main__":
     with app.app_context():

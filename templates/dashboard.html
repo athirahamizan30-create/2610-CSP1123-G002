@@ -16,7 +16,7 @@
 
         <a href="#" onclick="openPopup()">
             <i class="bxf bx-plus-square"></i>
-            New Job
+            New Application
         </a>
 
         <a href="/templates/document.html">
@@ -24,7 +24,7 @@
             Documents
         </a>
 
-        <a href="#">
+        <a href="/reminders">
             <i class='bxf bx-bell'></i>
             Reminders
         </a>
@@ -40,7 +40,7 @@
             <i class="bx bx-menu bx-sm"></i>
         </button>
 
-        <h1>Your Job Applications</h1>
+        <h1>Job Application Dashboard</h1>
 
     <div class="tabs">
     <button class="tab-btn active" onclick="openTab(event, 'full')">Full-Time</button>
@@ -56,10 +56,10 @@
 
                     <p><strong>Job Position:</strong> {{ job.job_position }}</p>
                     <p><strong>Location:</strong> {{ job.location }}</p>
-                    <p><strong>Job Status:</strong> {{ job.job_status.capitalize() }}</p>
+                    <p><strong>Application Status:</strong> {{ job.job_status.capitalize() }}</p>
 
                     <div class="dates">
-                        <h4>Important Dates</h4>
+                        <h4>Application Dates</h4>
 
                         {% if job.dates %}
                             {% for d in job.dates %}
@@ -83,10 +83,10 @@
 
                     <p><strong>Job Position:</strong> {{ job.job_position }}</p>
                     <p><strong>Location:</strong> {{ job.location }}</p>
-                    <p><strong>Job Status:</strong> {{ job.job_status.capitalize() }}</p>
+                    <p><strong>Application Status:</strong> {{ job.job_status.capitalize() }}</p>
 
                     <div class="dates">
-                        <h4>Important Dates</h4>
+                        <h4>Application Dates</h4>
 
                         {% if job.dates %}
                             {% for d in job.dates %}
@@ -110,10 +110,10 @@
 
                     <p><strong>Job Position:</strong> {{ job.job_position }}</p>
                     <p><strong>Location:</strong> {{ job.location }}</p>
-                    <p><strong>Job Status:</strong> {{ job.job_status.capitalize() }}</p>
+                    <p><strong>Application Status:</strong> {{ job.job_status.capitalize() }}</p>
 
                     <div class="dates">
-                        <h4>Important Dates</h4>
+                        <h4>Application Dates</h4>
 
                         {% if job.dates %}
                             {% for d in job.dates %}
@@ -134,7 +134,7 @@
 
             <span class="close" onclick="closePopup()">&times;</span>
 
-            <h2>Add New Job</h2>
+            <h2>New Application</h2>
 
             <form action="/add_job" method="POST">
 
@@ -147,7 +147,7 @@
                 <i class="bx-pull-left bxf bx-location bx-sm"></i><label for ='location'>Location</label>
                 <input type="text" id="location" name="location" placeholder="Location">
 
-                <h3>Important Dates</h3>
+                <h3>Application Dates</h3>
 
                 <div id="dates-container">
                     <div class="date-row">
@@ -166,7 +166,7 @@
 
                 <button type="button" onclick="addDate()" class="icon-btn"><i class="bxf bx-plus-square bx-sm"></i></button>
 
-                <label for="status">Job Status</label>
+                <label for="status">Application Status</label>
                 <select id="status" name="job_status">
                     <option value="interested">Interested</option>
                     <option value="applied">Applied</option>
