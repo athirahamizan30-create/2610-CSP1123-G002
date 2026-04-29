@@ -1,8 +1,0 @@
-Flask
-Flask-SQLAlchemy
-Flask-Login
-PyMySQL
-mysql-connector-python
-cryptography
-Werkzeug
-gunicorn
