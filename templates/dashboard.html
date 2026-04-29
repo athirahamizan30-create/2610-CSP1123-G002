@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Job Dashboard</title>
+    <title>Job Application Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='edit_job.css')}}">
     <link href="https://cdn.boxicons.com/transformations.min.css" rel="stylesheet">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
@@ -14,7 +15,12 @@
     <div class="sidebar" id="sidebar">
         <h2>Menu</h2>
 
-        <a href="#" onclick="openPopup()">
+        <a href="/dashboard" class="{% if active_page == 'dashboard' %}active{% endif %}">
+            <i class="bxf bx-home-circle"></i>
+            Dashboard
+        </a>
+
+        <a href="javascript:void(0);" onclick="openPopup()">
             <i class="bxf bx-plus-square"></i>
             New Application
         </a>
@@ -24,7 +30,7 @@
             Documents
         </a>
 
-        <a href="/reminders">
+        <a href="/reminders" class="{% if active_page == 'reminders' %}active{% endif %}">
             <i class='bxf bx-bell'></i>
             Reminders
         </a>
@@ -69,6 +75,16 @@
                             <p>No dates added</p>
                         {% endif %}
                     </div>
+                    <button class="edit-btn"
+                        onclick="openEditModal(
+                            '{{ job.company_name }}',
+                            '{{ job.job_position }}',
+                            '{{ job.location }}',
+                            '{{ job.job_status }}',
+                            '{{ job.job_type }}'
+                        )">
+                        Edit
+                    </button>
                 </div>
             {% endfor %}
         </div>
@@ -96,6 +112,16 @@
                             <p>No dates added</p>
                         {% endif %}
                     </div>
+                    <button class="edit-btn"
+                        onclick="openEditModal(
+                            '{{ job.company_name }}',
+                            '{{ job.job_position }}',
+                            '{{ job.location }}',
+                            '{{ job.job_status }}',
+                            '{{ job.job_type }}'
+                        )">
+                        Edit
+                    </button>
                 </div>
             {% endfor %}
         </div>
@@ -123,76 +149,56 @@
                             <p>No dates added</p>
                         {% endif %}
                     </div>
+                    <button class="edit-btn"
+                        onclick="openEditModal(
+                            '{{ job.company_name }}',
+                            '{{ job.job_position }}',
+                            '{{ job.location }}',
+                            '{{ job.job_status }}',
+                            '{{ job.job_type }}'
+                        )">
+                        Edit
+                    </button>
                 </div>
             {% endfor %}
         </div>
     </div>
 
-    <div id="popupForm" class="popup">
+    <div id="editModal" class="modal">
 
-        <div class="popup-content">
+    <div class="modal-content">
 
-            <span class="close" onclick="closePopup()">&times;</span>
+        <span class="close" onclick="closeEditModal()">&times;</span>
 
-            <h2>New Application</h2>
+        <h2>Edit Job</h2>
 
-            <form action="/add_job" method="POST">
+        <form id="editForm" method="POST">
 
-                <i class="bx-pull-left bxf bx-buildings bx-sm"></i><label for="cname">Company Name</label>
-                <input type="text" id="cname" name="company_name" placeholder="Company Name">
+            <input type="hidden" name="job_id" id="edit_id">
 
-                <i class="bx-pull-left bxf bx-user-id-card bx-sm"></i><label for="position">Job Position</label>
-                <input type="text" id="position" name="job_position" placeholder="Job Position">
+            <label>Company Name</label>
+            <input type="text" name="company_name" id="edit_company">
 
-                <i class="bx-pull-left bxf bx-location bx-sm"></i><label for ='location'>Location</label>
-                <input type="text" id="location" name="location" placeholder="Location">
+            <label>Job Position</label>
+            <input type="text" name="job_position" id="edit_position">
 
-                <h3>Application Dates</h3>
+            <label>Location</label>
+            <input type="text" name="location" id="edit_location">
 
-                <div id="dates-container">
-                    <div class="date-row">
-                        <select name="date_type[]">
-                            <option value="Applied">Applied</option>
-                            <option value="Interview">Interview</option>
-                            <option value="Deadline">Deadline</option>
-                            <option value="Offer">Offer</option>
-                        </select>
+            <label>Application Status</label>
+            <input type="text" name="job_status" id="edit_status">
 
-                        <input type="date" name="date_value[]">
+            <label>Job Type</label>
+            <input type="text" name="job_type" id="edit_type">
 
-                        <button type="button" onclick="removeDate(this)" class="icon-btn"><i class="bxf bx-x-square bx-sm"></i></button>
-                    </div>
-                </div>
+            <button type="submit">Update</button>
 
-                <button type="button" onclick="addDate()" class="icon-btn"><i class="bxf bx-plus-square bx-sm"></i></button>
-
-                <label for="status">Application Status</label>
-                <select id="status" name="job_status">
-                    <option value="interested">Interested</option>
-                    <option value="applied">Applied</option>
-                    <option value="rejected">Rejected</option>
-                    <option value="stage1">Stage 1</option>
-                    <option value="stage2">Stage 2</option>
-                    <option value="interview">Interview</option>
-                    <option value="accepted">Accepted</option>
-
-                </select>
-
-                <label>Job Type</label>
-                <select name="job_type" required>
-                    <option value="Full-Time">Full-Time</option>
-                    <option value="Part-Time">Part-Time</option>
-                    <option value="Intern/Trainee">Intern</option>
-                </select>
-
-                <input type="submit" value="Save Job">
-
-            </form>
-
-        </div>
+        </form>
 
     </div>
     </div>
+
+    {% include 'job.html' %}
 
     <script>
     function toggleSidebar() {
@@ -229,8 +235,8 @@
         window.openPopup = function () {
             popup.classList.add("show");
 
-            sidebar.classList.remove("active");
-            overlay.classList.remove("active");
+            if (sidebar) sidebar.classList.remove("active");
+            if (overlay) overlay.classList.remove("active");
         }
 
         window.closePopup = function () {
@@ -251,6 +257,26 @@
         }
 
     });
+    </script>
+
+    <script>
+    function openEditModal(id, company, position, location, status, type) {
+
+        document.getElementById("editModal").style.display = "block";
+
+        document.getElementById("edit_id").value = id;
+        document.getElementById("edit_company").value = company;
+        document.getElementById("edit_position").value = position;
+        document.getElementById("edit_location").value = location;
+        document.getElementById("edit_status").value = status;
+        document.getElementById("edit_type").value = type;
+
+        document.getElementById("editForm").action = "/edit_job/" + id;
+    }
+
+    function closeEditModal() {
+        document.getElementById("editModal").style.display = "none";
+    }
     </script>
 
 </body>

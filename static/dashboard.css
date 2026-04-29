@@ -16,9 +16,11 @@ body {
 
 .sidebar a {
     display: block;
-    color: black;
+    color: rgb(0, 0, 0);
     margin: 10px 0;
     text-decoration: none;
+    padding: 10px;
+    transition: 0.3s;
 }
 
 .sidebar h2,
@@ -32,6 +34,15 @@ body {
 
 .sidebar.active {
     left: 0;
+}
+
+.sidebar a:hover{
+    background-color: #b19104;
+}
+
+.sidebar a.active{
+    background-color: #a3bb7c;
+    font-weight: bold;
 }
 
 .main {
@@ -118,6 +129,14 @@ body {
 .tab-btn.active {
   background: #cfa771;
   color: white;
+}
+
+.tab-btn.active:hover{
+    background-color: #c49c68;
+}
+
+.tab-btn:hover{
+    background-color: #d1d5db;
 }
 
 .tab-content {
@@ -250,4 +269,19 @@ body {
 .popup.show .popup-content {
     transform: translateY(0);
     opacity: 1;
+}
+
+.edit-btn {
+    background-color: #577c58af;
+    color: white;
+    padding: 6px 14px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.edit-btn:hover{
+    background-color: #cfa771;
+
 }

@@ -42,7 +42,7 @@ def dashboard():
     intern = NewJob.query.filter_by(job_type='Intern/Trainee').all()
 
     return render_template(
-        'dashboard.html',
+        'dashboard.html', active_page='dashboard',
         full_time=full_time,
         part_time=part_time,
         intern=intern
@@ -83,7 +83,21 @@ def reminders():
 
     upcoming_dates = JobDate.query.filter(JobDate.date_value >= today).order_by(JobDate.date_value).all()
 
-    return render_template('reminders.html', dates=upcoming_dates)
+    return render_template('reminders.html', active_page='reminders', dates=upcoming_dates)
+
+@app.route('/edit_job/<int:id>', methods=['POST'])
+def edit_job(id):
+    job = NewJob.query.get_or_404(id)
+
+    job.company_name = request.form['company_name']
+    job.job_position = request.form['job_position']
+    job.location = request.form['location']
+    job.job_status = request.form['job_status']
+    job.job_type = request.form['job_type']
+
+    db.session.commit()
+
+    return redirect('/dashboard')
 
 if __name__ == "__main__":
     with app.app_context():
