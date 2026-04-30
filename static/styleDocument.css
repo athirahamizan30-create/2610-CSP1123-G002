@@ -107,7 +107,7 @@ h1 {
 }
 
 .file-card {
-    background: #bab9c6;
+    background-color: #74777a;
     border: 1px solid #e0e0e0;
     border-radius: 10px;
     padding: 15px;
@@ -121,7 +121,7 @@ h1 {
 .file-card:hover {
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     transform: translateY(-2px);
-    background-color: #74777a;
+    background: #bab9c6;
 }
 
 .file-icon {
@@ -141,13 +141,27 @@ h1 {
     box-sizing: border-box;
 }
 
-.view-btn {
+.view-btn , .delete-btn {
     font-size:medium;
     color: #fdfeff;
     text-decoration: none;
     font-weight: bolder;
 }
 
-.view-btn:hover {
+.view-btn {
+    margin-right: 5px;
+}
+
+.delete-btn {
+    margin-left: 5px;
+}
+
+.view-btn:hover{
     text-decoration: underline;
+    color: #4f6479;
+}
+
+.delete-btn:hover {
+    text-decoration: underline;
+    color: #ad4254;
 }

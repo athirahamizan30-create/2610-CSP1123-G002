@@ -73,6 +73,9 @@
                 <div class="file-info">
                     <span class="file-name" title="{{ doc.filename }}">{{ doc.filename }}</span>
                     <a href="{{ url_for('static', filename='uploads/' + doc.filename) }}" class="view-btn">View</a>
+                    
+                    <a href="{{ url_for('delete_file', doc_id=doc.id) }}" class="delete-btn" onclick="return confirm('Delete this file permanently?')">Delete</a>
+
                 </div>
             </div>
             {% endfor %}

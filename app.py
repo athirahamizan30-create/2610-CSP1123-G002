@@ -267,6 +267,25 @@ def create_app():
 
         return render_template('job.html')
 
+    @app.route('/delete_file/<int:doc_id>')
+    def delete_file(doc_id):
+        doc = Document.query.get_or_404(doc_id)
+
+        try:
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], doc.filename)
+
+            if os.path.exists(file_path):
+                os.remove(file_path)
+
+            db.session.delete(doc)
+            db.session.commit()
+        
+            return redirect(url_for('document')) # Redirect back to your files page
+
+        except Exception as e:
+            print(f"Error: {e}")
+            return "There was a problem deleting that file."
+
     @login_manager.user_loader
     def load_user(user_id):
         return User.query.get(int(user_id))
