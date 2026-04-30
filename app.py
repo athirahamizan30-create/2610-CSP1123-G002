@@ -235,7 +235,7 @@ def create_app():
     def add_job():
         if request.method == 'POST':
 
-            db = get_db_connection
+            db = get_db_connection()
             cursor = db.cursor()
 
             company = request.form['company_name']
