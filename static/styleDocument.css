@@ -1,49 +1,46 @@
-/* The sidebar menu */
+body {
+    margin: 0;
+    font-family: Arial;
+}
+
+.container {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+}
+
 .sidebar {
-  height: 100%; 
-  width: 0; 
-  position: fixed; 
-  z-index: 1; 
-  top: 0;
-  left: 0;
-  background-color: #bbc8a0; 
-  overflow-x: hidden; 
-  padding-top: 60px;
-  transition: 0.5s; 
+    height: 100%; 
+    width: 0; 
+    position: fixed; 
+    z-index: 1; 
+    top: 0;
+    left: 0;
+    background: #2c3e50;
+    color: white;
+    overflow-x: hidden; 
+    padding-top: 60px;
+    transition: 0.5s; 
 }
 
-/*Sidebar content*/
+.sidebar h2 {
+    margin-bottom: 20px;
+    padding: 20px;
+}
+
 .sidebar a {
-  padding: 8px 8px 8px 32px;
-  display: block;
-  transition: 0.5s;
-  text-decoration: underline;
-  color: #000000;
-  cursor: pointer;
-}
-
-/*indented content in sidebar */
-.sidebar .indent {
-    font-size: 20px;
-    padding-left: 40px;
-    color: #685f5f;
     display: block;
-    font-weight: 500;
+    color: white;
     text-decoration: none;
+    padding: 20px;
+    margin-bottom: 5px;
+    border-radius: 5px;
+    padding: 8px 8px 8px 32px;
+    transition: 0.5s;
+    cursor: pointer;
+    flex-grow: 1;
 }
 
-/*main content in side bar*/
-.division {
-    font-size: larger;
-    font-weight: 900;
-}
-
-/* change colour of sidebar content when hover */
-.sidebar a:hover {
-  color: #1951c8;
-}
-
-/* Position and style the close button (top right corner) */
 .sidebar .closebtn {
   position: absolute;
   top: 0;
@@ -53,11 +50,21 @@
   text-decoration: none;
 }
 
-/* The button used to open the sidebar */
+
+.sidebar a:hover {
+    background: #34495e;
+}
+
+.main {
+    flex: 1;
+    padding: 20px;
+    background: #f4f6f8;
+}
+
 .openbtn {
   font-size: 20px;
   cursor: pointer;
-  background-color: #2f2f2f;
+  background-color: #2c3e50;
   color: white;
   padding: 10px 15px;
   border: none;
@@ -67,13 +74,20 @@
 }
 
 .openbtn:hover {
-  background-color: #545454;
+  background-color: #4f6479;
 }
 
-/*  push the page content to the right when open the side navigation */
-#main {
+#movemain {
   transition: margin-left .5s;
   padding: 20px;
+  margin-left: 0;
+}
+
+.header-section {
+    display: flex;
+    align-items: center;
+    gap: 20px; /* Space between sidebar button and title */
+    margin-bottom: 20px;
 }
 
 /* Main Heading */
@@ -86,13 +100,6 @@ h1 {
   float:left;
 }
 
-
-.header-section {
-  display: flex;
-    align-items: center;
-    gap: 20px; /* Space between sidebar button and title */
-    margin-bottom: 20px;
-}
 
 .upload-container {
     background-color: #f9f9f9;

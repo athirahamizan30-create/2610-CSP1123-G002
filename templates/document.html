@@ -11,31 +11,32 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <div id="mySidebar" class="sidebar">
+    <div id="mySidebar" class="sidebar">  
         <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
-        <a class="division">New Job</a>
-        <a class="indent">-Full Time</a>
-        <a class="indent">-Part Time</a>
-        <a class="indent">-Internship</a>
-        <a class="division">Documents</a>
-        <a class="division">Reminders</a>
+        <h2>My Jobs</h2>
 
-        <!--to move the sidebar and push the main content -->
+        <a href="/">Dashboard</a>
+        <a href="/add_job">Add Job</a>
+        <a href="#">Applied</a>
+        <a href="#">Interview</a>
+        <a href="#">Rejected</a>
+        <a href="/document">Add Document</a>
+
         <script>
             function openNav() {
             document.getElementById("mySidebar").style.width = "250px";
-            document.getElementById("main").style.marginLeft = "250px";
+            document.getElementById("movemain").style.marginLeft = "250px";
             }
 
         <!--push back the content to the left -->
             function closeNav() {
             document.getElementById("mySidebar").style.width = "0";
-            document.getElementById("main").style.marginLeft = "0";
+            document.getElementById("movemain").style.marginLeft = "0";
             }
         </script>
     </div>
 
-    <div id="main">
+    <div id="movemain" class="main">
         <div class ="header-section">
             <button class="openbtn" onclick="openNav()">&#9776;</button>
             <h1>Documents</h1>
