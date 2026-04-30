@@ -86,7 +86,7 @@
                     )">
                     Edit
                     </button>
-                    <form method="POST" action="/delete_job/{{ job.id }}" style="display:inline;">
+                     <form method="POST" action="/delete_job/{{ job.id }}">
                         <button type="submit" class="delete-btn" onclick="return confirm('Delete this job?')">
                             Delete
                         </button>
@@ -129,16 +129,11 @@
                     )">
                     Edit
                     </button>
-                    <button class="delete-btn" onclick="deleteJob(
-                        '{{ job.id }}',
-                        '{{ job.company_name }}',
-                        '{{ job.job_position }}',
-                        '{{ job.location }}',
-                        '{{ job.job_status }}',
-                        '{{ job.job_type }}'
-                    )">
-                        Delete
-                    </button>
+                    <form method="POST" action="/delete_job/{{ job.id }}">
+                        <button type="submit" class="delete-btn" onclick="return confirm('Delete this job?')">
+                            Delete
+                        </button>
+                    </form>
                 </div>
             {% endfor %}
         </div>
@@ -177,16 +172,11 @@
                     )">
                     Edit
                     </button>
-                    <button class="delete-btn" onclick="deleteJob(
-                        '{{ job.id }}',
-                        '{{ job.company_name }}',
-                        '{{ job.job_position }}',
-                        '{{ job.location }}',
-                        '{{ job.job_status }}',
-                        '{{ job.job_type }}'
-                    )">
-                        Delete
-                    </button>
+                    <form method="POST" action="/delete_job/{{ job.id }}">
+                        <button type="submit" class="delete-btn" onclick="return confirm('Delete this job?')">
+                            Delete
+                        </button>
+                    </form>
                 </div>
             {% endfor %}
         </div>
