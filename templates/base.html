@@ -8,6 +8,41 @@
     <div class="content">
         {% block content %}{% endblock %}
     </div>
+
+    <div class="container">
+
+    <div id="mySidebar" class="sidebar">  
+        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+        <h2>My Jobs</h2>
+
+        <a href="/">Dashboard</a>
+        <a href="/add_job">Add Job</a>
+        <a href="#">Applied</a>
+        <a href="#">Interview</a>
+        <a href="#">Rejected</a>
+        <a href="/document">Add Document</a>
+
+        <script>
+            function openNav() {
+            document.getElementById("mySidebar").style.width = "250px";
+            document.getElementById("movemain").style.marginLeft = "250px";
+            }
+
+        <!--push back the content to the left -->
+            function closeNav() {
+            document.getElementById("mySidebar").style.width = "0";
+            document.getElementById("movemain").style.marginLeft = "0";
+            }
+        </script>
+    </div>
+
+    <div id="movemain" class="main">
+        <div class ="header-section">
+            <button class="openbtn" onclick="openNav()">&#9776;</button>
+        </div>
+    </div>
+    </div>
+    
     
     <script type="module">
         import Chatbot from "https://cdn.jsdelivr.net/npm/@denserai/embed-chat@1/dist/web.min.js";

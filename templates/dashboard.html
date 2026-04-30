@@ -12,7 +12,8 @@
 {% block content %}
 <div class="container">
 
-    <div class="sidebar">
+    <div id="mySidebar" class="sidebar">  
+        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
         <h2>My Jobs</h2>
 
         <a href="/">Dashboard</a>
@@ -21,10 +22,26 @@
         <a href="#">Interview</a>
         <a href="#">Rejected</a>
         <a href="/document">Add Document</a>
+
+        <script>
+            function openNav() {
+            document.getElementById("mySidebar").style.width = "250px";
+            document.getElementById("movemain").style.marginLeft = "250px";
+            }
+
+        <!--push back the content to the left -->
+            function closeNav() {
+            document.getElementById("mySidebar").style.width = "0";
+            document.getElementById("movemain").style.marginLeft = "0";
+            }
+        </script>
     </div>
 
-    <div class="main">
-        <h1>Dashboard</h1>
+    <div id="movemain" class="main">
+        <div class ="header-section">
+            <button class="openbtn" onclick="openNav()">&#9776;</button>
+            <h1>Dashboard</h1>
+        </div>
 
         <div class="card">
             <h3>Total Applications</h3>
