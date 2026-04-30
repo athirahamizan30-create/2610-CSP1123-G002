@@ -1,8 +1,7 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, url_for, request, redirect, flash
 import mysql.connector
 import re
 import uuid
-from flask import Flask, render_template, url_for, request, redirect, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, current_user, logout_user
 from sqlalchemy import select
@@ -68,7 +67,7 @@ def create_app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=15)
     app.config['UPLOAD_FOLDER'] = 'static/uploads'
-    app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024
+    app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
 
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
@@ -218,10 +217,6 @@ def create_app():
             file.seek(0, os.SEEK_END)
             file_length = file.tell()
             file.seek(0)
-
-            if file_length > 2 * 1024 * 1024:
-                flash("File too large! Max limit is 5MB.")
-                return redirect(url_for('document'))
         
             filename = file.filename
             save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
