@@ -68,6 +68,7 @@ def create_app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=15)
     app.config['UPLOAD_FOLDER'] = 'static/uploads'
+    app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024
 
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
@@ -214,6 +215,14 @@ def create_app():
     def file_upload():
         file = request.files['file']
         if file:
+            file.seek(0, os.SEEK_END)
+            file_length = file.tell()
+            file.seek(0)
+
+            if file_length > 2 * 1024 * 1024:
+                flash("File too large! Max limit is 5MB.")
+                return redirect(url_for('document'))
+        
             filename = file.filename
             save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(save_path)
@@ -224,6 +233,7 @@ def create_app():
 
             return redirect(url_for('document'))
         return "Upload Failed"
+
       
     @app.route('/add_job', methods=['GET', 'POST'])
     def add_job():

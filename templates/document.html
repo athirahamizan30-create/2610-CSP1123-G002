@@ -46,7 +46,18 @@
                 <input type="file" name="file" accept=".xlsx, .xls, .pdf, .doc, .docx, .png, .jpg, .jpeg" required="required">
                 <input type="submit" value="upload file">
             </form>
-    
+            
+            <script>
+                var uploadField = document.getElementById("fileInput");
+
+                uploadField.onchange = function() {
+                if(this.files[0].size > 5 * 1024 * 1024){
+                alert("File is too big! Please upload a file smaller than 2MB.");
+                this.value = ""; 
+                };
+            };
+            </script>
+
         <div class="Table-container">
             <table style="width:80%; border-collapse: collapse; margin-top: 20px;">
                 <thead>
