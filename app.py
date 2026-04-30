@@ -140,6 +140,21 @@ def add_job():
 
     db.session.add(job)
     db.session.commit()
+
+    date_types = request.form.getlist('date_type[]')
+    date_values = request.form.getlist('date_value[]')
+
+    for dtype, dvalue in zip(date_types, date_values):
+        if dvalue:  # ignore empty dates
+            job_date = JobDate(
+                job_id=job.id,
+                date_type=dtype,
+                date_value=datetime.strptime(dvalue, "%Y-%m-%d").date()
+            )
+            db.session.add(job_date)
+
+        db.session.commit()
+        
     return redirect(url_for('dashboard'))
 
 
