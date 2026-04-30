@@ -76,15 +76,21 @@
                         {% endif %}
                     </div>
                     <button class="edit-btn"
-                        onclick="openEditModal(
-                            '{{ job.company_name }}',
-                            '{{ job.job_position }}',
-                            '{{ job.location }}',
-                            '{{ job.job_status }}',
-                            '{{ job.job_type }}'
-                        )">
-                        Edit
+                    onclick="openEditModal(
+                        '{{ job.id }}',
+                        '{{ job.company_name }}',
+                        '{{ job.job_position }}',
+                        '{{ job.location }}',
+                        '{{ job.job_status }}',
+                        '{{ job.job_type }}'
+                    )">
+                    Edit
                     </button>
+                    <form method="POST" action="/delete_job/{{ job.id }}" style="display:inline;">
+                        <button type="submit" class="delete-btn" onclick="return confirm('Delete this job?')">
+                            Delete
+                        </button>
+                    </form>
                 </div>
             {% endfor %}
         </div>
@@ -113,14 +119,25 @@
                         {% endif %}
                     </div>
                     <button class="edit-btn"
-                        onclick="openEditModal(
-                            '{{ job.company_name }}',
-                            '{{ job.job_position }}',
-                            '{{ job.location }}',
-                            '{{ job.job_status }}',
-                            '{{ job.job_type }}'
-                        )">
-                        Edit
+                    onclick="openEditModal(
+                        '{{ job.id }}',
+                        '{{ job.company_name }}',
+                        '{{ job.job_position }}',
+                        '{{ job.location }}',
+                        '{{ job.job_status }}',
+                        '{{ job.job_type }}'
+                    )">
+                    Edit
+                    </button>
+                    <button class="delete-btn" onclick="deleteJob(
+                        '{{ job.id }}',
+                        '{{ job.company_name }}',
+                        '{{ job.job_position }}',
+                        '{{ job.location }}',
+                        '{{ job.job_status }}',
+                        '{{ job.job_type }}'
+                    )">
+                        Delete
                     </button>
                 </div>
             {% endfor %}
@@ -150,51 +167,80 @@
                         {% endif %}
                     </div>
                     <button class="edit-btn"
-                        onclick="openEditModal(
-                            '{{ job.company_name }}',
-                            '{{ job.job_position }}',
-                            '{{ job.location }}',
-                            '{{ job.job_status }}',
-                            '{{ job.job_type }}'
-                        )">
-                        Edit
+                    onclick="openEditModal(
+                        '{{ job.id }}',
+                        '{{ job.company_name }}',
+                        '{{ job.job_position }}',
+                        '{{ job.location }}',
+                        '{{ job.job_status }}',
+                        '{{ job.job_type }}'
+                    )">
+                    Edit
+                    </button>
+                    <button class="delete-btn" onclick="deleteJob(
+                        '{{ job.id }}',
+                        '{{ job.company_name }}',
+                        '{{ job.job_position }}',
+                        '{{ job.location }}',
+                        '{{ job.job_status }}',
+                        '{{ job.job_type }}'
+                    )">
+                        Delete
                     </button>
                 </div>
             {% endfor %}
         </div>
     </div>
 
-    <div id="editModal" class="modal">
-
+    <div id="editModal" class="modal" onclick="outsideClick(event)">
     <div class="modal-content">
+        <span class="close-btn" onclick="closeEditModal()">&times;</span>
 
-        <span class="close" onclick="closeEditModal()">&times;</span>
+        <h2>Edit Application</h2>
 
-        <h2>Edit Job</h2>
+        <input type="hidden" id="edit_id">
 
-        <form id="editForm" method="POST">
+        <form method="POST" id="editForm">
 
-            <input type="hidden" name="job_id" id="edit_id">
+            <div class="form-group">
+                <label>Company Name</label>
+                <input type="text" id="edit_company" name="company_name">
+            </div>
 
-            <label>Company Name</label>
-            <input type="text" name="company_name" id="edit_company">
+            <div class="form-group">
+                <label>Job Position</label>
+                <input type="text" id="edit_position" name="job_position">
+            </div>
 
-            <label>Job Position</label>
-            <input type="text" name="job_position" id="edit_position">
+            <div class="form-group">
+                <label>Location</label>
+                <input type="text" id="edit_location" name="location">
+            </div>
 
-            <label>Location</label>
-            <input type="text" name="location" id="edit_location">
+            <div class="form-group">
+                <label>Application Status</label>
+                <select id="edit_status" name="job_status">
+                    <option value="interested">Interested</option>
+                    <option value="applied">Applied</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="stage1">Stage 1</option>
+                    <option value="stage2">Stage 2</option>
+                    <option value="interview">Interview</option>
+                    <option value="accepted">Accepted</option>
+                </select>
+            </div>
 
-            <label>Application Status</label>
-            <input type="text" name="job_status" id="edit_status">
+            <div class="form-group">
+                <label>Job Type</label>
+                <select id="edit_type" name="job_type">
+                    <option value="Full-Time">Full-Time</option>
+                    <option value="Part-Time">Part-Time</option>
+                    <option value="Intern/Trainee">Intern</option>
+                </select>
+            </div>
 
-            <label>Job Type</label>
-            <input type="text" name="job_type" id="edit_type">
-
-            <button type="submit">Update</button>
-
+            <button type="submit">Save Changes</button>
         </form>
-
     </div>
     </div>
 
@@ -276,6 +322,14 @@
 
     function closeEditModal() {
         document.getElementById("editModal").style.display = "none";
+    }
+
+    function outsideClick(event) {
+        const modal = document.getElementById("editModal");
+
+        if (event.target === modal) {
+            closeEditModal();
+        }
     }
     </script>
 

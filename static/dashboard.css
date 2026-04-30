@@ -189,12 +189,6 @@ body {
     }
 }
 
-.close {
-    float: right;
-    font-size: 20px;
-    cursor: pointer;
-}
-
 .popup-content input,
 .popup-content select {
     width: 100%;
@@ -269,19 +263,4 @@ body {
 .popup.show .popup-content {
     transform: translateY(0);
     opacity: 1;
-}
-
-.edit-btn {
-    background-color: #577c58af;
-    color: white;
-    padding: 6px 14px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.edit-btn:hover{
-    background-color: #cfa771;
-
 }

@@ -85,3 +85,52 @@
 .close:hover {
     color: black;
 }
+select {
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    background: #ffffff;
+    color: rgb(0, 0, 0);
+    width: 100%;
+}
+
+.close-btn {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 22px;
+    color: #aaa;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.close-btn:hover {
+    color: #da0707f1;
+}
+.delete-btn {
+    background: #577c58af;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.delete-btn:hover {
+    background: #cfa771;
+}
+
+.edit-btn {
+    background-color: #577c58af;
+    color: white;
+    padding: 6px 14px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.edit-btn:hover{
+    background-color: #cfa771;
+}

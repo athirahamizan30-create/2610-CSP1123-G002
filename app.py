@@ -99,6 +99,15 @@ def edit_job(id):
 
     return redirect('/dashboard')
 
+@app.route('/delete_job/<int:id>', methods=['POST'])
+def delete_job(id):
+    job = NewJob.query.get_or_404(id)
+
+    db.session.delete(job)
+    db.session.commit()
+
+    return redirect('/dashboard')
+
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
