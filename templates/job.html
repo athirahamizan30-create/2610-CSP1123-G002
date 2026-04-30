@@ -16,16 +16,17 @@
         const overlay = document.getElementById("overlay");
 
         window.openPopup = function () {
-            popup.classList.add("show");
+            popup?.classList.add("show");
 
-            sidebar.classList.remove("active");
-            overlay.classList.remove("active");
+            sidebar?.classList.remove("active");
+            overlay?.classList.remove("active");
         }
 
         window.closePopup = function () {
-            popup.classList.remove("show");
-            sidebar.classList.remove("active");
-            overlay.classList.remove("active");
+            popup?.classList.remove("show");
+
+            sidebar?.classList.remove("active");
+            overlay?.classList.remove("active");
         }
 
         popup.addEventListener("click", function (event) {
