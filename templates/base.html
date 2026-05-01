@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Job Tracker</title>
+    </head>
+<body>
+
+    <div class="content">
+        {% block content %}{% endblock %}
+    </div>
+    
+    <script type="module">
+        import Chatbot from "https://cdn.jsdelivr.net/npm/@denserai/embed-chat@1/dist/web.min.js";
+        Chatbot.init({
+        chatbotId: "chatbot_gcntvcndfh5ldda4vt4y4",
+        theme: {
+            button: {
+                size: 'large',   
+                bottom: 40,      
+                right: 40,       
+                color: '#abc17c' 
+                },
+            }, 
+        });
+    </script>  
+    
+</body>
+</html>

@@ -1,9 +1,8 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, url_for, request, redirect, flash
 import mysql.connector
 import re
 import uuid
 import os
-from flask import Flask, render_template, url_for, request, redirect, flash
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user
@@ -13,7 +12,6 @@ from config import Config
 from flask_mail import Mail, Message
 from flask_bcrypt import Bcrypt
 from dotenv import load_dotenv
-
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 db= SQLAlchemy()
@@ -25,6 +23,10 @@ import os
 import re
 import uuid
 
+class Document(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(100), nullable=False)
+    file_path = db.Column(db.String(200), nullable=False)
 app = Flask(__name__, template_folder="templates", static_folder="static")
 
 app.config['SECRET_KEY'] = 'user_registration_athirah'
@@ -78,7 +80,6 @@ def get_db_connection():
     database="add_job"
     )
 
-
 def create_app():
 
     app = Flask(__name__)
@@ -93,6 +94,7 @@ def create_app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=15)
     app.config['UPLOAD_FOLDER'] = 'static/uploads'
+    app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
     print("SECRET_KEY:", app.config.get("SECRET_KEY"))
     print("DATABASE_URL:", app.config.get("SQLALCHEMY_DATABASE_URI"))
     print("MAIL_USERNAME:", app.config.get("MAIL_USERNAME"))
@@ -105,20 +107,52 @@ def create_app():
 
     @app.route('/', methods=['GET', 'POST'])
     def index():
-        return render_template('index.html')
+        errors = []
+
+        if request.method == "POST":
+            username = (request.form.get("username") or "").strip()
+            email = (request.form.get("email")or "").strip()
+            password = request.form.get("password")or ""
+            confirm = request.form.get("confirm_password")or ""
+
+            if not (3 <= len(username) <= 80):
+                errors.append("Username must be between 3 and 80 characters")
+
+            if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email):
+                errors.append("Please enter a valid email address")
+
+            if len(password) < 6:
+                errors.append("Password needs to be atleast 6 characters")
+
+            if password != confirm:
+                errors.append("Password don't match")
+
+            if not errors:
+             
+                try:
+                    pw_hash = generate_password_hash(password)
+                    user = User(username=username, email=email, password_hash=pw_hash)
+                    db.session.add(user)
+                    db.session.commit()
+
+                    return redirect(url_for('login'))
+                
+                except IntegrityError:
+                    db.session.rollback()
+                    errors.append("that username or email is already registered")
+            if errors:
+                return render_template("index.html", errors=errors)
+            return f"Received data - {email}"
+        return render_template('index.html', errors=errors)
     
     @app.route('/dashboard')
     @login_required
     def dashboard():
         return render_template('dashboard.html')
-
-      
-
     
     @app.route('/register', methods=["GET", "POST"])
     def register():
         errors = []
-
 
         if request.method == "POST":
             username = (request.form.get("username") or "").strip()
@@ -154,7 +188,6 @@ def create_app():
             return f"Received data - {email}"
         
         return render_template('register.html', errors=errors)
-    
 
     @app.route('/login', methods=["POST", "GET"])
     def login():
@@ -374,7 +407,6 @@ def add_job():
                     flash("User not found", "error")
 
             return render_template("reset_password.html")
-
     
     @app.route('/document')
     def document():
@@ -384,7 +416,7 @@ def add_job():
 @login_required
 def edit_job(id):
     job = NewJob.query.get_or_404(id)
-
+    
     job.company_name = request.form.get('company_name')
     job.job_position = request.form.get('job_position')
     job.location = request.form.get('location')
@@ -393,7 +425,26 @@ def edit_job(id):
 
     db.session.commit()
     return redirect(url_for('dashboard'))
+  
+  @app.route('/file_upload', methods=["POST"])
+    def file_upload():
+        file = request.files['file']
+        if file:
+            file.seek(0, os.SEEK_END)
+            file_length = file.tell()
+            file.seek(0)
+        
+            filename = file.filename
+            save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(save_path)
 
+            return redirect(url_for('document'))
+        return "Upload Failed"
+
+      
+    @app.route('/add_job', methods=['GET', 'POST'])
+    def add_job():
+        if request.method == 'POST':
 
 @app.route('/delete_job/<int:id>', methods=['POST'])
 @login_required
@@ -432,6 +483,24 @@ def file_upload():
         path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(path)
 
+    @app.route('/delete_file/<int:doc_id>')
+    def delete_file(doc_id):
+        doc = Document.query.get_or_404(doc_id)
+
+        try:
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], doc.filename)
+
+            if os.path.exists(file_path):
+                os.remove(file_path)
+
+            db.session.delete(doc)
+            db.session.commit()
+        
+            return redirect(url_for('document')) # Redirect back to your files page
+
+        except Exception as e:
+            print(f"Error: {e}")
+            return "There was a problem deleting that file."
         db.session.add(Document(filename=filename, file_path=path))
         db.session.commit()
 

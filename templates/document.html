@@ -8,31 +8,35 @@
 </head>
 
 <body>
-    <div id="mySidebar" class="sidebar">
-        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
-        <a class="division">New Job</a>
-        <a class="indent">-Full Time</a>
-        <a class="indent">-Part Time</a>
-        <a class="indent">-Internship</a>
-        <a class="division">Documents</a>
-        <a class="division">Reminders</a>
+{% extends "base.html" %}
 
-        <!--to move the sidebar and push the main content -->
+{% block content %}
+    <div id="mySidebar" class="sidebar">  
+        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+        <h2>My Jobs</h2>
+
+        <a href="/">Dashboard</a>
+        <a href="/add_job">Add Job</a>
+        <a href="#">Applied</a>
+        <a href="#">Interview</a>
+        <a href="#">Rejected</a>
+        <a href="/document">Add Document</a>
+
         <script>
             function openNav() {
             document.getElementById("mySidebar").style.width = "250px";
-            document.getElementById("main").style.marginLeft = "250px";
+            document.getElementById("movemain").style.marginLeft = "250px";
             }
 
         <!--push back the content to the left -->
             function closeNav() {
             document.getElementById("mySidebar").style.width = "0";
-            document.getElementById("main").style.marginLeft = "0";
+            document.getElementById("movemain").style.marginLeft = "0";
             }
         </script>
     </div>
 
-    <div id="main">
+    <div id="movemain" class="main">
         <div class ="header-section">
             <button class="openbtn" onclick="openNav()">&#9776;</button>
             <h1>Documents</h1>
@@ -43,26 +47,42 @@
                 <input type="file" name="file" accept=".xlsx, .xls, .pdf, .doc, .docx, .png, .jpg, .jpeg" required="required">
                 <input type="submit" value="upload file">
             </form>
-    
-        <div class="Table-container">
-            <table style="width:80%; border-collapse: collapse; margin-top: 20px;">
-                <thead>
-                    <tr style="background-color: #f2f2f2; text-align: left;">
-                        <th style="padding: 10px; border-bottom: 2px solid #ddd;">File Name</th>
-                        <th style="padding: 10px; border-bottom: 2px solid #ddd;">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for doc in docs %} 
-                    <tr>
-                        <td style="padding: 10px; border-bottom: 1px solid #ddd;">{{ doc.filename }}</td>
-                        <td style="padding: 10px; border-bottom: 1px solid #ddd;">
-                        <a href="{{ url_for('static', filename='uploads/' + doc.filename) }}" target="_blank" style="color: blue; text-decoration: none;">View File</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            
+            <script>
+                var uploadField = document.getElementById("fileInput");
+
+                uploadField.onchange = function() {
+                if(this.files[0].size > 5 * 1024 * 1024){
+                this.value = ""; 
+                };
+            };
+            </script>
+
+        <div class="file-grid-container">
+            {% for doc in docs %} 
+            <div class="file-card">
+                <div class="file-icon">
+                    {% if doc.filename.endswith(('.png', '.jpg', '.jpeg', 'JPG', 'JPEG', 'PNG')) %}
+                        🖼️
+                    {% elif doc.filename.endswith('.pdf') %}
+                        📕
+                    {% else %}
+                        📄
+                    {% endif %}
+                </div>
+                <div class="file-info">
+                    <span class="file-name" title="{{ doc.filename }}">{{ doc.filename }}</span>
+                    <a href="{{ url_for('static', filename='uploads/' + doc.filename) }}" class="view-btn">View</a>
+                    
+                    <a href="{{ url_for('delete_file', doc_id=doc.id) }}" class="delete-btn" onclick="return confirm('Delete this file permanently?')">Delete</a>
+
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        </div>
     </div>
+{% endblock %}
+    
 </body>
 </html>
