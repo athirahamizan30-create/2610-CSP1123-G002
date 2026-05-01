@@ -1,43 +1,327 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Job Dashboard</title>
+    <title>Job Application Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='edit_job.css')}}">
+    <link href="https://cdn.boxicons.com/transformations.min.css" rel="stylesheet">
+    <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
+    <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
 </head>
 
 <body>
+    <div id="overlay" onclick="toggleSidebar()"></div>
 
-<div class="container">
+    <div class="sidebar" id="sidebar">
+        <h2>Menu</h2>
 
-    <div class="sidebar">
-        <h2>My Jobs</h2>
+        <a href="/dashboard" class="{% if active_page == 'dashboard' %}active{% endif %}">
+            <i class="bxf bx-home-circle"></i>
+            Dashboard
+        </a>
 
-        <a href="/">Dashboard</a>
-        <a href="/add_job">Add Job</a>
-        <a href="#">Applied</a>
-        <a href="#">Interview</a>
-        <a href="#">Rejected</a>
-        <a href="/document">Add Document</a>
+        <a href="javascript:void(0);" onclick="openPopup()">
+            <i class="bxf bx-plus-square"></i>
+            New Application
+        </a>
+
+        <a href="/document">
+            <i class="bxf bx-folder"></i>
+            Documents
+        </a>
+
+        <a href="/reminders" class="{% if active_page == 'reminders' %}active{% endif %}">
+            <i class='bxf bx-bell'></i>
+            Reminders
+        </a>
+
+        <a href="#">
+            <i class="bxf bx-arrow-out-right-square-half"></i>
+            Log Out
+        </a>
     </div>
 
     <div class="main">
-        <h1>Dashboard</h1>
+        <button class="menu-btn" onclick="toggleSidebar()">
+            <i class="bx bx-menu bx-sm"></i>
+        </button>
 
-        <div class="card">
-            <h3>Total Applications</h3>
-        </div>
+        <h1>Job Application Dashboard</h1>
 
-        <div class="card">
-            <h3>Interviews</h3>
-        </div>
-
-        <div class="card">
-            <h3>Offers</h3>
-        </div>
-
+    <div class="tabs">
+    <button class="tab-btn active" onclick="openTab(event, 'full')">Full-Time</button>
+    <button class="tab-btn" onclick="openTab(event, 'part')">Part-Time</button>
+    <button class="tab-btn" onclick="openTab(event, 'intern')">Intern</button>
     </div>
 
-</div>
+    <div id="full" class="tab-content active">
+        <div class="card-container">
+            {% for job in full_time %}
+                <div class="card">
+                    <h2>{{ job.company_name }}</h2>
+
+                    <p><strong>Job Position:</strong> {{ job.job_position }}</p>
+                    <p><strong>Location:</strong> {{ job.location }}</p>
+                    <p><strong>Application Status:</strong> {{ job.job_status.capitalize() }}</p>
+
+                    <div class="dates">
+                        <h4>Application Dates</h4>
+
+                        {% if job.dates %}
+                            {% for d in job.dates %}
+                                <p><strong>{{ d.date_type }}:</strong> {{ d.date_value }}</p>
+                            {% endfor %}
+                        {% else %}
+                            <p>No dates added</p>
+                        {% endif %}
+                    </div>
+                    <button class="edit-btn"
+                    onclick="openEditModal(
+                        '{{ job.id }}',
+                        '{{ job.company_name }}',
+                        '{{ job.job_position }}',
+                        '{{ job.location }}',
+                        '{{ job.job_status }}',
+                        '{{ job.job_type }}'
+                    )">
+                    Edit
+                    </button>
+                     <form method="POST" action="/delete_job/{{ job.id }}">
+                        <button type="submit" class="delete-btn" onclick="return confirm('Delete this job?')">
+                            Delete
+                        </button>
+                    </form>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div id="part" class="tab-content">
+        <div class="card-container">
+            {% for job in part_time %}
+                <div class="card">
+                    <h2>{{ job.company_name }}</h2>
+
+
+                    <p><strong>Job Position:</strong> {{ job.job_position }}</p>
+                    <p><strong>Location:</strong> {{ job.location }}</p>
+                    <p><strong>Application Status:</strong> {{ job.job_status.capitalize() }}</p>
+
+                    <div class="dates">
+                        <h4>Application Dates</h4>
+
+                        {% if job.dates %}
+                            {% for d in job.dates %}
+                                <p><strong>{{ d.date_type }}:</strong> {{ d.date_value }}</p>
+                            {% endfor %}
+                        {% else %}
+                            <p>No dates added</p>
+                        {% endif %}
+                    </div>
+                    <button class="edit-btn"
+                    onclick="openEditModal(
+                        '{{ job.id }}',
+                        '{{ job.company_name }}',
+                        '{{ job.job_position }}',
+                        '{{ job.location }}',
+                        '{{ job.job_status }}',
+                        '{{ job.job_type }}'
+                    )">
+                    Edit
+                    </button>
+                    <form method="POST" action="/delete_job/{{ job.id }}">
+                        <button type="submit" class="delete-btn" onclick="return confirm('Delete this job?')">
+                            Delete
+                        </button>
+                    </form>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div id="intern" class="tab-content">
+        <div class="card-container">
+            {% for job in intern %}
+                <div class="card">
+                    <h2>{{ job.company_name }}</h2>
+
+
+                    <p><strong>Job Position:</strong> {{ job.job_position }}</p>
+                    <p><strong>Location:</strong> {{ job.location }}</p>
+                    <p><strong>Application Status:</strong> {{ job.job_status.capitalize() }}</p>
+
+                    <div class="dates">
+                        <h4>Application Dates</h4>
+
+                        {% if job.dates %}
+                            {% for d in job.dates %}
+                                <p><strong>{{ d.date_type }}:</strong> {{ d.date_value }}</p>
+                            {% endfor %}
+                        {% else %}
+                            <p>No dates added</p>
+                        {% endif %}
+                    </div>
+                    <button class="edit-btn"
+                    onclick="openEditModal(
+                        '{{ job.id }}',
+                        '{{ job.company_name }}',
+                        '{{ job.job_position }}',
+                        '{{ job.location }}',
+                        '{{ job.job_status }}',
+                        '{{ job.job_type }}'
+                    )">
+                    Edit
+                    </button>
+                    <form method="POST" action="/delete_job/{{ job.id }}">
+                        <button type="submit" class="delete-btn" onclick="return confirm('Delete this job?')">
+                            Delete
+                        </button>
+                    </form>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div id="editModal" class="modal" onclick="outsideClick(event)">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeEditModal()">&times;</span>
+
+        <h2>Edit Application</h2>
+
+        <input type="hidden" id="edit_id">
+
+        <form method="POST" id="editForm">
+
+            <div class="form-group">
+                <label>Company Name</label>
+                <input type="text" id="edit_company" name="company_name">
+            </div>
+
+            <div class="form-group">
+                <label>Job Position</label>
+                <input type="text" id="edit_position" name="job_position">
+            </div>
+
+            <div class="form-group">
+                <label>Location</label>
+                <input type="text" id="edit_location" name="location">
+            </div>
+
+            <div class="form-group">
+                <label>Application Status</label>
+                <select id="edit_status" name="job_status">
+                    <option value="interested">Interested</option>
+                    <option value="applied">Applied</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="stage1">Stage 1</option>
+                    <option value="stage2">Stage 2</option>
+                    <option value="interview">Interview</option>
+                    <option value="accepted">Accepted</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Job Type</label>
+                <select id="edit_type" name="job_type">
+                    <option value="Full-Time">Full-Time</option>
+                    <option value="Part-Time">Part-Time</option>
+                    <option value="Intern/Trainee">Intern</option>
+                </select>
+            </div>
+
+            <button type="submit">Save Changes</button>
+        </form>
+    </div>
+    </div>
+
+    {% include 'job.html' %}
+
+    <script>
+    function toggleSidebar() {
+        document.getElementById("sidebar").classList.toggle("active");
+        document.getElementById("overlay").classList.toggle("active");
+    }
+    </script>
+
+    <script>
+    function openTab(evt, tabName) {
+        let contents = document.getElementsByClassName("tab-content");
+        let buttons = document.getElementsByClassName("tab-btn");
+
+        for (let i = 0; i < contents.length; i++) {
+            contents[i].classList.remove("active");
+        }
+
+        for (let i = 0; i < buttons.length; i++) {
+            buttons[i].classList.remove("active");
+        }
+
+        document.getElementById(tabName).classList.add("active");
+        evt.currentTarget.classList.add("active");
+    }
+    </script>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const popup = document.getElementById("popupForm");
+        const sidebar = document.getElementById("sidebar");
+        const overlay = document.getElementById("overlay");
+
+        window.openPopup = function () {
+            popup.classList.add("show");
+
+            if (sidebar) sidebar.classList.remove("active");
+            if (overlay) overlay.classList.remove("active");
+        }
+
+        window.closePopup = function () {
+            popup.classList.remove("show");
+            sidebar.classList.remove("active");
+            overlay.classList.remove("active");
+        }
+
+        popup.addEventListener("click", function (event) {
+            if (event.target === popup) {
+                closePopup();
+            }
+        });
+
+        window.toggleSidebar = function () {
+            sidebar.classList.toggle("active");
+            overlay.classList.toggle("active");
+        }
+
+    });
+    </script>
+
+    <script>
+    function openEditModal(id, company, position, location, status, type) {
+
+        document.getElementById("editModal").style.display = "block";
+
+        document.getElementById("edit_id").value = id;
+        document.getElementById("edit_company").value = company;
+        document.getElementById("edit_position").value = position;
+        document.getElementById("edit_location").value = location;
+        document.getElementById("edit_status").value = status;
+        document.getElementById("edit_type").value = type;
+
+        document.getElementById("editForm").action = "/edit_job/" + id;
+    }
+
+    function closeEditModal() {
+        document.getElementById("editModal").style.display = "none";
+    }
+
+    function outsideClick(event) {
+        const modal = document.getElementById("editModal");
+
+        if (event.target === modal) {
+            closeEditModal();
+        }
+    }
+    </script>
 
 </body>
 </html>
