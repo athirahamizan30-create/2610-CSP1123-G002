@@ -426,25 +426,20 @@ def edit_job(id):
     db.session.commit()
     return redirect(url_for('dashboard'))
   
-  @app.route('/file_upload', methods=["POST"])
-    def file_upload():
-        file = request.files['file']
-        if file:
-            file.seek(0, os.SEEK_END)
-            file_length = file.tell()
-            file.seek(0)
+@app.route('/file_upload', methods=["POST"])
+def file_upload():
+    file = request.files['file']
+    if file:
+        file.seek(0, os.SEEK_END)
+        file_length = file.tell()
+        file.seek(0)
         
-            filename = file.filename
-            save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(save_path)
+        filename = file.filename
+        save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(save_path)
 
-            return redirect(url_for('document'))
-        return "Upload Failed"
-
-      
-    @app.route('/add_job', methods=['GET', 'POST'])
-    def add_job():
-        if request.method == 'POST':
+        return redirect(url_for('document'))
+    return "Upload Failed"
 
 @app.route('/delete_job/<int:id>', methods=['POST'])
 @login_required
@@ -473,50 +468,9 @@ def document():
     return render_template("document.html", docs=docs)
 
 
-@app.route('/file_upload', methods=["POST"])
-@login_required
-def file_upload():
-    file = request.files.get('file')
-
-    if file:
-        filename = file.filename
-        path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(path)
-
-    @app.route('/delete_file/<int:doc_id>')
-    def delete_file(doc_id):
-        doc = Document.query.get_or_404(doc_id)
-
-        try:
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], doc.filename)
-
-            if os.path.exists(file_path):
-                os.remove(file_path)
-
-            db.session.delete(doc)
-            db.session.commit()
-        
-            return redirect(url_for('document')) # Redirect back to your files page
-
-        except Exception as e:
-            print(f"Error: {e}")
-            return "There was a problem deleting that file."
-        db.session.add(Document(filename=filename, file_path=path))
-        db.session.commit()
-
-    return redirect(url_for('document'))
-
 if __name__ == "__main__":
+    app = create_app()
     with app.app_context():
         db.create_all()
-        return app
-
-if __name__ == '__main__':
-    app = create_app()
     app.run(host="0.0.0.0", port=5000, debug=True)
 
-
-
-#satu database and semua table dalam database tu
-#kene buang register punyer link kat navbar. 
-    app.run(debug=True)
