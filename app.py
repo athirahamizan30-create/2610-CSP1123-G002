@@ -20,8 +20,6 @@ login_manager = LoginManager()
 bcrypt = Bcrypt()
 
 
-
-
 app.config['SECRET_KEY'] = 'user_registration_athirah'
 app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://athirah:Tiya071!@localhost/CareerTrack_Database"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -33,7 +31,6 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = "login"
-
 
 
 class User(UserMixin, db.Model):
@@ -336,8 +333,7 @@ def create_app():
     @app.route('/document')
     def document():
         docs = Document.query.order_by(Document.filename.asc()).all()
-        return render_template("document.html", docs=docs)
-    
+        return render_template("document.html", docs=docs)  
 
     @app.route('/edit_job/<int:id>', methods=['POST'])
     @login_required
@@ -352,7 +348,6 @@ def create_app():
 
         db.session.commit()
         return redirect(url_for('dashboard'))
-
 
     @app.route('/delete_job/<int:id>', methods=['POST'])
     @login_required
@@ -413,16 +408,10 @@ def create_app():
             return "There was a problem deleting that file."
 
 
-
     with app.app_context():
         db.create_all()
         return app
 
-
-
 if __name__ == '__main__':
     app = create_app()
     app.run(host="0.0.0.0", port=5000, debug=True)
-
-
-
