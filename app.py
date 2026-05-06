@@ -4,7 +4,7 @@ import re
 import uuid
 import os
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import timedelta, datetime, timezone
 from config import Config
@@ -19,9 +19,6 @@ db= SQLAlchemy()
 login_manager = LoginManager()
 bcrypt = Bcrypt()
 
-
-
-
 app.config['SECRET_KEY'] = 'user_registration_athirah'
 app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://athirah:Tiya071!@localhost/CareerTrack_Database"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -33,6 +30,8 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = "login"
+with app.app_context():
+    db.create_all()
 
 
 
@@ -80,6 +79,7 @@ class Document(db.Model):
 
 class NewJob(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     company_name = db.Column(db.String(255))
     job_position = db.Column(db.String(255))
     location = db.Column(db.String(255))
@@ -87,13 +87,28 @@ class NewJob(db.Model):
     job_type = db.Column(db.String(50))
 
     dates = db.relationship('JobDate', backref='job', cascade="all, delete")
+    reminders = db.relationship('Reminder', backref='job', lazy=True)
 
 
 class JobDate(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     job_id = db.Column(db.Integer, db.ForeignKey('new_job.id'))
     date_type = db.Column(db.String(50))
     date_value = db.Column(db.Date)
+
+class Reminder(db.Model):
+    __tablename__ = 'reminders'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    job_id = db.Column(db.Integer, db.ForeignKey('new_job.id'), nullable=False)
+    reminder_date = db.Column(db.DateTime, nullable=False)
+    message = db.Column(db.String(255))
+    is_done = db.Column(db.Boolean, default=False)
+
+    def __repr__(self):
+        return f"<Reminder {self.reminder_date}>"
 
 
 def create_app():
@@ -217,6 +232,8 @@ def create_app():
     @app.route('/add_job', methods=['POST'])
     @login_required
     def add_job():
+        application_date = request.form.get("application_date")
+
         job = NewJob(
             company_name=request.form.get('company_name'),
             job_position=request.form.get('job_position'),
@@ -228,11 +245,23 @@ def create_app():
         db.session.add(job)
         db.session.commit()
 
+        if application_date:
+            app_date_obj = datetime.strptime(application_date, "%Y-%m-%d")
+
+            reminder = Reminder(
+                user_id=current_user.id,
+                job_id=job.id,
+                reminder_date=app_date_obj - timedelta(days=1),
+                message="Upcoming application deadline"
+            )
+
+            db.session.add(reminder)
+
         date_types = request.form.getlist('date_type[]')
         date_values = request.form.getlist('date_value[]')
 
         for dtype, dvalue in zip(date_types, date_values):
-            if dvalue:  # ignore empty dates
+            if dvalue:
                 job_date = JobDate(
                     job_id=job.id,
                     date_type=dtype,
@@ -240,8 +269,8 @@ def create_app():
                 )
                 db.session.add(job_date)
 
-            db.session.commit()
-            
+        db.session.commit()
+
         return redirect(url_for('dashboard'))
 
 
