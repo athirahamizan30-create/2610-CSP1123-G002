@@ -86,6 +86,7 @@ class NewJob(db.Model):
     job_status = db.Column(db.String(50))
     job_type = db.Column(db.String(50))
 
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
     dates = db.relationship('JobDate', backref='job', cascade="all, delete")
     reminders = db.relationship('Reminder', backref='job', lazy=True)
 
@@ -97,6 +98,8 @@ class JobDate(db.Model):
     date_type = db.Column(db.String(50))
     date_value = db.Column(db.Date)
 
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
 class Reminder(db.Model):
     __tablename__ = 'reminders'
 
@@ -106,6 +109,8 @@ class Reminder(db.Model):
     reminder_date = db.Column(db.DateTime, nullable=False)
     message = db.Column(db.String(255))
     is_done = db.Column(db.Boolean, default=False)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __repr__(self):
         return f"<Reminder {self.reminder_date}>"
@@ -254,7 +259,6 @@ def create_app():
                 reminder_date=app_date_obj - timedelta(days=1),
                 message="Upcoming application deadline"
             )
-
             db.session.add(reminder)
 
         date_types = request.form.getlist('date_type[]')
@@ -262,12 +266,22 @@ def create_app():
 
         for dtype, dvalue in zip(date_types, date_values):
             if dvalue:
+                date_obj = datetime.strptime(dvalue, "%Y-%m-%d")
+
                 job_date = JobDate(
                     job_id=job.id,
                     date_type=dtype,
-                    date_value=datetime.strptime(dvalue, "%Y-%m-%d").date()
+                    date_value=date_obj.date()
                 )
                 db.session.add(job_date)
+
+                reminder = Reminder(
+                    user_id=current_user.id,
+                    job_id=job.id,
+                    reminder_date=date_obj,
+                    message = f"{dtype.title()} – {job.job_position} at {job.company_name}"
+                )
+                db.session.add(reminder)
 
         db.session.commit()
 
@@ -395,13 +409,11 @@ def create_app():
     @app.route('/reminders')
     @login_required
     def reminders():
-        today = datetime.today().date()
+        reminders = Reminder.query.filter_by(
+            user_id=current_user.id
+        ).order_by(Reminder.reminder_date).all()
 
-        dates = JobDate.query.filter(
-            JobDate.date_value >= today
-        ).order_by(JobDate.date_value).all()
-
-        return render_template('reminders.html', active_page='reminders', dates=dates)
+        return render_template("reminders.html", reminders=reminders)
 
     @app.route('/file_upload', methods=["POST"])
     def file_upload():

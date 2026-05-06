@@ -47,19 +47,12 @@
 
         <h1>Upcoming Reminders</h1>
 
-        {% if important_dates %}
-            <ul>
-                {% for d in important_dates %}
-                    <li>
-                        <strong>{{ d.date_type }}</strong> - 
-                        {{ d.date_value }} 
-                        ({{ d.job.company_name }})
-                    </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p>No upcoming reminders</p>
-        {% endif %}
+       {% for r in reminders %}
+        <div class="card">
+            <p>{{ r.message }}</p>
+            <p>{{ r.reminder_date }}</p>
+        </div>
+        {% endfor %}
     </div>
 
     {% include 'job.html' %}
