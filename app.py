@@ -4,7 +4,7 @@ import re
 import uuid
 import os
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import timedelta, datetime, timezone
 from config import Config
@@ -48,6 +48,8 @@ class User(UserMixin, db.Model):
         cascade="all, delete-orphan"
     )
 
+    jobs = db.relationship('NewJob', backref='owner', lazy=True)
+
 
 class PasswordResetId(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -76,7 +78,8 @@ class PasswordResetId(db.Model):
 class Document(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(100), nullable=False)
-    file_path = db.Column(db.String(200), nullable=False)    
+    file_path = db.Column(db.String(200), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)    
 
 class NewJob(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -85,6 +88,7 @@ class NewJob(db.Model):
     location = db.Column(db.String(255))
     job_status = db.Column(db.String(50))
     job_type = db.Column(db.String(50))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
     dates = db.relationship('JobDate', backref='job', cascade="all, delete")
 
@@ -131,9 +135,9 @@ def create_app():
         return render_template(
             'dashboard.html',
             active_page='dashboard',
-            full_time=NewJob.query.filter_by(job_type='Full-Time').all(),
-            part_time=NewJob.query.filter_by(job_type='Part-Time').all(),
-            intern=NewJob.query.filter_by(job_type='Intern/Trainee').all()
+            full_time=NewJob.query.filter_by(job_type='Full-Time', user_id=current_user.id).all(),
+            part_time=NewJob.query.filter_by(job_type='Part-Time', user_id=current_user.id).all(),
+            intern=NewJob.query.filter_by(job_type='Intern/Trainee', user_id=current_user.id).all()
         )
     
     @app.route('/register', methods=["GET", "POST"])
@@ -222,7 +226,8 @@ def create_app():
             job_position=request.form.get('job_position'),
             location=request.form.get('location'),
             job_status=request.form.get('job_status'),
-            job_type=request.form.get('job_type')
+            job_type=request.form.get('job_type'),
+            user_id=current_user.id
         )
 
         db.session.add(job)
@@ -335,7 +340,7 @@ def create_app():
     
     @app.route('/document')
     def document():
-        docs = Document.query.order_by(Document.filename.asc()).all()
+        docs = Document.query.filter_by(user_id=current_user.id).order_by(Document.filename.asc()).all()
         return render_template("document.html", docs=docs)
     
 
@@ -377,16 +382,28 @@ def create_app():
     @app.route('/file_upload', methods=["POST"])
     @login_required
     def file_upload():
-        file = request.files.get('file')
-
+        file = request.files['file']
         if file:
+            file.seek(0, os.SEEK_END)
+            file_length = file.tell()
+            file.seek(0)
+
             filename = file.filename
-            path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(path)
+            save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(save_path)
+            
+
+            new_doc = Document(filename=filename, file_path=save_path, user_id=current_user.id)
+            db.session.add(new_doc)
+            db.session.commit()
+
+            return redirect(url_for('document'))
+        return "Upload Failed"
 
     @app.route('/delete_file/<int:doc_id>')
+    @login_required
     def delete_file(doc_id):
-        doc = Document.query.get_or_404(doc_id)
+        doc = Document.query.get_or_404(id=doc_id)
 
         try:
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], doc.filename)
@@ -396,17 +413,12 @@ def create_app():
 
             db.session.delete(doc)
             db.session.commit()
-            
+        
             return redirect(url_for('document')) # Redirect back to your files page
 
         except Exception as e:
             print(f"Error: {e}")
             return "There was a problem deleting that file."
-        db.session.add(Document(filename=filename, file_path=path))
-        db.session.commit()
-
-        return redirect(url_for('document'))
-
 
     with app.app_context():
         db.create_all()
