@@ -45,7 +45,6 @@ class User(UserMixin, db.Model):
         cascade="all, delete-orphan"
     )
 
-
 class PasswordResetId(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
@@ -85,13 +84,11 @@ class NewJob(db.Model):
 
     dates = db.relationship('JobDate', backref='job', cascade="all, delete")
 
-
 class JobDate(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     job_id = db.Column(db.Integer, db.ForeignKey('new_job.id'))
     date_type = db.Column(db.String(50))
     date_value = db.Column(db.Date)
-
 
 def create_app():
 
@@ -240,7 +237,6 @@ def create_app():
             db.session.commit()
             
         return redirect(url_for('dashboard'))
-
 
     @app.route('/forgot_password', methods=['POST', 'GET'])
     def forgot_password():
@@ -407,6 +403,17 @@ def create_app():
             print(f"Error: {e}")
             return "There was a problem deleting that file."
 
+    @app.route('/statistic')
+    def statistic():
+        mycursor = db.cursor()
+
+        mycursor.execute("SELECT * FROM customers")
+
+        myresult = mycursor.fetchall()
+
+        for x in myresult:
+            print(x)
+        
 
     with app.app_context():
         db.create_all()
