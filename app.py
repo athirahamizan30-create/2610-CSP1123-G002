@@ -409,7 +409,7 @@ def create_app():
         results = db.session.query(NewJob.job_status, func.count(NewJob.job_status)).group_by(NewJob.job_status).all()
     
         return render_template('statistic.html', status_data=results)
-        
+
 
     with app.app_context():
         db.create_all()

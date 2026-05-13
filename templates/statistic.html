@@ -5,14 +5,30 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='stylestatistic.css') }}">
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script type="text/javascript">
-      google.charts.load('current', {'packages':['bar']});
+      google.charts.load('current', {'packages':['corechart']});
       google.charts.setOnLoadCallback(drawChart);
 
       function drawChart() {
         var data = google.visualization.arrayToDataTable([
-        ['Status', 'Count'],
+        ['Status', 'Number', { role: "style" }],
             {% for status, count in status_data %}
-                ['{{ status }}', {{ count }}],
+                {% if status == 'interested' %}
+                    ['{{ status }}', {{ count }}, '#ffff99'],
+                {% elif status == 'applied' %}
+                    ['{{ status }}', {{ count }}, '#99ffff'],
+                {% elif status == 'rejected' %}
+                    ['{{ status }}', {{ count }}, '#ff3333'],
+                {% elif status == 'stage 1' %}
+                        ['{{ status }}', {{ count }}, '#99ccff'],
+                {% elif status == 'stage 2' %}
+                    ['{{ status }}', {{ count }}, '#0080ff'], 
+                {% elif status == 'interview' %}
+                    ['{{ status }}', {{ count }}, '#00cccc'],
+                {% elif status == 'accepted' %}
+                    ['{{ status }}', {{ count }}, '#00CC00'], 
+                {% else %}
+                    ['{{ status }}', {{ count }}, '#cccccc'],
+                {% endif %}
             {% endfor %}
         ]);
 
@@ -23,9 +39,9 @@
           }
         };
 
-        var chart = new google.charts.Bar(document.getElementById('columnchart_material'));
+        var chart = new google.visualization.ColumnChart(document.getElementById('columnchart_material'));
 
-        chart.draw(data, google.charts.Bar.convertOptions(options));
+        chart.draw(data, options);
     }
     </script>
 </head>
