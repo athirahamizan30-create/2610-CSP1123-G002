@@ -416,16 +416,34 @@ def create_app():
     @app.route('/edit_job/<int:id>', methods=['POST'])
     @login_required
     def edit_job(id):
+
         job = NewJob.query.get_or_404(id)
-        
-        job.company_name = request.form.get('company_name')
-        job.job_position = request.form.get('job_position')
-        job.location = request.form.get('location')
-        job.job_status = request.form.get('job_status')
-        job.job_type = request.form.get('job_type')
+
+        job.company_name = request.form.get("company_name")
+        job.job_position = request.form.get("job_position")
+        job.location = request.form.get("location")
+        job.job_status = request.form.get("job_status")
+        job.job_type = request.form.get("job_type")
+
+        date_types = request.form.getlist("date_type[]")
+        date_values = request.form.getlist("date_value[]")
+
+        JobDate.query.filter_by(job_id=id).delete()
+
+        for t, v in zip(date_types, date_values):
+
+            if v:
+                new_date = JobDate(
+                    job_id=id,
+                    user_id=current_user.id,
+                    date_type=t,
+                    date_value=datetime.fromisoformat(v)
+                )
+                db.session.add(new_date)
 
         db.session.commit()
-        return redirect(url_for('dashboard'))
+
+        return redirect(url_for("dashboard"))
 
 
     @app.route('/delete_job/<int:id>', methods=['POST'])
