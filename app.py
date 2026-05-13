@@ -96,7 +96,7 @@ class JobDate(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     job_id = db.Column(db.Integer, db.ForeignKey('new_job.id'))
     date_type = db.Column(db.String(50))
-    date_value = db.Column(db.Date)
+    date_value = db.Column(db.DateTime)
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -148,20 +148,42 @@ def create_app():
     @app.route('/dashboard')
     @login_required
     def dashboard():
+
+        full_time = NewJob.query.filter_by(
+            user_id=current_user.id,
+            job_type='Full-Time'
+        ).all()
+
+        part_time = NewJob.query.filter_by(
+            user_id=current_user.id,
+            job_type='Part-Time'
+        ).all()
+
+        intern = NewJob.query.filter_by(
+            user_id=current_user.id,
+            job_type='Intern/Trainee'
+        ).all()
+
+        all_jobs = full_time + part_time + intern
+
+        job_dates = {}
+
+        for job in all_jobs:
+            job_dates[job.id] = []
+
+            for d in job.dates:
+                job_dates[job.id].append({
+                    "date_type": d.date_type,
+                    "date_value": d.date_value.strftime("%Y-%m-%dT%H:%M")
+                })
+
         return render_template(
-            'dashboard.html',
-            active_page='dashboard',
-            full_time=NewJob.query.filter_by(
-                user_id=current_user.id,
-                job_type='Full-Time'
-            ).all(),
-            part_time=NewJob.query.filter_by(
-                user_id=current_user.id,
-                job_type='Full-Time'
-            ).all(),
-            intern=NewJob.query.filter_by(user_id=current_user.id,
-                job_type='Full-Time'
-            ).all()
+            "dashboard.html",
+            active_page="dashboard",
+            full_time=full_time,
+            part_time=part_time,
+            intern=intern,
+            job_dates=job_dates
         )
     
     @app.route('/register', methods=["GET", "POST"])
