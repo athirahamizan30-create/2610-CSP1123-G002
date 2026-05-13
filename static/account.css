@@ -1,6 +1,6 @@
 /* account.css */
 .main{
-  background-color: beige;
+  background-color: rgb(227, 217, 207);
   min-height: 100vh;   /* fills the whole screen height */
   width: 100%;         /* fills the whole screen width */
   padding: 40px 0;     /* optional spacing around the card */
