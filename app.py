@@ -403,16 +403,11 @@ def create_app():
             print(f"Error: {e}")
             return "There was a problem deleting that file."
 
-    @app.route('/statistic')
-    def statistic():
-        mycursor = db.cursor()
+    @app.route('/statistic', methods=["GET"])
+    def statistic(status):
+        stats = NewJob.query.filter_by({status}).count()
 
-        mycursor.execute("SELECT * FROM customers")
-
-        myresult = mycursor.fetchall()
-
-        for x in myresult:
-            print(x)
+        print (stats)
         
 
     with app.app_context():
