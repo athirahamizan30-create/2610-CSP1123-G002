@@ -151,9 +151,17 @@ def create_app():
         return render_template(
             'dashboard.html',
             active_page='dashboard',
-            full_time=NewJob.query.filter_by(job_type='Full-Time').all(),
-            part_time=NewJob.query.filter_by(job_type='Part-Time').all(),
-            intern=NewJob.query.filter_by(job_type='Intern/Trainee').all()
+            full_time=NewJob.query.filter_by(
+                user_id=current_user.id,
+                job_type='Full-Time'
+            ).all(),
+            part_time=NewJob.query.filter_by(
+                user_id=current_user.id,
+                job_type='Full-Time'
+            ).all(),
+            intern=NewJob.query.filter_by(user_id=current_user.id,
+                job_type='Full-Time'
+            ).all()
         )
     
     @app.route('/register', methods=["GET", "POST"])
@@ -240,6 +248,7 @@ def create_app():
         application_date = request.form.get("application_date")
 
         job = NewJob(
+            user_id=current_user.id,
             company_name=request.form.get('company_name'),
             job_position=request.form.get('job_position'),
             location=request.form.get('location'),
@@ -266,7 +275,7 @@ def create_app():
 
         for dtype, dvalue in zip(date_types, date_values):
             if dvalue:
-                date_obj = datetime.strptime(dvalue, "%Y-%m-%d")
+                date_obj = datetime.strptime(dvalue, "%Y-%m-%dT%H:%M")
 
                 job_date = JobDate(
                     job_id=job.id,

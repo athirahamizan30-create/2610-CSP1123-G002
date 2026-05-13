@@ -47,10 +47,13 @@
 
         <h1>Upcoming Reminders</h1>
 
-       {% for r in reminders %}
+       {% for reminder in reminders %}
         <div class="card">
-            <p>{{ r.message }}</p>
-            <p>{{ r.reminder_date }}</p>
+            <p class="reminder-message"><strong>{{ reminder.message }}</strong></p>
+            <p class="reminder-date">
+                <i class='bx bx-calendar-event'></i> 
+                {{ reminder.reminder_date.strftime('%d %b %Y, %H:%M') }}
+            </p>
         </div>
         {% endfor %}
     </div>
