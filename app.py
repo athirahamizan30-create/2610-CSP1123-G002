@@ -12,6 +12,7 @@ from flask_mail import Mail, Message
 from flask_bcrypt import Bcrypt
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select
+from sqlalchemy import func
 
 
 app = Flask(__name__, template_folder="templates", static_folder="static/uploads")
@@ -403,11 +404,11 @@ def create_app():
             print(f"Error: {e}")
             return "There was a problem deleting that file."
 
-    @app.route('/statistic', methods=["GET"])
-    def statistic(status):
-        stats = NewJob.query.filter_by({status}).count()
-
-        print (stats)
+    @app.route('/statistic')
+    def statistic():
+        results = db.session.query(NewJob.job_status, func.count(NewJob.job_status)).group_by(NewJob.job_status).all()
+    
+        return render_template('statistic.html', status_data=results)
         
 
     with app.app_context():
