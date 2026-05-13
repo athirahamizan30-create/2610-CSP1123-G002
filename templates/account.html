@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="content-section p-4 border rounded">
+        
+        <div class="d-flex align-items-center">
+
+                <img class="rounded-circle me-3" src="{{ image_file }}" width="125" height="125">
+                <div class="media-body">
+                    <h2 class="account-heading">{{ current_user.username}}</h2>
+                    <p class="text-secondary">{{ current_user.email}}</p>
+                </div>
+            </div>
+
+
+
+
+    </div>
+</div>
+{% endblock content %}
+
+

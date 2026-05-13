@@ -12,7 +12,10 @@ from flask_mail import Mail, Message
 from flask_bcrypt import Bcrypt
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select
-
+from flask_wtf import FlaskForm
+from flask_wtf.file import FileField, FileAllowed
+from wtforms import StringField, SubmitField
+from wtforms.validators import DataRequired, Length, Email, ValidationError
 
 app = Flask(__name__, template_folder="templates", static_folder="static/uploads")
 db= SQLAlchemy()
@@ -41,6 +44,7 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
+    image_file= db.Column(db.String(20), nullable=False, default='default.jpg')
 
     password_reset_ids = db.relationship(
         "PasswordResetId",
@@ -49,7 +53,6 @@ class User(UserMixin, db.Model):
     )
 
     jobs = db.relationship('NewJob', backref='owner', lazy=True)
-
 
 class PasswordResetId(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -92,12 +95,31 @@ class NewJob(db.Model):
 
     dates = db.relationship('JobDate', backref='job', cascade="all, delete")
 
-
 class JobDate(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     job_id = db.Column(db.Integer, db.ForeignKey('new_job.id'))
     date_type = db.Column(db.String(50))
     date_value = db.Column(db.Date)
+
+class UpdateAccountForm(FlaskForm):
+    username = StringField('Username',
+                           validators=[DataRequired(), Length(min=2, max=20)])
+    email = StringField('Email',
+                        validators=[DataRequired(), Email()])
+    picture = FileField('Update Profile Picture', validators=[FileAllowed(['jpg', 'png'])])
+    submit = SubmitField('Update')
+
+    def validate_username(self, username):
+        if username.data != current_user.username:
+            user = User.query.filter_by(username=username.data).first()
+            if user:
+                raise ValidationError('That username is taken. Please choose a different one.')
+
+    def validate_email(self, email):
+        if email.data != current_user.email:
+            user = User.query.filter_by(email=email.data).first()
+            if user:
+                raise ValidationError('That email is taken. Please choose a different one.')
 
 
 def create_app():
@@ -419,6 +441,13 @@ def create_app():
         except Exception as e:
             print(f"Error: {e}")
             return "There was a problem deleting that file."
+
+    @app.route("/account")
+    @login_required
+    def account():
+        image_file = url_for('static', filename='profile_pics/' + current_user.image_file)
+        return render_template('account.html', title='Account', image_file=image_file)
+
 
     with app.app_context():
         db.create_all()
