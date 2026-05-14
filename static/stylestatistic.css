@@ -92,8 +92,12 @@ h1 {
   width: 200px;
   background-color: antiquewhite;
   border-radius: 20px;
-  margin-top: 20px;
+  margin: 20px 20px;
   display: inline-block;
+}
+
+.line2{
+  right : 20px;
 }
 
 .card:hover {
