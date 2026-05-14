@@ -407,8 +407,16 @@ def create_app():
     @app.route('/statistic')
     def statistic():
         results = db.session.query(NewJob.job_status, func.count(NewJob.job_status)).group_by(NewJob.job_status).all()
+
+        stats_dict = {status: count for status, count in results}
     
-        return render_template('statistic.html', status_data=results)
+        total_count = sum(stats_dict.values())
+
+        return render_template('statistic.html', 
+                           status_data=results, 
+                           stats=stats_dict, 
+                           total=total_count)
+        
 
 
     with app.app_context():
