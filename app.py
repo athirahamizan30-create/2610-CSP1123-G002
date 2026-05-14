@@ -149,20 +149,11 @@ def create_app():
     @login_required
     def dashboard():
 
-        full_time = NewJob.query.filter_by(
-            user_id=current_user.id,
-            job_type='Full-Time'
-        ).all()
+        full_time = NewJob.query.filter_by(user_id=current_user.id, job_type='Full-Time').all()
 
-        part_time = NewJob.query.filter_by(
-            user_id=current_user.id,
-            job_type='Part-Time'
-        ).all()
+        part_time = NewJob.query.filter_by(user_id=current_user.id, job_type='Part-Time').all()
 
-        intern = NewJob.query.filter_by(
-            user_id=current_user.id,
-            job_type='Intern/Trainee'
-        ).all()
+        intern = NewJob.query.filter_by(user_id=current_user.id, job_type='Intern/Trainee').all()
 
         all_jobs = full_time + part_time + intern
 
@@ -436,7 +427,7 @@ def create_app():
 
             if v:
                 parsed_date = datetime.fromisoformat(v)
-                
+
                 new_date = JobDate(
                     job_id=id,
                     user_id=current_user.id,
