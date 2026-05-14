@@ -10,63 +10,34 @@
 
       function drawChart() {
         var data = google.visualization.arrayToDataTable([
-        ['Status', 'Number', { role: "style" }],
+        ['Status', 'Interested', 'Applied', 'Rejected', 'Stage 1', 'Stage 2', 'Interview', 'Accepted'],
+        ['Applications Status', 
+            {% set counts = {'int': 0, 'app': 0, 'rej': 0, 's1': 0, 's2': 0, 'iv': 0, 'acc': 0} %}
             {% for status, count in status_data %}
-                {% if status == 'interested' %}
-                    ['{{ status }}', {{ count }}, '#ffff99'],
-                {% elif status == 'applied' %}
-                    ['{{ status }}', {{ count }}, '#99ffff'],
-                {% elif status == 'rejected' %}
-                    ['{{ status }}', {{ count }}, '#ff3333'],
-                {% elif status == 'stage 1' %}
-                        ['{{ status }}', {{ count }}, '#99ccff'],
-                {% elif status == 'stage 2' %}
-                    ['{{ status }}', {{ count }}, '#0080ff'], 
-                {% elif status == 'interview' %}
-                    ['{{ status }}', {{ count }}, '#00cccc'],
-                {% elif status == 'accepted' %}
-                    ['{{ status }}', {{ count }}, '#00CC00'], 
-                {% else %}
-                    ['{{ status }}', {{ count }}, '#cccccc'],
+                {% if status == 'interested' %}{% set _ = counts.update({'int': count}) %}
+                {% elif status == 'applied' %}{% set _ = counts.update({'app': count}) %}
+                {% elif status == 'rejected' %}{% set _ = counts.update({'rej': count}) %}
+                {% elif status == 'stage 1' %}{% set _ = counts.update({'s1': count}) %}
+                {% elif status == 'stage 2' %}{% set _ = counts.update({'s2': count}) %}
+                {% elif status == 'interview' %}{% set _ = counts.update({'iv': count}) %}
+                {% elif status == 'accepted' %}{% set _ = counts.update({'acc': count}) %}
                 {% endif %}
             {% endfor %}
+            {{ counts.int }}, {{ counts.app }}, {{ counts.rej }}, {{ counts.s1 }}, {{ counts.s2 }}, {{ counts.iv }}, {{ counts.acc }}
+        ]
         ]);
 
         var options = {
-          chart: {
-            title: 'Status',
-            subtitle: 'from may to now',
-          }
+            title: 'Application Status Data',
+            colors: ['#ffff99', '#99ffff', '#ff3333', '#99ccff', '#0080ff', '#00cccc', '#00CC00'],
+            legend: { position: 'top', maxLines: 3 },
+            bar: { groupWidth: '100%' }
         };
 
         var chart = new google.visualization.ColumnChart(document.getElementById('columnchart_material'));
 
         chart.draw(data, options);
     }
-    </script>
-
-    <script type="text/javascript">
-        const config = {
-        type: 'doughnut',
-        data: data,
-        };
-        const data = {
-        labels: [
-            'Red',
-            'Blue',
-            'Yellow'
-            ],
-        datasets: [{
-        label: 'My First Dataset',
-        data: [300, 50, 100],
-        backgroundColor: [
-        'rgb(255, 99, 132)',
-        'rgb(54, 162, 235)',
-        'rgb(255, 205, 86)'
-        ],
-        hoverOffset: 4
-        }]
-        };
     </script>
 </head>
 
@@ -104,7 +75,7 @@
             <h1>Statistic</h1>
         </div>
 
-        <div id="columnchart_material" style="width: 800px; height: 500px;"></div>
+        <div id="columnchart_material" style="width: 1200px; height: 750px;"></div>
 
     </div>
 {% endblock %}
