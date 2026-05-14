@@ -95,7 +95,6 @@ h1 {
   transition: 0.3s;
   width: 260px;
   height: 170px;
-  background-color: antiquewhite;
   border-radius: 20px;
   margin: 20px 20px;
   display: inline-block;
@@ -138,4 +137,36 @@ h1 {
 
 .container p{
   font-size: 20px;
+}
+
+#Total{
+  background-color: #8b3ff4;
+}
+
+#Interested{
+  background-color: #ffff99;
+}
+
+#Applied{
+  background-color: #99ffff;
+}
+
+#Rejected{
+  background-color: #ff3333;
+}
+
+#Stage1{
+  background-color: #99ccff;
+}
+
+#Stage2{
+  background-color: #0080ff;
+}
+
+#Interview{
+  background-color: #00cccc;
+}
+
+#AcceptedS{
+  background-color: #00CC00;
 }
