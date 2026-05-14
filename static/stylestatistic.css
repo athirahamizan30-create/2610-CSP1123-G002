@@ -9,8 +9,8 @@ body{
     z-index: 1; 
     top: 0;
     left: 0;
-    background: #2c3e50;
-    color: white;
+    background: rgb(206, 156, 89);
+    color: rgb(0, 0, 0);
     overflow-x: hidden; 
     padding-top: 60px;
     transition: 0.5s; 
@@ -19,11 +19,12 @@ body{
 .sidebar h2 {
     margin-bottom: 20px;
     padding: 20px;
+    color: rgb(0, 0, 0);
 }
 
 .sidebar a {
     display: block;
-    color: white;
+    color: rgb(0, 0, 0);
     text-decoration: none;
     padding: 20px;
     margin-bottom: 5px;
@@ -44,7 +45,7 @@ body{
 }
 
 .sidebar a:hover {
-    background: #34495e;
+    background: rgb(150, 115, 69);
 }
 
 .main {
@@ -55,7 +56,7 @@ body{
 .openbtn {
   font-size: 20px;
   cursor: pointer;
-  background-color: #2c3e50;
+  background-color: rgb(206, 156, 89);
   color: white;
   padding: 10px 15px;
   border: none;
@@ -125,6 +126,8 @@ h1 {
   gap: 20px;
 }
 
+
+
 .right-box {
   display: flex;
   flex-direction: column;
@@ -136,11 +139,12 @@ h1 {
 }
 
 .container p{
-  font-size: 20px;
+  font-size: 30px;
+  font-weight: bolder;
 }
 
 #Total{
-  background-color: #8b3ff4;
+  background-color: #bc9ee7;
 }
 
 #Interested{
@@ -152,7 +156,7 @@ h1 {
 }
 
 #Rejected{
-  background-color: #ff3333;
+  background-color: #bd4a4a;
 }
 
 #Stage1{
@@ -160,13 +164,13 @@ h1 {
 }
 
 #Stage2{
-  background-color: #0080ff;
+  background-color: #3474b4;
 }
 
 #Interview{
-  background-color: #00cccc;
+  background-color: #299b9b;
 }
 
-#AcceptedS{
-  background-color: #00CC00;
+#Accepted{
+  background-color: #41be41;
 }
