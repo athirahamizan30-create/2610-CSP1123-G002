@@ -30,6 +30,17 @@ profile-left img {
 
 .profile-right {
   padding-left: 30px;
+  word-wrap: break-word;       /* Standard property for older browsers */
+  overflow-wrap: break-word;    /* Modern property to prevent overflow */
+  word-break: normal;           /* Keeps words intact unless they are too long */
+  white-space: normal;          /* Ensures text wraps naturally */
+}
+
+.profile-text {
+    display: block;
+    font-weight: normal;
+    margin-top: 10px;
+    line-height: 1.6;             /* Makes paragraphs easier to read */
 }
 
 .profile-right h4 {
@@ -37,7 +48,6 @@ profile-left img {
   margin-bottom: 10px;
   color: #333;
 }
-
 
 .account-heading {
   font-size: 1.5rem;

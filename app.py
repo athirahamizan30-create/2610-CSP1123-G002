@@ -14,7 +14,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
-from wtforms import StringField, SubmitField
+from wtforms import StringField, SubmitField, TextAreaField
 from wtforms.validators import DataRequired, Length, Email, ValidationError
 
 app = Flask(__name__, template_folder="templates", static_folder="static/uploads")
@@ -45,6 +45,10 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
     image_file= db.Column(db.String(20), nullable=False, default='default.jpg')
+
+    full_name = db.Column(db.String(100), nullable=True)
+    phone_number = db.Column(db.String(20), nullable=True)
+    about_me = db.Column(db.Text, nullable=True)
 
     password_reset_ids = db.relationship(
         "PasswordResetId",
@@ -106,6 +110,11 @@ class UpdateAccountForm(FlaskForm):
                            validators=[DataRequired(), Length(min=2, max=20)])
     email = StringField('Email',
                         validators=[DataRequired(), Email()])
+    
+    full_name = StringField('Full Name')
+    phone_number = StringField('Phone Number')
+    about_me = TextAreaField('About Me')
+
     picture = FileField('Update Profile Picture', validators=[FileAllowed(['jpg', 'png'])])
     submit = SubmitField('Update')
 
@@ -459,14 +468,23 @@ def create_app():
             if form.picture.data:
                 picture_file = save_picture(form.picture.data)
                 current_user.image_file = picture_file
+
             current_user.username = form.username.data
             current_user.email = form.email.data
+            current_user.full_name = form.full_name.data
+            current_user.phone_number = form.phone_number.data
+            current_user.about_me = form.about_me.data
+
             db.session.commit()
             flash("your account has been updated!", 'success')
             return redirect(url_for('account'))
         elif request.method == 'GET':
             form.username.data = current_user.username
             form.email.data = current_user.email
+            form.full_name.data = current_user.full_name 
+            form.phone_number.data = current_user.phone_number 
+            form.about_me.data = current_user.about_me 
+
         image_file = url_for('static', filename='profile_pics/' + current_user.image_file)
         return render_template('account.html', title='Account', image_file=image_file, form=form)
 

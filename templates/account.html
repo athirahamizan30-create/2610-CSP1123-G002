@@ -11,43 +11,87 @@
         <!-- Left card -->
         <div class="col-md-4 profile-left">
         <div class="card-container text-center profile-left">
-            <img class="rounded-circle mb-3" src="{{ image_file }}" width="125" height="125">
+            <img class="rounded-circle mb-3" src="{{ image_file }}" width="150" height="150">
             <h2 class="account-heading">{{ current_user.username }}</h2>
             <p class="text-secondary">{{ current_user.email }}</p>
+             
+            <div class="form-group">
+                {{ form.picture.label() }}
+                {{ form.picture(class="form-control-file") }}
+                {% if form.picture.errors %}
+                    {% for error in form.picture.errors %}
+                            <span class="text-danger">{{ error }}</span><br>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            <div class="form-group">
+                    {{ form.submit(class="btn btn-primary") }}
+            </div>
+
         </div>
         </div>
 
         <!-- Right card -->
         <div class="col-md-8">
         <div class="card-container profile-right">
-            <h4>Full Name: {{ current_user.username }}</h4>
+            <legend class="border-bottom mb-4">Account Info</legend>
+            <h4>Full Name: {{ current_user.full_name or 'Not Set' }}</h4>
             <hr>
             <h4>Email: {{ current_user.email }}</h4>
             <hr>
-            <h4>Phone: +60 123-456-789</h4>
+            <h4>Phone: {{ current_user.phone_number or 'Not Set' }}</h4>
             <hr>
-            <h4>About Me: Aspiring professional seeking new opportunities.</h4>
+            <h4>About Me: <span class="profile-text">{{ current_user.about_me or 'Tell us about yourself!' }}</span></h4>
             <hr>
 
             <form method="POST" action="" enctype="multipart/form-data" class="mt-4">
             {{ form.hidden_tag() }}
             <fieldset class="form-group">
-                <legend class="border-bottom mb-4">Account Info</legend>
+                <legend class="border-bottom mb-4">Edit Account Information</legend>
 
                 <div class="form-group">
                 {{ form.username.label(class="form-control-label") }}
-                {{ form.username(class="form-control") }}
+                {% if form.username.errors %}
+                    {{ form.username(class="form-control is-invalid") }}
+                    <div class="invalid-feedback">
+                        {% for error in form.username.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    {{ form.username(class="form-control") }}
+                {% endif %}
                 </div>
 
                 <div class="form-group">
                 {{ form.email.label(class="form-control-label") }}
-                {{ form.email(class="form-control") }}
+                {% if form.email.errors %}
+                    {{ form.email(class="form-control is-invalid") }}
+                    <div class="invalid-feedback">
+                        {% for error in form.email.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    {{ form.email(class="form-control") }}
+                {% endif %}
                 </div>
 
                 <div class="form-group">
-                {{ form.picture.label() }}
-                {{ form.picture(class="form-control-file") }}
+                {{ form.full_name.label(class="form-control-label") }}
+                {{ form.full_name(class="form-control") }}
                 </div>
+
+                <div class="form-group">
+                    {{ form.phone_number.label(class="form-control-label") }}
+                    {{ form.phone_number(class="form-control") }}
+                </div>
+
+                <div class="form-group">
+                    {{ form.about_me.label(class="form-control-label") }}
+                    {{ form.about_me(class="form-control") }}
+                </div>
+
             </fieldset>
 
             <div class="form-group">
