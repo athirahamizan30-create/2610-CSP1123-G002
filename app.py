@@ -139,6 +139,13 @@ def create_app():
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
 
+    app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+    app.config['MAIL_PORT'] = 587
+    app.config['MAIL_USE_TLS'] = True
+    app.config['MAIL_USERNAME'] = 'your_email@gmail.com'
+    app.config['MAIL_PASSWORD'] = 'your_app_password'
+    app.config['MAIL_DEFAULT_SENDER'] = 'your_email@gmail.com'
+    
     mail.init_app(app)
 
     @app.route('/', methods=['GET', 'POST'])
