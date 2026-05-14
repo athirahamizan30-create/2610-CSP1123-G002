@@ -1,3 +1,7 @@
+body{
+  background-color: antiquewhite;
+}
+
 .sidebar {
     height: 100%; 
     width: 0; 
@@ -89,17 +93,24 @@ h1 {
 .card {
   box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
   transition: 0.3s;
-  width: 200px;
+  width: 260px;
+  height: 170px;
   background-color: antiquewhite;
   border-radius: 20px;
   margin: 20px 20px;
   display: inline-block;
+  flex-direction: column;    
+  justify-content: center;  
+  align-items: center;      
+  text-align: center;
 }
 
-.line2{
+
+.line1 .line2 {
   display: flex;
-  padding-left: 100px;
-} 
+  flex-wrap: wrap;
+  gap: 10px;
+}
 
 .card:hover {
   box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
@@ -109,6 +120,22 @@ h1 {
   padding: 2px 16px;
 }
 
-#columnchart_material {
+.databoard {
   display: flex;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.right-box {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.container h4 {
+  font-size: 30px;
+}
+
+.container p{
+  font-size: 20px;
 }
