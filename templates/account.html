@@ -1,68 +1,62 @@
 {% extends "base.html" %}
 
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='account.css') }}">
+
+<link rel="stylesheet" href="{{ url_for('static', filename='styleAccount.css') }}">
+
 <div class="main">
-<div class="container mt-5">
-    <div class="d-flex align-items-center mb-4">
-            <img class="rounded-circle me-3" src="{{ image_file }}" width="125" height="125">
-            <div class="media-body">
-                <h2 class="account-heading">{{ current_user.username }}</h2>
-                <p class="text-secondary">{{ current_user.email }}</p>
-            </div>
+  <div class="container mt-5">  
+    <div class="row justify-content-center mt-5">
+
+        <!-- Left card -->
+        <div class="col-md-4 profile-left">
+        <div class="card-container text-center profile-left">
+            <img class="rounded-circle mb-3" src="{{ image_file }}" width="125" height="125">
+            <h2 class="account-heading">{{ current_user.username }}</h2>
+            <p class="text-secondary">{{ current_user.email }}</p>
+        </div>
         </div>
 
-        <form method="POST" action="" enctype="multipart/form-data">
+        <!-- Right card -->
+        <div class="col-md-8">
+        <div class="card-container profile-right">
+            <h4>Full Name: {{ current_user.username }}</h4>
+            <hr>
+            <h4>Email: {{ current_user.email }}</h4>
+            <hr>
+            <h4>Phone: +60 123-456-789</h4>
+            <hr>
+            <h4>About Me: Aspiring professional seeking new opportunities.</h4>
+            <hr>
+
+            <form method="POST" action="" enctype="multipart/form-data" class="mt-4">
             {{ form.hidden_tag() }}
             <fieldset class="form-group">
                 <legend class="border-bottom mb-4">Account Info</legend>
-                
+
                 <div class="form-group">
-                    {{ form.username.label(class="form-control-label") }}
-                    {% if form.username.errors %}
-                        {{ form.username(class="form-control is-invalid") }}
-                        <div class="invalid-feedback">
-                            {% for error in form.username.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        {{ form.username(class="form-control") }}
-                    {% endif %}
+                {{ form.username.label(class="form-control-label") }}
+                {{ form.username(class="form-control") }}
                 </div>
 
                 <div class="form-group">
-                    {{ form.email.label(class="form-control-label") }}
-                    {% if form.email.errors %}
-                        {{ form.email(class="form-control is-invalid") }}
-                        <div class="invalid-feedback">
-                            {% for error in form.email.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        {{ form.email(class="form-control") }}
-                    {% endif %}
+                {{ form.email.label(class="form-control-label") }}
+                {{ form.email(class="form-control") }}
                 </div>
 
                 <div class="form-group">
-                    {{ form.picture.label() }}
-                    {{ form.picture(class="form-control-file") }}
-                    {% if form.picture.errors %}
-                        {% for error in form.picture.errors %}
-                            <span class="text-danger">{{ error }}</span><br>
-                        {% endfor %}
-                    {% endif %}
+                {{ form.picture.label() }}
+                {{ form.picture(class="form-control-file") }}
                 </div>
             </fieldset>
 
             <div class="form-group">
                 {{ form.submit(class="btn btn-primary") }}
             </div>
-        </form>
+            </form>
+        </div>
+        </div>
     </div>
-</div>
+  </div>
 </div>
 {% endblock content %}
-
-
