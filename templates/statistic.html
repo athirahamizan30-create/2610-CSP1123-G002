@@ -17,8 +17,8 @@
                 {% if status == 'interested' %}{% set _ = counts.update({'int': count}) %}
                 {% elif status == 'applied' %}{% set _ = counts.update({'app': count}) %}
                 {% elif status == 'rejected' %}{% set _ = counts.update({'rej': count}) %}
-                {% elif status == 'stage 1' %}{% set _ = counts.update({'s1': count}) %}
-                {% elif status == 'stage 2' %}{% set _ = counts.update({'s2': count}) %}
+                {% elif status == 'stage1' %}{% set _ = counts.update({'s1': count}) %}
+                {% elif status == 'stage2' %}{% set _ = counts.update({'s2': count}) %}
                 {% elif status == 'interview' %}{% set _ = counts.update({'iv': count}) %}
                 {% elif status == 'accepted' %}{% set _ = counts.update({'acc': count}) %}
                 {% endif %}
@@ -33,6 +33,8 @@
             legend: { position: 'top', maxLines: 3 },
             bar: { groupWidth: '100%' },
             backgroundColor: 'transparent',
+            stroke: '#000000',
+            strokeWidth: 2,
         };
 
         var chart = new google.visualization.ColumnChart(document.getElementById('columnchart_material'));
@@ -114,14 +116,14 @@
                     <div id="Stage1" class="card">
                         <div class="container">
                             <h4><b>Stage 1</b></h4>
-                            <p>{{stats.get('stage 1', 0)}}</p>
+                            <p>{{stats.get('stage1', 0)}}</p>
                         </div>
                     </div>
 
                     <div id="Stage2" class="card">
                         <div class="container">
                             <h4><b>Stage 2</b></h4>
-                            <p>{{stats.get('stage 2', 0)}}</p>
+                            <p>{{stats.get('stage2', 0)}}</p>
                         </div>
                     </div>
 
