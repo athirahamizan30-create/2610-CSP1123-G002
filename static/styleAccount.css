@@ -63,6 +63,13 @@ img.rounded-circle {
   border: 3px solid #e0e0e0;
 }
 
+.profile-pic{
+    width:150px;
+    height:150px;
+    border-radius:50%;
+    object-fit:cover;
+}
+
 legend {
   font-size: 1.3rem;
   font-weight: 600;

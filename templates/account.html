@@ -5,13 +5,15 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='styleAccount.css') }}">
 
 <div class="main">
-  <div class="container mt-5">  
+  <div class="container mt-5"> 
+    <form method="POST" action="" enctype="multipart/form-data" class="mt-4">
+    {{ form.hidden_tag() }} 
     <div class="row justify-content-center mt-5">
 
         <!-- Left card -->
         <div class="col-md-4 profile-left">
         <div class="card-container text-center profile-left">
-            <img class="rounded-circle mb-3" src="{{ image_file }}" width="150" height="150">
+            <img class="profile-pic" src="{{ image_file }}">
             <h2 class="account-heading">{{ current_user.username }}</h2>
             <p class="text-secondary">{{ current_user.email }}</p>
              
@@ -44,8 +46,6 @@
             <h4>About Me: <span class="profile-text">{{ current_user.about_me or 'Tell us about yourself!' }}</span></h4>
             <hr>
 
-            <form method="POST" action="" enctype="multipart/form-data" class="mt-4">
-            {{ form.hidden_tag() }}
             <fieldset class="form-group">
                 <legend class="border-bottom mb-4">Edit Account Information</legend>
 
