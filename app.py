@@ -430,9 +430,13 @@ def create_app():
 
         JobDate.query.filter_by(job_id=id).delete()
 
+        Reminder.query.filter_by(job_id=id).delete()
+
         for t, v in zip(date_types, date_values):
 
             if v:
+                parsed_date = datetime.fromisoformat(v)
+                
                 new_date = JobDate(
                     job_id=id,
                     user_id=current_user.id,
@@ -440,6 +444,15 @@ def create_app():
                     date_value=datetime.fromisoformat(v)
                 )
                 db.session.add(new_date)
+
+                reminder = Reminder(
+                    user_id=current_user.id,
+                    job_id=id,
+                    reminder_date=parsed_date,
+                    message=f"{t} reminder for {job.company_name}"
+                )
+
+                db.session.add(reminder)
 
         db.session.commit()
 
