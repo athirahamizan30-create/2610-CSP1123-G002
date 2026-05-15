@@ -1,10 +1,10 @@
 from flask import Flask, render_template, url_for, request, redirect, flash
-import mysql.connector
+import secrets
 import re
 import uuid
 import os
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import timedelta, datetime, timezone
 from config import Config
@@ -13,13 +13,15 @@ from flask_bcrypt import Bcrypt
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select
 from sqlalchemy import func
-
+from flask_wtf import FlaskForm
+from flask_wtf.file import FileField, FileAllowed
+from wtforms import StringField, SubmitField, TextAreaField
+from wtforms.validators import DataRequired, Length, Email, ValidationError
 
 app = Flask(__name__, template_folder="templates", static_folder="static/uploads")
 db= SQLAlchemy()
 login_manager = LoginManager()
 bcrypt = Bcrypt()
-
 
 app.config['SECRET_KEY'] = 'user_registration_athirah'
 app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://athirah:Tiya071!@localhost/CareerTrack_Database"
@@ -33,18 +35,24 @@ db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = "login"
 
-
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
+    image_file= db.Column(db.String(20), nullable=False, default='default.jpg')
+
+    full_name = db.Column(db.String(100), nullable=True)
+    phone_number = db.Column(db.String(20), nullable=True)
+    about_me = db.Column(db.Text, nullable=True)
 
     password_reset_ids = db.relationship(
         "PasswordResetId",
         backref="user",
         cascade="all, delete-orphan"
     )
+
+    jobs = db.relationship('NewJob', backref='owner', lazy=True)
 
 class PasswordResetId(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -90,6 +98,32 @@ class JobDate(db.Model):
     job_id = db.Column(db.Integer, db.ForeignKey('new_job.id'))
     date_type = db.Column(db.String(50))
     date_value = db.Column(db.Date)
+
+class UpdateAccountForm(FlaskForm):
+    username = StringField('Username',
+                           validators=[DataRequired(), Length(min=2, max=20)])
+    email = StringField('Email',
+                        validators=[DataRequired(), Email()])
+    
+    full_name = StringField('Full Name')
+    phone_number = StringField('Phone Number')
+    about_me = TextAreaField('About Me')
+
+    picture = FileField('Update Profile Picture', validators=[FileAllowed(['jpg', 'png'])])
+    submit = SubmitField('Update')
+
+    def validate_username(self, username):
+        if username.data != current_user.username:
+            user = User.query.filter_by(username=username.data).first()
+            if user:
+                raise ValidationError('That username is taken. Please choose a different one.')
+
+    def validate_email(self, email):
+        if email.data != current_user.email:
+            user = User.query.filter_by(email=email.data).first()
+            if user:
+                raise ValidationError('That email is taken. Please choose a different one.')
+
 
 def create_app():
 
@@ -367,16 +401,22 @@ def create_app():
         return render_template('reminders.html', active_page='reminders', dates=dates)
 
     @app.route('/file_upload', methods=["POST"])
+    @login_required
     def file_upload():
         file = request.files['file']
         if file:
             file.seek(0, os.SEEK_END)
             file_length = file.tell()
             file.seek(0)
-        
+
             filename = file.filename
             save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(save_path)
+            
+
+            new_doc = Document(filename=filename, file_path=save_path, user_id=current_user.id)
+            db.session.add(new_doc)
+            db.session.commit()
 
             new_doc = Document(filename=filename, file_path=save_path)
             db.session.add(new_doc)
@@ -386,8 +426,9 @@ def create_app():
         return "Upload Failed"
 
     @app.route('/delete_file/<int:doc_id>')
+    @login_required
     def delete_file(doc_id):
-        doc = Document.query.get_or_404(doc_id)
+        doc = Document.query.get_or_404(id=doc_id)
 
         try:
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], doc.filename)
@@ -417,11 +458,49 @@ def create_app():
                            stats=stats_dict, 
                            total=total_count)
         
+    def save_picture(form_picture):
+        random_hex = secrets.token_hex(8)
+        _, f_ext = os.path.splitext(form_picture.filename)
+        picture_fn = random_hex + f_ext
+        picture_path = os.path.join(app.root_path, 'static/profile_pics', picture_fn)
+        form_picture.save(picture_path)
+
+        return picture_fn
+
+    @app.route("/account", methods=["POST", "GET"])
+    @login_required
+    def account():
+        form = UpdateAccountForm()
+        if form.validate_on_submit():
+            if form.picture.data:
+                picture_file = save_picture(form.picture.data)
+                current_user.image_file = picture_file
+
+            current_user.username = form.username.data
+            current_user.email = form.email.data
+            current_user.full_name = form.full_name.data
+            current_user.phone_number = form.phone_number.data
+            current_user.about_me = form.about_me.data
+
+            db.session.commit()
+            flash("your account has been updated!", 'success')
+            return redirect(url_for('account'))
+        elif request.method == 'GET':
+            form.username.data = current_user.username
+            form.email.data = current_user.email
+            form.full_name.data = current_user.full_name 
+            form.phone_number.data = current_user.phone_number 
+            form.about_me.data = current_user.about_me 
+
+        image_file = url_for('static', filename='profile_pics/' + current_user.image_file)
+        return render_template('account.html', title='Account', image_file=image_file, form=form)
 
 
     with app.app_context():
         db.create_all()
         return app
+
+
 
 if __name__ == '__main__':
     app = create_app()
