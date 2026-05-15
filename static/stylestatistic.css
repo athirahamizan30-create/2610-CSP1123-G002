@@ -33,6 +33,8 @@ body{
     transition: 0.5s;
     cursor: pointer;
     flex-grow: 1;
+    font-size: larger;
+    font-weight: bold;
 }
 
 .sidebar .closebtn {
