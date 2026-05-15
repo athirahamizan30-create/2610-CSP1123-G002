@@ -447,7 +447,7 @@ def create_app():
                     user_id=current_user.id,
                     job_id=id,
                     reminder_date=parsed_date,
-                    message=f"{t} reminder for {job.company_name}"
+                    message = f"{t.title()} - {job.job_position} at {job.company_name}"
                 )
 
                 db.session.add(reminder)
