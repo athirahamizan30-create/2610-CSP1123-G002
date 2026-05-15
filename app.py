@@ -12,6 +12,7 @@ from flask_mail import Mail, Message
 from flask_bcrypt import Bcrypt
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select
+from sqlalchemy import func
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from wtforms import StringField, SubmitField, TextAreaField
@@ -21,9 +22,6 @@ app = Flask(__name__, template_folder="templates", static_folder="static/uploads
 db= SQLAlchemy()
 login_manager = LoginManager()
 bcrypt = Bcrypt()
-
-
-
 
 app.config['SECRET_KEY'] = 'user_registration_athirah'
 app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://athirah:Tiya071!@localhost/CareerTrack_Database"
@@ -36,8 +34,6 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = "login"
-
-
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -84,23 +80,24 @@ class PasswordResetId(db.Model):
     
 class Document(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     filename = db.Column(db.String(100), nullable=False)
-    file_path = db.Column(db.String(200), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)    
+    file_path = db.Column(db.String(200), nullable=False)    
 
 class NewJob(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     company_name = db.Column(db.String(255))
     job_position = db.Column(db.String(255))
     location = db.Column(db.String(255))
     job_status = db.Column(db.String(50))
     job_type = db.Column(db.String(50))
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
     dates = db.relationship('JobDate', backref='job', cascade="all, delete")
 
 class JobDate(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     job_id = db.Column(db.Integer, db.ForeignKey('new_job.id'))
     date_type = db.Column(db.String(50))
     date_value = db.Column(db.Date)
@@ -166,9 +163,9 @@ def create_app():
         return render_template(
             'dashboard.html',
             active_page='dashboard',
-            full_time=NewJob.query.filter_by(job_type='Full-Time', user_id=current_user.id).all(),
-            part_time=NewJob.query.filter_by(job_type='Part-Time', user_id=current_user.id).all(),
-            intern=NewJob.query.filter_by(job_type='Intern/Trainee', user_id=current_user.id).all()
+            full_time=NewJob.query.filter_by(job_type='Full-Time').all(),
+            part_time=NewJob.query.filter_by(job_type='Part-Time').all(),
+            intern=NewJob.query.filter_by(job_type='Intern/Trainee').all()
         )
     
     @app.route('/register', methods=["GET", "POST"])
@@ -257,8 +254,7 @@ def create_app():
             job_position=request.form.get('job_position'),
             location=request.form.get('location'),
             job_status=request.form.get('job_status'),
-            job_type=request.form.get('job_type'),
-            user_id=current_user.id
+            job_type=request.form.get('job_type')
         )
 
         db.session.add(job)
@@ -279,7 +275,6 @@ def create_app():
             db.session.commit()
             
         return redirect(url_for('dashboard'))
-
 
     @app.route('/forgot_password', methods=['POST', 'GET'])
     def forgot_password():
@@ -371,9 +366,8 @@ def create_app():
     
     @app.route('/document')
     def document():
-        docs = Document.query.filter_by(user_id=current_user.id).order_by(Document.filename.asc()).all()
-        return render_template("document.html", docs=docs)
-    
+        docs = Document.query.order_by(Document.filename.asc()).all()
+        return render_template("document.html", docs=docs)  
 
     @app.route('/edit_job/<int:id>', methods=['POST'])
     @login_required
@@ -388,7 +382,6 @@ def create_app():
 
         db.session.commit()
         return redirect(url_for('dashboard'))
-
 
     @app.route('/delete_job/<int:id>', methods=['POST'])
     @login_required
@@ -422,9 +415,8 @@ def create_app():
             filename = file.filename
             save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(save_path)
-            
 
-            new_doc = Document(filename=filename, file_path=save_path, user_id=current_user.id)
+            new_doc = Document(filename=filename, file_path=save_path)
             db.session.add(new_doc)
             db.session.commit()
 
@@ -451,6 +443,19 @@ def create_app():
             print(f"Error: {e}")
             return "There was a problem deleting that file."
 
+    @app.route('/statistic')
+    def statistic():
+        results = db.session.query(NewJob.job_status, func.count(NewJob.job_status)).group_by(NewJob.job_status).all()
+
+        stats_dict = {status: count for status, count in results}
+    
+        total_count = sum(stats_dict.values())
+
+        return render_template('statistic.html', 
+                           status_data=results, 
+                           stats=stats_dict, 
+                           total=total_count)
+        
     def save_picture(form_picture):
         random_hex = secrets.token_hex(8)
         _, f_ext = os.path.splitext(form_picture.filename)
@@ -498,6 +503,3 @@ def create_app():
 if __name__ == '__main__':
     app = create_app()
     app.run(host="0.0.0.0", port=5000, debug=True)
-
-
-

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Statistic</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='stylestatistic.css') }}">
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+      google.charts.load('current', {'packages':['corechart']});
+      google.charts.setOnLoadCallback(drawChart);
+
+      function drawChart() {
+        var data = google.visualization.arrayToDataTable([
+        ['Status', 'Interested', 'Applied', 'Rejected', 'Stage 1', 'Stage 2', 'Interview', 'Accepted'],
+        ['Applications Status', 
+            {% set counts = {'int': 0, 'app': 0, 'rej': 0, 's1': 0, 's2': 0, 'iv': 0, 'acc': 0} %}
+            {% for status, count in status_data %}
+                {% if status == 'interested' %}{% set _ = counts.update({'int': count}) %}
+                {% elif status == 'applied' %}{% set _ = counts.update({'app': count}) %}
+                {% elif status == 'rejected' %}{% set _ = counts.update({'rej': count}) %}
+                {% elif status == 'stage1' %}{% set _ = counts.update({'s1': count}) %}
+                {% elif status == 'stage2' %}{% set _ = counts.update({'s2': count}) %}
+                {% elif status == 'interview' %}{% set _ = counts.update({'iv': count}) %}
+                {% elif status == 'accepted' %}{% set _ = counts.update({'acc': count}) %}
+                {% endif %}
+            {% endfor %}
+            {{ counts.int }}, {{ counts.app }}, {{ counts.rej }}, {{ counts.s1 }}, {{ counts.s2 }}, {{ counts.iv }}, {{ counts.acc }}
+        ]
+        ]);
+
+        var options = {
+            title: 'Application Status Data',
+            colors: ['#ffff99', '#99ffff', '#bd4a4a', '#99ccff', '#3474b4', '#299b9b', '#41be41'],
+            legend: { position: 'top', maxLines: 3 },
+            bar: { groupWidth: '100%' },
+            backgroundColor: 'transparent',
+            stroke: '#000000',
+            strokeWidth: 2,
+        };
+
+        var chart = new google.visualization.ColumnChart(document.getElementById('columnchart_material'));
+
+        chart.draw(data, options);
+    }
+    </script>
+</head>
+
+<body>
+{% extends "base.html" %}
+
+{% block content %}
+    <div id="mySidebar" class="sidebar">  
+        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+        <h2>My Jobs</h2>
+
+        <a href="/dashboard">Dashboard</a>
+        <a href="javascript:void(0);" onclick="openPopup()">New Application</a>
+        <a href="/document">Documents</a>
+        <a href="/reminders">Reminders</a>
+        <a href="/">Log Out</a>
+
+        <script>
+            function openNav() {
+            document.getElementById("mySidebar").style.width = "250px";
+            document.getElementById("movemain").style.marginLeft = "250px";
+            }
+
+        <!--push back the content to the left -->
+            function closeNav() {
+            document.getElementById("mySidebar").style.width = "0";
+            document.getElementById("movemain").style.marginLeft = "0";
+            }
+        </script>
+    </div>
+
+    <div id="movemain" class="main">
+        <div class ="header-section">
+            <button class="openbtn" onclick="openNav()">&#9776;</button>
+            <h1>Statistic</h1>
+        </div>
+
+        <div class="databoard">
+            <div id="columnchart_material" style="width: 1200px; height: 750px;"></div>
+
+            <div class="right-box">
+                <div class="line1">
+                    <div id="Total" class="card">
+                        <div class="container">
+                            <h4><b>Total Application</b></h4>
+                            <p>{{ total }}</p>
+                        </div>
+                    </div>
+
+                    <div id="Interested" class="card">
+                        <div class="container">
+                            <h4><b>Interested</b></h4>
+                            <p>{{stats.get('interested', 0)}}</p>
+                        </div>
+                    </div>
+
+                    <div id="Applied" class="card">
+                        <div class="container">
+                            <h4><b>Applied</b></h4>
+                            <p>{{stats.get('applied', 0)}}</p>
+                        </div>
+                    </div>
+
+                    <div id="Rejected" class="card">
+                        <div class="container">
+                            <h4><b>Rejected</b></h4>
+                            <p>{{stats.get('rejected', 0)}}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="line2">
+                    <div id="Stage1" class="card">
+                        <div class="container">
+                            <h4><b>Stage 1</b></h4>
+                            <p>{{stats.get('stage1', 0)}}</p>
+                        </div>
+                    </div>
+
+                    <div id="Stage2" class="card">
+                        <div class="container">
+                            <h4><b>Stage 2</b></h4>
+                            <p>{{stats.get('stage2', 0)}}</p>
+                        </div>
+                    </div>
+
+                    <div id="Interview" class="card">
+                        <div class="container">
+                            <h4><b>Interview</b></h4>
+                            <p>{{stats.get('interview', 0)}}</p>
+                        </div>
+                    </div>
+
+                    <div id="Accepted" class="card">
+                        <div class="container">
+                            <h4><b>Accepted</b></h4>
+                            <p>{{stats.get('accepted', 0)}}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+</div>
+
+
+    </div>
+{% endblock %}
+</body>
+</html>
