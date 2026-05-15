@@ -132,3 +132,34 @@ select {
 .edit-btn:hover{
     background-color: #cfa771;
 }
+
+.date-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.date-row select {
+    width: 90px;
+    flex-shrink: 0;
+}
+
+.date-row input[type="datetime-local"] {
+    flex: 1;
+    min-width: 220px;
+    width: 100%;
+}
+
+.remove-date-btn {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    padding: 0;
+}
+
+.add-date-btn {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+}
