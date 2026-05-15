@@ -45,15 +45,37 @@
             <i class="bx bx-menu bx-sm"></i>
         </button>
 
-        <h1>Upcoming Reminders</h1>
+        <h1>Reminders</h1>
 
-       {% for reminder in reminders %}
-        <div class="card">
-            <p class="reminder-message"><strong>{{ reminder.message }}</strong></p>
-            <p class="reminder-date">
-                <i class='bx bx-calendar-event'></i> 
-                {{ reminder.reminder_date.strftime('%d %b %Y, %H:%M') }}
-            </p>
+       <h2>Upcoming</h2>
+
+        {% for r in upcoming_reminders %}
+        <div class="reminder-card">
+
+            <div class="reminder-title">
+                {{ r.message }}
+            </div>
+
+            <div class="reminder-date">
+                {{ r.reminder_date.strftime('%d %b %Y %I:%M %p') }}
+            </div>
+
+        </div>
+        {% endfor %}
+
+        <h2>Past Activity</h2>
+
+        {% for r in past_reminders %}
+        <div class="reminder-card past-card">
+
+            <div class="reminder-title">
+                {{ r.message }}
+            </div>
+
+            <div class="reminder-date">
+                {{ r.reminder_date.strftime('%d %b %Y %I:%M %p') }}
+            </div>
+
         </div>
         {% endfor %}
     </div>

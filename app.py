@@ -88,7 +88,7 @@ class NewJob(db.Model):
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     dates = db.relationship('JobDate', backref='job', cascade="all, delete")
-    reminders = db.relationship('Reminder', backref='job', lazy=True)
+    reminders = db.relationship('Reminder', backref='job', cascade="all, delete-orphan", passive_deletes=True)
 
 
 class JobDate(db.Model):
@@ -105,7 +105,7 @@ class Reminder(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    job_id = db.Column(db.Integer, db.ForeignKey('new_job.id'), nullable=False)
+    job_id = db.Column(db.Integer, db.ForeignKey('new_job.id', ondelete='CASCADE'), nullable=False)
     reminder_date = db.Column(db.DateTime, nullable=False)
     message = db.Column(db.String(255))
     is_done = db.Column(db.Boolean, default=False)
@@ -469,11 +469,27 @@ def create_app():
     @app.route('/reminders')
     @login_required
     def reminders():
+
         reminders = Reminder.query.filter_by(
             user_id=current_user.id
         ).order_by(Reminder.reminder_date).all()
 
-        return render_template("reminders.html", reminders=reminders)
+        now = datetime.now()
+
+        upcoming_reminders = []
+        past_reminders = []
+
+        for reminder in reminders:
+            if reminder.reminder_date >= now:
+                upcoming_reminders.append(reminder)
+            else:
+                past_reminders.append(reminder)
+
+        return render_template(
+            "reminders.html",
+            upcoming_reminders=upcoming_reminders,
+            past_reminders=past_reminders
+        )
 
     @app.route('/file_upload', methods=["POST"])
     def file_upload():

@@ -6,11 +6,11 @@ body {
 
 .sidebar {
     position: fixed;
-    left: -250px;   /* hide completely */
+    left: -250px;
     top: 0;
     width: 250px;
     height: 100%;
-    background: #edeeca;  /* your color */
+    background: #edeeca;
     transition: left 0.3s ease;
 }
 
@@ -263,4 +263,17 @@ body {
 .popup.show .popup-content {
     transform: translateY(0);
     opacity: 1;
+}
+
+.reminder-card {
+    background: white;
+    width: 250px;
+    padding: 15px;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    transition: 0.3s;
+}
+
+.reminder-card:hover {
+    transform: scale(1.05);
 }
