@@ -80,11 +80,13 @@ class PasswordResetId(db.Model):
     
 class Document(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     filename = db.Column(db.String(100), nullable=False)
     file_path = db.Column(db.String(200), nullable=False)    
 
 class NewJob(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     company_name = db.Column(db.String(255))
     job_position = db.Column(db.String(255))
     location = db.Column(db.String(255))
@@ -95,6 +97,7 @@ class NewJob(db.Model):
 
 class JobDate(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     job_id = db.Column(db.Integer, db.ForeignKey('new_job.id'))
     date_type = db.Column(db.String(50))
     date_value = db.Column(db.Date)
@@ -412,11 +415,6 @@ def create_app():
             filename = file.filename
             save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(save_path)
-            
-
-            new_doc = Document(filename=filename, file_path=save_path, user_id=current_user.id)
-            db.session.add(new_doc)
-            db.session.commit()
 
             new_doc = Document(filename=filename, file_path=save_path)
             db.session.add(new_doc)
