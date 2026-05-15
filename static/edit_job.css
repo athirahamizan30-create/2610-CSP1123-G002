@@ -57,7 +57,7 @@
 .modal-content button {
     width: 100%;
     padding: 12px;
-    background: #4CAF50;
+    background: #315532af;
     color: white;
     border: none;
     border-radius: 10px;
@@ -67,7 +67,7 @@
 }
 
 .modal-content button:hover {
-    background: #3e8e41;
+    background: #cfa771;
     transform: translateY(-2px);
 }
 
@@ -151,15 +151,24 @@ select {
     width: 100%;
 }
 
-.remove-date-btn {
-    width: 40px;
-    height: 40px;
-    flex-shrink: 0;
-    padding: 0;
+.remove-date-btn,
+.add-date-btn {
+    width: 40px !important;
+    height: 40px !important;
+
+    min-width: 40px;
+    max-width: 40px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 !important;
+    flex: none !important;
 }
 
-.add-date-btn {
-    width: 40px;
-    height: 40px;
-    padding: 0;
+.add-date-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
 }
