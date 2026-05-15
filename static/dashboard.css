@@ -6,11 +6,15 @@ body {
 
 .sidebar {
     position: fixed;
+<<<<<<< HEAD
     left: -250px;
+=======
+    left: -250px;   /* hide completely */
+>>>>>>> main
     top: 0;
     width: 250px;
     height: 100%;
-    background: #edeeca;
+    background: #edeeca;  /* your color */
     transition: left 0.3s ease;
 }
 

@@ -1,5 +1,5 @@
 from flask import Flask, render_template, url_for, request, redirect, flash
-import mysql.connector
+import secrets
 import re
 import uuid
 import os
@@ -12,7 +12,10 @@ from flask_mail import Mail, Message
 from flask_bcrypt import Bcrypt
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select
-
+from flask_wtf import FlaskForm
+from flask_wtf.file import FileField, FileAllowed
+from wtforms import StringField, SubmitField, TextAreaField
+from wtforms.validators import DataRequired, Length, Email, ValidationError
 
 app = Flask(__name__, template_folder="templates", static_folder="static/uploads")
 db= SQLAlchemy()
@@ -33,13 +36,12 @@ login_manager.login_view = "login"
 with app.app_context():
     db.create_all()
 
-
-
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
+    image_file= db.Column(db.String(20), nullable=False, default='default.jpg')
 
     password_reset_ids = db.relationship(
         "PasswordResetId",
@@ -47,6 +49,17 @@ class User(UserMixin, db.Model):
         cascade="all, delete-orphan"
     )
 
+    full_name = db.Column(db.String(100), nullable=True)
+    phone_number = db.Column(db.String(20), nullable=True)
+    about_me = db.Column(db.Text, nullable=True)
+
+    password_reset_ids = db.relationship(
+        "PasswordResetId",
+        backref="user",
+        cascade="all, delete-orphan"
+    )
+
+    jobs = db.relationship('NewJob', backref='owner', lazy=True)
 
 class PasswordResetId(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -75,17 +88,17 @@ class PasswordResetId(db.Model):
 class Document(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(100), nullable=False)
-    file_path = db.Column(db.String(200), nullable=False)    
+    file_path = db.Column(db.String(200), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)    
 
 class NewJob(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)    
     company_name = db.Column(db.String(255))
     job_position = db.Column(db.String(255))
     location = db.Column(db.String(255))
     job_status = db.Column(db.String(50))
     job_type = db.Column(db.String(50))
-
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     dates = db.relationship('JobDate', backref='job', cascade="all, delete")
     reminders = db.relationship('Reminder', backref='job', cascade="all, delete-orphan", passive_deletes=True)
@@ -114,6 +127,40 @@ class Reminder(db.Model):
 
     def __repr__(self):
         return f"<Reminder {self.reminder_date}>"
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+    dates = db.relationship('JobDate', backref='job', cascade="all, delete")
+
+class JobDate(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    job_id = db.Column(db.Integer, db.ForeignKey('new_job.id'))
+    date_type = db.Column(db.String(50))
+    date_value = db.Column(db.Date)
+
+class UpdateAccountForm(FlaskForm):
+    username = StringField('Username',
+                           validators=[DataRequired(), Length(min=2, max=20)])
+    email = StringField('Email',
+                        validators=[DataRequired(), Email()])
+    
+    full_name = StringField('Full Name')
+    phone_number = StringField('Phone Number')
+    about_me = TextAreaField('About Me')
+
+    picture = FileField('Update Profile Picture', validators=[FileAllowed(['jpg', 'png'])])
+    submit = SubmitField('Update')
+
+    def validate_username(self, username):
+        if username.data != current_user.username:
+            user = User.query.filter_by(username=username.data).first()
+            if user:
+                raise ValidationError('That username is taken. Please choose a different one.')
+
+    def validate_email(self, email):
+        if email.data != current_user.email:
+            user = User.query.filter_by(email=email.data).first()
+            if user:
+                raise ValidationError('That email is taken. Please choose a different one.')
 
 
 def create_app():
@@ -312,8 +359,22 @@ def create_app():
                 )
                 db.session.add(reminder)
 
+        db.session.add(job)
         db.session.commit()
+        date_types = request.form.getlist('date_type[]')
+        date_values = request.form.getlist('date_value[]')
 
+        for dtype, dvalue in zip(date_types, date_values):
+            if dvalue:  # ignore empty dates
+                job_date = JobDate(
+                    job_id=job.id,
+                    date_type=dtype,
+                    date_value=datetime.strptime(dvalue, "%Y-%m-%d").date()
+                )
+                db.session.add(job_date)
+
+            db.session.commit()
+            
         return redirect(url_for('dashboard'))
 
 
@@ -407,7 +468,7 @@ def create_app():
     
     @app.route('/document')
     def document():
-        docs = Document.query.order_by(Document.filename.asc()).all()
+        docs = Document.query.filter_by(user_id=current_user.id).order_by(Document.filename.asc()).all()
         return render_template("document.html", docs=docs)
     
 
@@ -502,6 +563,11 @@ def create_app():
             filename = file.filename
             save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(save_path)
+            
+
+            new_doc = Document(filename=filename, file_path=save_path, user_id=current_user.id)
+            db.session.add(new_doc)
+            db.session.commit()
 
             new_doc = Document(filename=filename, file_path=save_path)
             db.session.add(new_doc)
@@ -511,8 +577,9 @@ def create_app():
         return "Upload Failed"
 
     @app.route('/delete_file/<int:doc_id>')
+    @login_required
     def delete_file(doc_id):
-        doc = Document.query.get_or_404(doc_id)
+        doc = Document.query.get_or_404(id=doc_id)
 
         try:
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], doc.filename)
@@ -529,9 +596,49 @@ def create_app():
             print(f"Error: {e}")
             return "There was a problem deleting that file."
 
+    def save_picture(form_picture):
+        random_hex = secrets.token_hex(8)
+        _, f_ext = os.path.splitext(form_picture.filename)
+        picture_fn = random_hex + f_ext
+        picture_path = os.path.join(app.root_path, 'static/profile_pics', picture_fn)
+        form_picture.save(picture_path)
+
+        return picture_fn
+
+    @app.route("/account", methods=["POST", "GET"])
+    @login_required
+    def account():
+        form = UpdateAccountForm()
+        if form.validate_on_submit():
+            if form.picture.data:
+                picture_file = save_picture(form.picture.data)
+                current_user.image_file = picture_file
+
+            current_user.username = form.username.data
+            current_user.email = form.email.data
+            current_user.full_name = form.full_name.data
+            current_user.phone_number = form.phone_number.data
+            current_user.about_me = form.about_me.data
+
+            db.session.commit()
+            flash("your account has been updated!", 'success')
+            return redirect(url_for('account'))
+        elif request.method == 'GET':
+            form.username.data = current_user.username
+            form.email.data = current_user.email
+            form.full_name.data = current_user.full_name 
+            form.phone_number.data = current_user.phone_number 
+            form.about_me.data = current_user.about_me 
+
+        image_file = url_for('static', filename='profile_pics/' + current_user.image_file)
+        return render_template('account.html', title='Account', image_file=image_file, form=form)
+
+
     with app.app_context():
         db.create_all()
         return app
+
+
 
 if __name__ == '__main__':
     app = create_app()
