@@ -1,33 +1,29 @@
 from flask import Flask, render_template, url_for, request, redirect, flash
-import mysql.connector
+import secrets
 import re
 import uuid
 import os
-from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import timedelta, datetime, timezone
 from config import Config
 from flask_mail import Mail, Message
 from flask_bcrypt import Bcrypt
-from dotenv import load_dotenv
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy import select
+from flask_wtf import FlaskForm
+from flask_wtf.file import FileField, FileAllowed
+from wtforms import StringField, SubmitField, TextAreaField
+from wtforms.validators import DataRequired, Length, Email, ValidationError
 
-app = Flask(__name__, template_folder="templates", static_folder="static")
+app = Flask(__name__, template_folder="templates", static_folder="static/uploads")
 db= SQLAlchemy()
 login_manager = LoginManager()
 bcrypt = Bcrypt()
-from sqlalchemy.exc import IntegrityError
-from datetime import datetime, timedelta
-import os
-import re
-import uuid
 
-class Document(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    filename = db.Column(db.String(100), nullable=False)
-    file_path = db.Column(db.String(200), nullable=False)
-app = Flask(__name__, template_folder="templates", static_folder="static")
+
+
 
 app.config['SECRET_KEY'] = 'user_registration_athirah'
 app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://athirah:Tiya071!@localhost/CareerTrack_Database"
@@ -41,14 +37,28 @@ db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = "login"
 
+
+
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
+    image_file= db.Column(db.String(20), nullable=False, default='default.jpg')
 
+    full_name = db.Column(db.String(100), nullable=True)
+    phone_number = db.Column(db.String(20), nullable=True)
+    about_me = db.Column(db.Text, nullable=True)
 
-class Document(db.Model):
+    password_reset_ids = db.relationship(
+        "PasswordResetId",
+        backref="user",
+        cascade="all, delete-orphan"
+    )
+
+    jobs = db.relationship('NewJob', backref='owner', lazy=True)
+
+class PasswordResetId(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
 
@@ -72,13 +82,54 @@ class Document(db.Model):
         expires_at = base_time + timedelta(minutes=10)
         return now > expires_at
     
-def get_db_connection():
-    return mysql.connector.connect(
-    host="localhost",
-    user="root",
-    password="N&j@1209",
-    database="add_job"
-    )
+class Document(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(100), nullable=False)
+    file_path = db.Column(db.String(200), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)    
+
+class NewJob(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    company_name = db.Column(db.String(255))
+    job_position = db.Column(db.String(255))
+    location = db.Column(db.String(255))
+    job_status = db.Column(db.String(50))
+    job_type = db.Column(db.String(50))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+    dates = db.relationship('JobDate', backref='job', cascade="all, delete")
+
+class JobDate(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    job_id = db.Column(db.Integer, db.ForeignKey('new_job.id'))
+    date_type = db.Column(db.String(50))
+    date_value = db.Column(db.Date)
+
+class UpdateAccountForm(FlaskForm):
+    username = StringField('Username',
+                           validators=[DataRequired(), Length(min=2, max=20)])
+    email = StringField('Email',
+                        validators=[DataRequired(), Email()])
+    
+    full_name = StringField('Full Name')
+    phone_number = StringField('Phone Number')
+    about_me = TextAreaField('About Me')
+
+    picture = FileField('Update Profile Picture', validators=[FileAllowed(['jpg', 'png'])])
+    submit = SubmitField('Update')
+
+    def validate_username(self, username):
+        if username.data != current_user.username:
+            user = User.query.filter_by(username=username.data).first()
+            if user:
+                raise ValidationError('That username is taken. Please choose a different one.')
+
+    def validate_email(self, email):
+        if email.data != current_user.email:
+            user = User.query.filter_by(email=email.data).first()
+            if user:
+                raise ValidationError('That email is taken. Please choose a different one.')
+
 
 def create_app():
 
@@ -107,48 +158,18 @@ def create_app():
 
     @app.route('/', methods=['GET', 'POST'])
     def index():
-        errors = []
-
-        if request.method == "POST":
-            username = (request.form.get("username") or "").strip()
-            email = (request.form.get("email")or "").strip()
-            password = request.form.get("password")or ""
-            confirm = request.form.get("confirm_password")or ""
-
-            if not (3 <= len(username) <= 80):
-                errors.append("Username must be between 3 and 80 characters")
-
-            if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email):
-                errors.append("Please enter a valid email address")
-
-            if len(password) < 6:
-                errors.append("Password needs to be atleast 6 characters")
-
-            if password != confirm:
-                errors.append("Password don't match")
-
-            if not errors:
-             
-                try:
-                    pw_hash = generate_password_hash(password)
-                    user = User(username=username, email=email, password_hash=pw_hash)
-                    db.session.add(user)
-                    db.session.commit()
-
-                    return redirect(url_for('login'))
-                
-                except IntegrityError:
-                    db.session.rollback()
-                    errors.append("that username or email is already registered")
-            if errors:
-                return render_template("index.html", errors=errors)
-            return f"Received data - {email}"
-        return render_template('index.html', errors=errors)
+        return render_template('index.html')
     
     @app.route('/dashboard')
     @login_required
     def dashboard():
-        return render_template('dashboard.html')
+        return render_template(
+            'dashboard.html',
+            active_page='dashboard',
+            full_time=NewJob.query.filter_by(job_type='Full-Time', user_id=current_user.id).all(),
+            part_time=NewJob.query.filter_by(job_type='Part-Time', user_id=current_user.id).all(),
+            intern=NewJob.query.filter_by(job_type='Intern/Trainee', user_id=current_user.id).all()
+        )
     
     @app.route('/register', methods=["GET", "POST"])
     def register():
@@ -191,133 +212,73 @@ def create_app():
 
     @app.route('/login', methods=["POST", "GET"])
     def login():
-
         errors = []
-    filename = db.Column(db.String(100), nullable=False)
-    file_path = db.Column(db.String(200), nullable=False)
 
+        if request.method == "POST":
+            email = (request.form.get("email") or "").strip()
+            password = request.form.get("password") or ""
 
-class NewJob(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    company_name = db.Column(db.String(255))
-    job_position = db.Column(db.String(255))
-    location = db.Column(db.String(255))
-    job_status = db.Column(db.String(50))
-    job_type = db.Column(db.String(50))
+            if not email:
+                errors.append("Email is required")
 
-    dates = db.relationship('JobDate', backref='job', cascade="all, delete")
+            if not password:
+                errors.append("Password is required")
 
+            if not errors:
+                user = User.query.filter_by(email=email).first()
 
-class JobDate(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    job_id = db.Column(db.Integer, db.ForeignKey('new_job.id'))
-    date_type = db.Column(db.String(50))
-    date_value = db.Column(db.Date)
+            if not user or not check_password_hash(user.password_hash, password):
+                errors.append("Invalid password or email")
 
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
+            else:
 
-@app.route('/')
-def index():
-    return render_template('index.html')
+                remember_me = request.form.get("remember") == "1"
 
+                login_user(user, remember=remember_me)
+                return redirect(url_for("dashboard"))
+            
 
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    errors = []
+        return render_template('login.html', errors=errors)
+    
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.query.get(int(user_id))
 
-    if request.method == "POST":
-        username = request.form.get("username")
-        email = request.form.get("email")
-        password = request.form.get("password")
-        confirm = request.form.get("confirm_password")
+    @app.route('/logout')
+    def logout():
+        logout_user()
+        return redirect(url_for('index'))
+ 
+    @app.route('/add_job', methods=['POST'])
+    @login_required
+    def add_job():
+        job = NewJob(
+            company_name=request.form.get('company_name'),
+            job_position=request.form.get('job_position'),
+            location=request.form.get('location'),
+            job_status=request.form.get('job_status'),
+            job_type=request.form.get('job_type'),
+            user_id=current_user.id
+        )
 
-        if password != confirm:
-            errors.append("Passwords do not match")
-
-        if not errors:
-            try:
-                user = User(
-                    username=username,
-                    email=email,
-                    password_hash=generate_password_hash(password)
-                )
-                db.session.add(user)
-                db.session.commit()
-                return redirect(url_for('login'))
-            except IntegrityError:
-                db.session.rollback()
-                errors.append("User already exists")
-
-    return render_template('register.html', errors=errors)
-
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    errors = []
-
-    if request.method == "POST":
-        email = request.form.get("email")
-        password = request.form.get("password")
-
-        user = User.query.filter_by(email=email).first()
-
-        if not user or not check_password_hash(user.password_hash, password):
-            errors.append("Invalid email or password")
-        else:
-            login_user(user)
-            return redirect(url_for('dashboard'))
-
-    return render_template('login.html', errors=errors)
-
-
-@app.route('/logout')
-def logout():
-    logout_user()
-    return redirect(url_for('login'))
-
-@app.route('/dashboard')
-@login_required
-def dashboard():
-    return render_template(
-        'dashboard.html',
-        active_page='dashboard',
-        full_time=NewJob.query.filter_by(job_type='Full-Time').all(),
-        part_time=NewJob.query.filter_by(job_type='Part-Time').all(),
-        intern=NewJob.query.filter_by(job_type='Intern/Trainee').all()
-    )
-
-
-@app.route('/add_job', methods=['POST'])
-@login_required
-def add_job():
-    job = NewJob(
-        company_name=request.form.get('company_name'),
-        job_position=request.form.get('job_position'),
-        location=request.form.get('location'),
-        job_status=request.form.get('job_status'),
-        job_type=request.form.get('job_type')
-    )
-
-    db.session.add(job)
-    db.session.commit()
-
-    date_types = request.form.getlist('date_type[]')
-    date_values = request.form.getlist('date_value[]')
-
-    for dtype, dvalue in zip(date_types, date_values):
-        if dvalue:  # ignore empty dates
-            job_date = JobDate(
-                job_id=job.id,
-                date_type=dtype,
-                date_value=datetime.strptime(dvalue, "%Y-%m-%d").date()
-            )
-            db.session.add(job_date)
-
+        db.session.add(job)
         db.session.commit()
-        
-    return redirect(url_for('dashboard'))
+
+        date_types = request.form.getlist('date_type[]')
+        date_values = request.form.getlist('date_value[]')
+
+        for dtype, dvalue in zip(date_types, date_values):
+            if dvalue:  # ignore empty dates
+                job_date = JobDate(
+                    job_id=job.id,
+                    date_type=dtype,
+                    date_value=datetime.strptime(dvalue, "%Y-%m-%d").date()
+                )
+                db.session.add(job_date)
+
+            db.session.commit()
+            
+        return redirect(url_for('dashboard'))
 
 
     @app.route('/forgot_password', methods=['POST', 'GET'])
@@ -410,82 +371,70 @@ def add_job():
     
     @app.route('/document')
     def document():
-        docs = Document.query.order_by(Document.filename.asc()).all()
+        docs = Document.query.filter_by(user_id=current_user.id).order_by(Document.filename.asc()).all()
         return render_template("document.html", docs=docs)
-@app.route('/edit_job/<int:id>', methods=['POST'])
-@login_required
-def edit_job(id):
-    job = NewJob.query.get_or_404(id)
     
-    job.company_name = request.form.get('company_name')
-    job.job_position = request.form.get('job_position')
-    job.location = request.form.get('location')
-    job.job_status = request.form.get('job_status')
-    job.job_type = request.form.get('job_type')
 
-    db.session.commit()
-    return redirect(url_for('dashboard'))
-  
-  @app.route('/file_upload', methods=["POST"])
+    @app.route('/edit_job/<int:id>', methods=['POST'])
+    @login_required
+    def edit_job(id):
+        job = NewJob.query.get_or_404(id)
+        
+        job.company_name = request.form.get('company_name')
+        job.job_position = request.form.get('job_position')
+        job.location = request.form.get('location')
+        job.job_status = request.form.get('job_status')
+        job.job_type = request.form.get('job_type')
+
+        db.session.commit()
+        return redirect(url_for('dashboard'))
+
+
+    @app.route('/delete_job/<int:id>', methods=['POST'])
+    @login_required
+    def delete_job(id):
+        job = NewJob.query.get_or_404(id)
+
+        db.session.delete(job)
+        db.session.commit()
+        return redirect(url_for('dashboard'))
+
+    @app.route('/reminders')
+    @login_required
+    def reminders():
+        today = datetime.today().date()
+
+        dates = JobDate.query.filter(
+            JobDate.date_value >= today
+        ).order_by(JobDate.date_value).all()
+
+        return render_template('reminders.html', active_page='reminders', dates=dates)
+
+    @app.route('/file_upload', methods=["POST"])
+    @login_required
     def file_upload():
         file = request.files['file']
         if file:
             file.seek(0, os.SEEK_END)
             file_length = file.tell()
             file.seek(0)
-        
+
             filename = file.filename
             save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(save_path)
+            
+
+            new_doc = Document(filename=filename, file_path=save_path, user_id=current_user.id)
+            db.session.add(new_doc)
+            db.session.commit()
 
             return redirect(url_for('document'))
         return "Upload Failed"
 
-      
-    @app.route('/add_job', methods=['GET', 'POST'])
-    def add_job():
-        if request.method == 'POST':
-
-@app.route('/delete_job/<int:id>', methods=['POST'])
-@login_required
-def delete_job(id):
-    job = NewJob.query.get_or_404(id)
-
-    db.session.delete(job)
-    db.session.commit()
-    return redirect(url_for('dashboard'))
-
-@app.route('/reminders')
-@login_required
-def reminders():
-    today = datetime.today().date()
-
-    dates = JobDate.query.filter(
-        JobDate.date_value >= today
-    ).order_by(JobDate.date_value).all()
-
-    return render_template('reminders.html', active_page='reminders', dates=dates)
-
-@app.route('/document')
-@login_required
-def document():
-    docs = Document.query.all()
-    return render_template("document.html", docs=docs)
-
-
-@app.route('/file_upload', methods=["POST"])
-@login_required
-def file_upload():
-    file = request.files.get('file')
-
-    if file:
-        filename = file.filename
-        path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(path)
-
     @app.route('/delete_file/<int:doc_id>')
+    @login_required
     def delete_file(doc_id):
-        doc = Document.query.get_or_404(doc_id)
+        doc = Document.query.get_or_404(id=doc_id)
 
         try:
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], doc.filename)
@@ -501,15 +450,50 @@ def file_upload():
         except Exception as e:
             print(f"Error: {e}")
             return "There was a problem deleting that file."
-        db.session.add(Document(filename=filename, file_path=path))
-        db.session.commit()
 
-    return redirect(url_for('document'))
+    def save_picture(form_picture):
+        random_hex = secrets.token_hex(8)
+        _, f_ext = os.path.splitext(form_picture.filename)
+        picture_fn = random_hex + f_ext
+        picture_path = os.path.join(app.root_path, 'static/profile_pics', picture_fn)
+        form_picture.save(picture_path)
 
-if __name__ == "__main__":
+        return picture_fn
+
+    @app.route("/account", methods=["POST", "GET"])
+    @login_required
+    def account():
+        form = UpdateAccountForm()
+        if form.validate_on_submit():
+            if form.picture.data:
+                picture_file = save_picture(form.picture.data)
+                current_user.image_file = picture_file
+
+            current_user.username = form.username.data
+            current_user.email = form.email.data
+            current_user.full_name = form.full_name.data
+            current_user.phone_number = form.phone_number.data
+            current_user.about_me = form.about_me.data
+
+            db.session.commit()
+            flash("your account has been updated!", 'success')
+            return redirect(url_for('account'))
+        elif request.method == 'GET':
+            form.username.data = current_user.username
+            form.email.data = current_user.email
+            form.full_name.data = current_user.full_name 
+            form.phone_number.data = current_user.phone_number 
+            form.about_me.data = current_user.about_me 
+
+        image_file = url_for('static', filename='profile_pics/' + current_user.image_file)
+        return render_template('account.html', title='Account', image_file=image_file, form=form)
+
+
     with app.app_context():
         db.create_all()
         return app
+
+
 
 if __name__ == '__main__':
     app = create_app()
@@ -517,6 +501,3 @@ if __name__ == '__main__':
 
 
 
-#satu database and semua table dalam database tu
-#kene buang register punyer link kat navbar. 
-    app.run(debug=True)
