@@ -15,7 +15,7 @@
     <div class="sidebar" id="sidebar">
         <h2>Menu</h2>
 
-        <a href="/dashboard" class="{% if active_page == 'dashboard' %} active {% endif %}">
+        <a href="/dashboard" class="{% if active_page == 'dashboard' %}active{% endif %}">
             <i class="bxf bx-home-circle"></i>
             Dashboard
         </a>
@@ -25,12 +25,12 @@
             New Application
         </a>
 
-        <a href="/document" class="{% if active_page == 'reminders' %} active {% endif %}">
+        <a href="/document">
             <i class="bxf bx-folder"></i>
             Documents
         </a>
 
-        <a href="/reminders" class="{% if active_page == 'reminders' %} active {% endif %}">
+        <a href="/reminders" class="{% if active_page == 'reminders' %}active{% endif %}">
             <i class='bxf bx-bell'></i>
             Reminders
         </a>
@@ -86,14 +86,14 @@
                         {% endif %}
                     </div>
                     <button class="edit-btn"
-                    onclick="openEditModal(
-                        '{{ job.id }}',
-                        '{{ job.company_name }}',
-                        '{{ job.job_position }}',
-                        '{{ job.location }}',
-                        '{{ job.job_status }}',
-                        '{{ job.job_type }}'
-                    )">
+                            data-id="{{ job.id }}"
+                            data-company="{{ job.company_name }}"
+                            data-position="{{ job.job_position }}"
+                            data-location="{{ job.location }}"
+                            data-status="{{ job.job_status }}"
+                            data-type="{{ job.job_type }}"
+                            data-dates='{{ job_dates[job.id] | tojson | safe }}'
+                            onclick="openEditFromButton(this)">
                     Edit
                     </button>
                      <form method="POST" action="/delete_job/{{ job.id }}">
@@ -129,14 +129,14 @@
                         {% endif %}
                     </div>
                     <button class="edit-btn"
-                    onclick="openEditModal(
-                        '{{ job.id }}',
-                        '{{ job.company_name }}',
-                        '{{ job.job_position }}',
-                        '{{ job.location }}',
-                        '{{ job.job_status }}',
-                        '{{ job.job_type }}'
-                    )">
+                            data-id="{{ job.id }}"
+                            data-company="{{ job.company_name }}"
+                            data-position="{{ job.job_position }}"
+                            data-location="{{ job.location }}"
+                            data-status="{{ job.job_status }}"
+                            data-type="{{ job.job_type }}"
+                            data-dates='{{ job_dates[job.id] | tojson | safe }}'
+                            onclick="openEditFromButton(this)">
                     Edit
                     </button>
                     <form method="POST" action="/delete_job/{{ job.id }}">
@@ -172,14 +172,14 @@
                         {% endif %}
                     </div>
                     <button class="edit-btn"
-                    onclick="openEditModal(
-                        '{{ job.id }}',
-                        '{{ job.company_name }}',
-                        '{{ job.job_position }}',
-                        '{{ job.location }}',
-                        '{{ job.job_status }}',
-                        '{{ job.job_type }}'
-                    )">
+                            data-id="{{ job.id }}"
+                            data-company="{{ job.company_name }}"
+                            data-position="{{ job.job_position }}"
+                            data-location="{{ job.location }}"
+                            data-status="{{ job.job_status }}"
+                            data-type="{{ job.job_type }}"
+                            data-dates='{{ job_dates[job.id] | tojson | safe }}'
+                            onclick="openEditFromButton(this)">
                     Edit
                     </button>
                     <form method="POST" action="/delete_job/{{ job.id }}">
@@ -218,6 +218,24 @@
             </div>
 
             <div class="form-group">
+
+                <label>Application Dates</label>
+
+                <div id="edit-dates-container"></div>
+
+                <div class="add-date-container">
+
+                    <button type="button" onclick="addEditDate()" class="add-date-btn">
+
+                        <i class="bxf bx-plus-square bx-sm"></i>
+
+                    </button>
+
+                </div>
+
+            </div>
+
+            <div class="form-group">
                 <label>Application Status</label>
                 <select id="edit_status" name="job_status">
                     <option value="interested">Interested</option>
@@ -251,6 +269,7 @@
         document.getElementById("sidebar").classList.toggle("active");
         document.getElementById("overlay").classList.toggle("active");
     }
+    
     </script>
 
     <script>
@@ -306,7 +325,21 @@
     </script>
 
     <script>
-    function openEditModal(id, company, position, location, status, type) {
+
+    function openEditFromButton(btn) {
+
+        const id = btn.dataset.id;
+        const company = btn.dataset.company;
+        const position = btn.dataset.position;
+        const location = btn.dataset.location;
+        const status = btn.dataset.status;
+        const type = btn.dataset.type;
+        const dates = JSON.parse(btn.dataset.dates || "[]");
+
+        openEditModal(id, company, position, location, status, type, dates);
+    }
+
+    function openEditModal(id, company, position, location, status, type, dates) {
 
         document.getElementById("editModal").style.display = "block";
 
@@ -318,6 +351,17 @@
         document.getElementById("edit_type").value = type;
 
         document.getElementById("editForm").action = "/edit_job/" + id;
+
+        const container = document.getElementById("edit-dates-container");
+        container.innerHTML = "";
+
+        if (!Array.isArray(dates)) {
+            dates = [];
+        }
+
+        dates.forEach(date => {
+            addEditDate(date.date_type, date.date_value);
+        });
     }
 
     function closeEditModal() {
@@ -331,6 +375,45 @@
             closeEditModal();
         }
     }
+    </script>
+
+    <script>
+
+    function addEditDate(type = "", value = "") {
+
+        const container = document.getElementById("edit-dates-container");
+
+        const div = document.createElement("div");
+
+        div.classList.add("date-row");
+
+        div.innerHTML = `
+            <select name="date_type[]">
+
+                <option value="Applied" ${type === "Applied" ? "selected" : ""}>Applied</option>
+
+                <option value="Interview" ${type === "Interview" ? "selected" : ""}>Interview</option>
+
+                <option value="Deadline" ${type === "Deadline" ? "selected" : ""}>Deadline</option>
+
+                <option value="Offer" ${type === "Offer" ? "selected" : ""}>Offer</option>
+
+            </select>
+
+            <input type="datetime-local" name="date_value[]" value="${value ? value.replace(' ', 'T') : ''}">
+
+            <button type="button" onclick="removeDate(this)" class="remove-date-btn">
+                <i class="bxf bx-x-square bx-sm"></i>
+            </button>
+        `;
+
+        container.appendChild(div);
+    }
+
+    function removeDate(button) {
+        button.parentElement.remove();
+    }
+
     </script>
 
 </body>

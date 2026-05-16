@@ -14,7 +14,7 @@
     <div class="sidebar" id="sidebar">
         <h2>Menu</h2>
 
-        <a href="/dashboard" class="{% if active_page == 'dashboard' %}active{% endif %}">
+        <a href="/dashboard">
             <i class="bxf bx-home-circle"></i>
             Dashboard
         </a>
@@ -34,7 +34,7 @@
             Reminders
         </a>
 
-        <a href="#">
+        <a href="/">
             <i class="bxf bx-arrow-out-right-square-half"></i>
             Log Out
         </a>
@@ -45,21 +45,39 @@
             <i class="bx bx-menu bx-sm"></i>
         </button>
 
-        <h1>Upcoming Reminders</h1>
+        <h1>Reminders</h1>
 
-        {% if important_dates %}
-            <ul>
-                {% for d in important_dates %}
-                    <li>
-                        <strong>{{ d.date_type }}</strong> - 
-                        {{ d.date_value }} 
-                        ({{ d.job.company_name }})
-                    </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p>No upcoming reminders</p>
-        {% endif %}
+       <h2>Upcoming</h2>
+
+        {% for r in upcoming_reminders %}
+        <div class="reminder-card">
+
+            <div class="reminder-title">
+                {{ r.message }}
+            </div>
+
+            <div class="reminder-date">
+                {{ r.reminder_date.strftime('%d %b %Y %I:%M %p') }}
+            </div>
+
+        </div>
+        {% endfor %}
+
+        <h2>Past Activity</h2>
+
+        {% for r in past_reminders %}
+        <div class="reminder-card past-card">
+
+            <div class="reminder-title">
+                {{ r.message }}
+            </div>
+
+            <div class="reminder-date">
+                {{ r.reminder_date.strftime('%d %b %Y %I:%M %p') }}
+            </div>
+
+        </div>
+        {% endfor %}
     </div>
 
     {% include 'job.html' %}

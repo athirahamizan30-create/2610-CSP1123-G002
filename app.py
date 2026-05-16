@@ -1,8 +1,9 @@
 from flask import Flask, render_template, url_for, request, redirect, flash
-import secrets
+import mysql.connector
 import re
 import uuid
 import os
+import secrets
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -11,8 +12,7 @@ from config import Config
 from flask_mail import Mail, Message
 from flask_bcrypt import Bcrypt
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import select
-from sqlalchemy import func
+from sqlalchemy import select, func
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from wtforms import StringField, SubmitField, TextAreaField
@@ -34,17 +34,14 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = "login"
+with app.app_context():
+    db.create_all()
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
-    image_file= db.Column(db.String(20), nullable=False, default='default.jpg')
-
-    full_name = db.Column(db.String(100), nullable=True)
-    phone_number = db.Column(db.String(20), nullable=True)
-    about_me = db.Column(db.Text, nullable=True)
 
     password_reset_ids = db.relationship(
         "PasswordResetId",
@@ -52,7 +49,6 @@ class User(UserMixin, db.Model):
         cascade="all, delete-orphan"
     )
 
-    jobs = db.relationship('NewJob', backref='owner', lazy=True)
 
 class PasswordResetId(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -86,46 +82,41 @@ class Document(db.Model):
 
 class NewJob(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     company_name = db.Column(db.String(255))
     job_position = db.Column(db.String(255))
     location = db.Column(db.String(255))
     job_status = db.Column(db.String(50))
     job_type = db.Column(db.String(50))
 
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
     dates = db.relationship('JobDate', backref='job', cascade="all, delete")
+    reminders = db.relationship('Reminder', backref='job', cascade="all, delete-orphan", passive_deletes=True)
+
 
 class JobDate(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     job_id = db.Column(db.Integer, db.ForeignKey('new_job.id'))
     date_type = db.Column(db.String(50))
-    date_value = db.Column(db.Date)
+    date_value = db.Column(db.DateTime)
 
-class UpdateAccountForm(FlaskForm):
-    username = StringField('Username',
-                           validators=[DataRequired(), Length(min=2, max=20)])
-    email = StringField('Email',
-                        validators=[DataRequired(), Email()])
-    
-    full_name = StringField('Full Name')
-    phone_number = StringField('Phone Number')
-    about_me = TextAreaField('About Me')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    picture = FileField('Update Profile Picture', validators=[FileAllowed(['jpg', 'png'])])
-    submit = SubmitField('Update')
+class Reminder(db.Model):
+    __tablename__ = 'reminders'
 
-    def validate_username(self, username):
-        if username.data != current_user.username:
-            user = User.query.filter_by(username=username.data).first()
-            if user:
-                raise ValidationError('That username is taken. Please choose a different one.')
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    job_id = db.Column(db.Integer, db.ForeignKey('new_job.id', ondelete='CASCADE'), nullable=False)
+    reminder_date = db.Column(db.DateTime, nullable=False)
+    message = db.Column(db.String(255))
+    is_done = db.Column(db.Boolean, default=False)
 
-    def validate_email(self, email):
-        if email.data != current_user.email:
-            user = User.query.filter_by(email=email.data).first()
-            if user:
-                raise ValidationError('That email is taken. Please choose a different one.')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<Reminder {self.reminder_date}>"
 
 
 def create_app():
@@ -151,6 +142,13 @@ def create_app():
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
 
+    app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+    app.config['MAIL_PORT'] = 587
+    app.config['MAIL_USE_TLS'] = True
+    app.config['MAIL_USERNAME'] = 'your_email@gmail.com'
+    app.config['MAIL_PASSWORD'] = 'your_app_password'
+    app.config['MAIL_DEFAULT_SENDER'] = 'your_email@gmail.com'
+    
     mail.init_app(app)
 
     @app.route('/', methods=['GET', 'POST'])
@@ -160,12 +158,33 @@ def create_app():
     @app.route('/dashboard')
     @login_required
     def dashboard():
+
+        full_time = NewJob.query.filter_by(user_id=current_user.id, job_type='Full-Time').all()
+
+        part_time = NewJob.query.filter_by(user_id=current_user.id, job_type='Part-Time').all()
+
+        intern = NewJob.query.filter_by(user_id=current_user.id, job_type='Intern/Trainee').all()
+
+        all_jobs = full_time + part_time + intern
+
+        job_dates = {}
+
+        for job in all_jobs:
+            job_dates[job.id] = []
+
+            for d in job.dates:
+                job_dates[job.id].append({
+                    "date_type": d.date_type,
+                    "date_value": d.date_value.strftime("%Y-%m-%dT%H:%M")
+                })
+
         return render_template(
-            'dashboard.html',
-            active_page='dashboard',
-            full_time=NewJob.query.filter_by(job_type='Full-Time').all(),
-            part_time=NewJob.query.filter_by(job_type='Part-Time').all(),
-            intern=NewJob.query.filter_by(job_type='Intern/Trainee').all()
+            "dashboard.html",
+            active_page="dashboard",
+            full_time=full_time,
+            part_time=part_time,
+            intern=intern,
+            job_dates=job_dates
         )
     
     @app.route('/register', methods=["GET", "POST"])
@@ -249,7 +268,10 @@ def create_app():
     @app.route('/add_job', methods=['POST'])
     @login_required
     def add_job():
+        application_date = request.form.get("application_date")
+
         job = NewJob(
+            user_id=current_user.id,
             company_name=request.form.get('company_name'),
             job_position=request.form.get('job_position'),
             location=request.form.get('location'),
@@ -260,20 +282,41 @@ def create_app():
         db.session.add(job)
         db.session.commit()
 
+        if application_date:
+            app_date_obj = datetime.strptime(application_date, "%Y-%m-%d")
+
+            reminder = Reminder(
+                user_id=current_user.id,
+                job_id=job.id,
+                reminder_date=app_date_obj - timedelta(days=1),
+                message="Upcoming application deadline"
+            )
+            db.session.add(reminder)
+
         date_types = request.form.getlist('date_type[]')
         date_values = request.form.getlist('date_value[]')
 
         for dtype, dvalue in zip(date_types, date_values):
-            if dvalue:  # ignore empty dates
+            if dvalue:
+                date_obj = datetime.strptime(dvalue, "%Y-%m-%dT%H:%M")
+
                 job_date = JobDate(
                     job_id=job.id,
                     date_type=dtype,
-                    date_value=datetime.strptime(dvalue, "%Y-%m-%d").date()
+                    date_value=date_obj.date()
                 )
                 db.session.add(job_date)
 
-            db.session.commit()
-            
+                reminder = Reminder(
+                    user_id=current_user.id,
+                    job_id=job.id,
+                    reminder_date=date_obj,
+                    message = f"{dtype.title()} – {job.job_position} at {job.company_name}"
+                )
+                db.session.add(reminder)
+
+        db.session.commit()
+
         return redirect(url_for('dashboard'))
 
     @app.route('/forgot_password', methods=['POST', 'GET'])
@@ -372,16 +415,47 @@ def create_app():
     @app.route('/edit_job/<int:id>', methods=['POST'])
     @login_required
     def edit_job(id):
+
         job = NewJob.query.get_or_404(id)
-        
-        job.company_name = request.form.get('company_name')
-        job.job_position = request.form.get('job_position')
-        job.location = request.form.get('location')
-        job.job_status = request.form.get('job_status')
-        job.job_type = request.form.get('job_type')
+
+        job.company_name = request.form.get("company_name")
+        job.job_position = request.form.get("job_position")
+        job.location = request.form.get("location")
+        job.job_status = request.form.get("job_status")
+        job.job_type = request.form.get("job_type")
+
+        date_types = request.form.getlist("date_type[]")
+        date_values = request.form.getlist("date_value[]")
+
+        JobDate.query.filter_by(job_id=id).delete()
+
+        Reminder.query.filter_by(job_id=id).delete()
+
+        for t, v in zip(date_types, date_values):
+
+            if v:
+                parsed_date = datetime.fromisoformat(v)
+
+                new_date = JobDate(
+                    job_id=id,
+                    user_id=current_user.id,
+                    date_type=t,
+                    date_value=datetime.fromisoformat(v)
+                )
+                db.session.add(new_date)
+
+                reminder = Reminder(
+                    user_id=current_user.id,
+                    job_id=id,
+                    reminder_date=parsed_date,
+                    message = f"{t.title()} - {job.job_position} at {job.company_name}"
+                )
+
+                db.session.add(reminder)
 
         db.session.commit()
-        return redirect(url_for('dashboard'))
+
+        return redirect(url_for("dashboard"))
 
     @app.route('/delete_job/<int:id>', methods=['POST'])
     @login_required
@@ -395,16 +469,29 @@ def create_app():
     @app.route('/reminders')
     @login_required
     def reminders():
-        today = datetime.today().date()
 
-        dates = JobDate.query.filter(
-            JobDate.date_value >= today
-        ).order_by(JobDate.date_value).all()
+        reminders = Reminder.query.filter_by(
+            user_id=current_user.id
+        ).order_by(Reminder.reminder_date).all()
 
-        return render_template('reminders.html', active_page='reminders', dates=dates)
+        now = datetime.now()
+
+        upcoming_reminders = []
+        past_reminders = []
+
+        for reminder in reminders:
+            if reminder.reminder_date >= now:
+                upcoming_reminders.append(reminder)
+            else:
+                past_reminders.append(reminder)
+
+        return render_template(
+            "reminders.html",
+            upcoming_reminders=upcoming_reminders,
+            past_reminders=past_reminders
+        )
 
     @app.route('/file_upload', methods=["POST"])
-    @login_required
     def file_upload():
         file = request.files['file']
         if file:
@@ -424,9 +511,8 @@ def create_app():
         return "Upload Failed"
 
     @app.route('/delete_file/<int:doc_id>')
-    @login_required
     def delete_file(doc_id):
-        doc = Document.query.get_or_404(id=doc_id)
+        doc = Document.query.get_or_404(doc_id)
 
         try:
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], doc.filename)
@@ -497,8 +583,6 @@ def create_app():
     with app.app_context():
         db.create_all()
         return app
-
-
 
 if __name__ == '__main__':
     app = create_app()
