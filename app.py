@@ -434,7 +434,7 @@ def create_app():
     @app.route('/delete_file/<int:doc_id>')
     @login_required
     def delete_file(doc_id):
-        doc = Document.query.get_or_404(id=doc_id)
+        doc = Document.query.get_or_404(doc_id)
 
         try:
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], doc.filename)
