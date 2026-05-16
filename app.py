@@ -11,8 +11,11 @@ from config import Config
 from flask_mail import Mail, Message
 from flask_bcrypt import Bcrypt
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import select
-
+from sqlalchemy import select, func
+from flask_wtf import FlaskForm
+from flask_wtf.file import FileField, FileAllowed
+from wtforms import StringField, SubmitField, TextAreaField
+from wtforms.validators import DataRequired, Length, Email, ValidationError
 
 app = Flask(__name__, template_folder="templates", static_folder="static/uploads")
 db= SQLAlchemy()
@@ -32,8 +35,6 @@ login_manager = LoginManager(app)
 login_manager.login_view = "login"
 with app.app_context():
     db.create_all()
-
-
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -74,6 +75,7 @@ class PasswordResetId(db.Model):
     
 class Document(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     filename = db.Column(db.String(100), nullable=False)
     file_path = db.Column(db.String(200), nullable=False)    
 
@@ -316,7 +318,6 @@ def create_app():
 
         return redirect(url_for('dashboard'))
 
-
     @app.route('/forgot_password', methods=['POST', 'GET'])
     def forgot_password():
 
@@ -408,8 +409,7 @@ def create_app():
     @app.route('/document')
     def document():
         docs = Document.query.order_by(Document.filename.asc()).all()
-        return render_template("document.html", docs=docs)
-    
+        return render_template("document.html", docs=docs)  
 
     @app.route('/edit_job/<int:id>', methods=['POST'])
     @login_required
@@ -455,7 +455,6 @@ def create_app():
         db.session.commit()
 
         return redirect(url_for("dashboard"))
-
 
     @app.route('/delete_job/<int:id>', methods=['POST'])
     @login_required
@@ -528,6 +527,57 @@ def create_app():
         except Exception as e:
             print(f"Error: {e}")
             return "There was a problem deleting that file."
+
+    @app.route('/statistic')
+    def statistic():
+        results = db.session.query(NewJob.job_status, func.count(NewJob.job_status)).group_by(NewJob.job_status).all()
+
+        stats_dict = {status: count for status, count in results}
+    
+        total_count = sum(stats_dict.values())
+
+        return render_template('statistic.html', 
+                           status_data=results, 
+                           stats=stats_dict, 
+                           total=total_count)
+        
+    def save_picture(form_picture):
+        random_hex = secrets.token_hex(8)
+        _, f_ext = os.path.splitext(form_picture.filename)
+        picture_fn = random_hex + f_ext
+        picture_path = os.path.join(app.root_path, 'static/profile_pics', picture_fn)
+        form_picture.save(picture_path)
+
+        return picture_fn
+
+    @app.route("/account", methods=["POST", "GET"])
+    @login_required
+    def account():
+        form = UpdateAccountForm()
+        if form.validate_on_submit():
+            if form.picture.data:
+                picture_file = save_picture(form.picture.data)
+                current_user.image_file = picture_file
+
+            current_user.username = form.username.data
+            current_user.email = form.email.data
+            current_user.full_name = form.full_name.data
+            current_user.phone_number = form.phone_number.data
+            current_user.about_me = form.about_me.data
+
+            db.session.commit()
+            flash("your account has been updated!", 'success')
+            return redirect(url_for('account'))
+        elif request.method == 'GET':
+            form.username.data = current_user.username
+            form.email.data = current_user.email
+            form.full_name.data = current_user.full_name 
+            form.phone_number.data = current_user.phone_number 
+            form.about_me.data = current_user.about_me 
+
+        image_file = url_for('static', filename='profile_pics/' + current_user.image_file)
+        return render_template('account.html', title='Account', image_file=image_file, form=form)
+
 
     with app.app_context():
         db.create_all()
