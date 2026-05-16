@@ -2,7 +2,7 @@
 <html>
 <head>
     <link href="https://cdn.boxicons.com/transformations.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='test.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='job.css')}}">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
     <title>New Application</title>
@@ -58,7 +58,7 @@ function addDate() {
             <option value="Offer">Offer</option>
         </select>
 
-        <input type="date" name="date_value[]">
+        <input type="datetime-local" name="date_value[]">
 
         <button type="button" onclick="removeDate(this)" class="icon-btn">
             <i class="bxf bx-x-square bx-sm"></i>
@@ -74,9 +74,6 @@ function removeDate(button) {
 </script>
 
 <body>
-{% extends "base.html" %}
-
-{% block content %}
 
     <div id="popupForm" class="popup">
 
@@ -108,7 +105,7 @@ function removeDate(button) {
                             <option value="Offer">Offer</option>
                         </select>
 
-                        <input type="date" name="date_value[]">
+                        <input type="datetime-local" name="date_value[]">
 
                         <button type="button" onclick="removeDate(this)" class="icon-btn"><i class="bxf bx-x-square bx-sm"></i></button>
                     </div>
@@ -141,6 +138,6 @@ function removeDate(button) {
 
         </div>
     </div>
-{% endblock %}
+
 </body>
 </html>

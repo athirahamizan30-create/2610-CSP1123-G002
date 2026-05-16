@@ -1,24 +1,22 @@
 .modal {
     display: none;
     position: fixed;
-    z-index: 999;
-    left: 0;
     top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.6);
+    background: rgba(0,0,0,0.5);
 }
 
 .modal-content {
-    background: #ffffff;
-    margin: 6% auto;
-    padding: 25px;
-    border-radius: 16px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.25);
-    animation: pop 0.25s ease;
+    background: white;
+    width: 500px;
+    max-height: 90vh;
+    margin: 5vh auto;
+    padding: 20px;
+    overflow-y: auto; 
+    border-radius: 10px;
     position: relative;
-    width: 80%; 
-    max-width: 900px;
 }
 
 @keyframes pop {
@@ -59,7 +57,7 @@
 .modal-content button {
     width: 100%;
     padding: 12px;
-    background: #4CAF50;
+    background: #315532af;
     color: white;
     border: none;
     border-radius: 10px;
@@ -69,7 +67,7 @@
 }
 
 .modal-content button:hover {
-    background: #3e8e41;
+    background: #cfa771;
     transform: translateY(-2px);
 }
 
@@ -133,4 +131,44 @@ select {
 
 .edit-btn:hover{
     background-color: #cfa771;
+}
+
+.date-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.date-row select {
+    width: 90px;
+    flex-shrink: 0;
+}
+
+.date-row input[type="datetime-local"] {
+    flex: 1;
+    min-width: 220px;
+    width: 100%;
+}
+
+.remove-date-btn,
+.add-date-btn {
+    width: 40px !important;
+    height: 40px !important;
+
+    min-width: 40px;
+    max-width: 40px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 !important;
+    flex: none !important;
+}
+
+.add-date-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
 }
