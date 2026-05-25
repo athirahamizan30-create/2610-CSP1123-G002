@@ -42,13 +42,16 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
+    image_file= db.Column(db.String(20), nullable=False, default='default.jpg')
+    full_name = db.Column(db.String(100), nullable=True)
+    phone_number = db.Column(db.String(20), nullable=True)
+    about_me = db.Column(db.Text, nullable=True)
 
     password_reset_ids = db.relationship(
         "PasswordResetId",
         backref="user",
         cascade="all, delete-orphan"
     )
-
 
 class PasswordResetId(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -92,7 +95,6 @@ class NewJob(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     dates = db.relationship('JobDate', backref='job', cascade="all, delete")
     reminders = db.relationship('Reminder', backref='job', cascade="all, delete-orphan", passive_deletes=True)
-
 
 class JobDate(db.Model):
     id = db.Column(db.Integer, primary_key=True)
