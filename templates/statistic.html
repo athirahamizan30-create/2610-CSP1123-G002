@@ -158,8 +158,13 @@
                 <div class="box2">
                 <div class="card">
                     <div class="container">
-                        <h4><b>Total Application</b></h4>
-                        <p>{{ total }}</p>
+                        <h4><b>Rate of Acceptance</b></h4>
+                        <p>{% if total > 0 %}
+                            {{ ((stats.get('accepted', 0) / total) * 100) | round(2) }}%
+                            {% else %}
+                                0%
+                            {% endif %}
+                        </p>
                     </div>
                 </div>
             </div>
