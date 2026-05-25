@@ -1,5 +1,7 @@
-body{
-  background-color: rgb(241, 225, 204);
+body {
+  background-color: #edeeca; 
+  margin: 0;
+  padding: 0;
 }
 
 .sidebar {
@@ -8,8 +10,9 @@ body{
     top: 0;
     width: 250px;
     height: 100%;
-    background: #edeeca;  /* your color */
+    background: #edeeca;  
     transition: left 0.3s ease;
+    z-index: 1000; 
 }
 
 .sidebar a {
@@ -34,24 +37,35 @@ body{
     left: 0;
 }
 
-.sidebar a:hover{
+.sidebar a:hover {
     background-color: #b19104;
 }
 
-.sidebar a.active{
+.sidebar a.active {
     background-color: #a3bb7c;
     font-weight: bold;
+}
+
+#overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.55); 
+    display: none;
+    z-index: 998; 
+}
+
+#overlay.active {
+    display: block;
 }
 
 .main {
     padding: 20px;
     transition: margin-left 0.3s;
-}
-
-.menu-btn {
-    font-size: 20px;
-    padding: 10px;
-    cursor: pointer;
+    background-color: #edeeca; 
+    min-height: 100vh;
 }
 
 .sidebar.active ~ .main {
@@ -61,21 +75,21 @@ body{
 h1 {
   font-size: 40px;
   text-decoration: underline;
-  display:flex;
+  display: flex;
   align-items: center;
   margin-left: 60px;
   gap: 30px;
-  float:left;
+  float: left;
 }
 
 .card {
   box-shadow: 0 4px 10px 0 rgba(0,0,0,0.2);
   transition: 0.3s;
   width: 180px;
-  height: 85px;
+  height: 95px; 
   border-radius: 20px;
   margin: 20px 10px;
-  display: inline-block;
+  display: flex;             
   flex-direction: column;    
   justify-content: center;  
   align-items: center;      
@@ -107,45 +121,45 @@ h1 {
 }
 
 .container h4 {
-  font-size: 20px;
+  font-size: 18px;
+  margin: 0;
 }
 
-.container p{
+.container p {
   font-size: 19px;
   font-weight: bolder;
   margin-bottom: 5px;
   margin-top: 5px;
 }
 
-
-#Total{
+#Total {
   background-color: #bc9ee7;
 }
 
-#Interested{
+#Interested {
   background-color: #ffff99;
 }
 
-#Applied{
+#Applied {
   background-color: #99ffff;
 }
 
-#Rejected{
+#Rejected {
   background-color: #bd4a4a;
 }
 
-#Stage1{
+#Stage1 {
   background-color: #99ccff;
 }
 
-#Stage2{
+#Stage2 {
   background-color: #3474b4;
 }
 
-#Interview{
+#Interview {
   background-color: #299b9b;
 }
 
-#Accepted{
+#Accepted {
   background-color: #41be41;
 }

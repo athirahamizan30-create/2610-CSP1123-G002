@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>My Job Tracker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='base.css') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">    
@@ -12,20 +12,22 @@
         {% block content %}{% endblock %}
     </div>
     
-    <script type="module">
-        import Chatbot from "https://cdn.jsdelivr.net/npm/@denserai/embed-chat@1/dist/web.min.js";
-        Chatbot.init({
-        chatbotId: "chatbot_gcntvcndfh5ldda4vt4y4",
-        theme: {
-            button: {
-                size: 'large',   
-                bottom: 40,      
-                right: 40,       
-                color: '#abc17c' 
-                },
-            }, 
-        });
-    </script>  
+    <div id="ai-chatbot-wrapper">
+        <script type="module">
+            import Chatbot from "https://cdn.jsdelivr.net/npm/@denserai/embed-chat@1/dist/web.min.js";
+            Chatbot.init({
+            chatbotId: "chatbot_gcntvcndfh5ldda4vt4y4",
+            theme: {
+                button: {
+                    size: 'large',   
+                    bottom: 40,      
+                    right: 40,       
+                    color: '#abc17c' 
+                    },
+                }, 
+            });
+        </script>  
+    </div>
     
 </body>
 </html>
