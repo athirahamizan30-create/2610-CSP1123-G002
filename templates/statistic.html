@@ -1,5 +1,8 @@
 <!DOCTYPE html>
 <html>
+{% extends "base.html" %}
+
+{% block content %}
 <head>
     <title>Statistic</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='stylestatistic.css') }}">
@@ -44,37 +47,49 @@
     </script>
 </head>
 
-<body>
-{% extends "base.html" %}
+<body>  
+<div id="overlay" onclick="toggleSidebar()"></div>
 
-{% block content %}
-    <div id="mySidebar" class="sidebar">  
-        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
-        <h2>My Jobs</h2>
+    <div class="sidebar" id="sidebar">
+        <h2>Menu</h2>
 
-        <a href="/dashboard">Dashboard</a>
-        <a href="javascript:void(0);" onclick="openPopup()">New Application</a>
-        <a href="/document">Documents</a>
-        <a href="/reminders">Reminders</a>
-        <a href="/">Log Out</a>
+        <a href="/dashboard" class="{% if active_page == 'dashboard' %}active{% endif %}">
+            <i class="bxf bx-home-circle"></i>Dashboard
+        </a>
 
-        <script>
-            function openNav() {
-            document.getElementById("mySidebar").style.width = "250px";
-            document.getElementById("movemain").style.marginLeft = "250px";
-            }
+        <a href="javascript:void(0);" onclick="openPopup()">
+            <i class="bxf bx-plus-square"></i>New Application
+        </a>
 
-        <!--push back the content to the left -->
-            function closeNav() {
-            document.getElementById("mySidebar").style.width = "0";
-            document.getElementById("movemain").style.marginLeft = "0";
-            }
-        </script>
+        <a href="/document">
+            <i class="bxf bx-folder"></i>Documents
+        </a>
+
+        <a href="/reminders" class="{% if active_page == 'reminders' %}active{% endif %}">
+            <i class='bxf bx-bell'></i>Reminders
+        </a>
+
+        <a href="/statistic" class="{% if active_page == 'statistic' %} active {% endif %}">
+            <i class='bxf bx-chart-bar-big-columns'></i>Statistic
+        </a>
+
+        <a href="/account" class="{% if active_page == 'reminders' %}active{% endif %}">
+            <i class='bxf bx-user'></i>Account profile
+        </a>
+
+        <a href="/">
+            <i class="bxf bx-arrow-out-right-square-half"></i>
+            Log Out
+        </a>
     </div>
 
-    <div id="movemain" class="main">
+    <div id="movemain" class="main">        
+        <button class="menu-btn" onclick="toggleSidebar()">
+            <i class="bx bx-menu bx-sm"></i>
+        </button>
+
+
         <div class ="header-section">
-            <button class="openbtn" onclick="openNav()">&#9776;</button>
             <h1>Statistic</h1>
         </div>
 
@@ -148,6 +163,12 @@
         </div>
 
     </div>
+<script>
+function toggleSidebar() {
+    document.getElementById("sidebar").classList.toggle("active");
+    document.getElementById("overlay").classList.toggle("active");
+}
+</script>
 {% endblock %}
 </body>
 </html>
