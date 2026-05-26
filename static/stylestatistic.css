@@ -144,6 +144,11 @@ h1 {
   font-size: 35px;
 }
 
+#box2 p{
+  font-size: 40px;
+  color: rgba(122, 29, 131, 0.699); 
+}
+
 #Total {
   background-color: #bc9ee7;
 }
