@@ -43,18 +43,6 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
-
-class config:
-    SECRET_KEY = os.environ.get("SECRET_KEY") or os.urandom(24)
-    DEBUG = os.environ.get("FLASK_DEBUG", "False").lower() in ('true', "1", "t")
-    CORS_ORIGINS = os.environ.get("CORS_ORIGIN", "*")
-
-    CHAT_ROOMS = [
-        "General",
-        "Zero to Knowing"
-    ]
-
-
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = "login"
@@ -471,6 +459,7 @@ def create_app():
             return render_template("reset_password.html")
     
     @app.route('/document')
+    @login_required
     def document():
         docs = Document.query.order_by(Document.filename.asc()).all()
         return render_template("document.html", docs=docs)  
@@ -575,6 +564,7 @@ def create_app():
         return "Upload Failed"
 
     @app.route('/delete_file/<int:doc_id>')
+    @login_required
     def delete_file(doc_id):
         doc = Document.query.get_or_404(doc_id)
 
