@@ -7,7 +7,7 @@ import secrets
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import timedelta, datetime, timezone
+from datetime import timedelta, datetime, timezone, date
 from config import Config
 from flask_mail import Mail, Message
 from flask_bcrypt import Bcrypt
@@ -17,12 +17,18 @@ from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from wtforms import StringField, SubmitField, TextAreaField
 from wtforms.validators import DataRequired, Length, Email, ValidationError
+from apscheduler.schedulers.background import BackgroundScheduler
+from dotenv import load_dotenv
 
 app = Flask(__name__, template_folder="templates", static_folder="static/uploads")
 db= SQLAlchemy()
+mail = Mail(app)
 login_manager = LoginManager()
 bcrypt = Bcrypt()
+load_dotenv()
 
+app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
 app.config['SECRET_KEY'] = 'user_registration_athirah'
 app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://athirah:Tiya071!@localhost/CareerTrack_Database"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -117,6 +123,50 @@ class Reminder(db.Model):
 
     def __repr__(self):
         return f"<Reminder {self.reminder_date}>"
+    
+    def send_reminders():
+        with app.app_context():
+                
+            from datetime import datetime
+
+            now = datetime.now()
+            start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            end = now.replace(hour=23, minute=59, second=59, microsecond=999999)
+
+            reminders = Reminder.query.filter(
+                Reminder.reminder_date >= start,
+                Reminder.reminder_date <= end
+            ).all()
+
+            print("FOUND:", reminders)
+
+            for reminder in reminders:
+                user = db.session.get(User, reminder.user_id)
+
+                msg = Message(
+                    subject='Reminder Notification',
+                    sender=app.config['MAIL_USERNAME'],
+                    recipients=[user.email]
+                )
+
+                msg.body = f"""
+    Hello {user.username},
+
+    Reminder:
+    {reminder.message}
+
+    Date: {reminder.reminder_date}
+    """
+                print("Sending email to:", user.email)
+
+                mail.send(msg)
+
+                print("SENT")
+
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(send_reminders, 'interval', minutes=1)
+    scheduler.start()
+
 
 class UpdateAccountForm(FlaskForm):
     username = StringField('Username',
@@ -283,7 +333,7 @@ def create_app():
     
     @login_manager.user_loader
     def load_user(user_id):
-        return User.query.get(int(user_id))
+        return db.session.get(User, int(user_id))
 
     @app.route('/logout')
     def logout():
