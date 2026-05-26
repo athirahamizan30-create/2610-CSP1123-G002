@@ -5,7 +5,6 @@ import uuid
 import os
 import secrets
 import logging
-import random
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -637,13 +636,142 @@ def create_app():
     @login_required
     def chat():
         logger.info(f"User {current_user.username} entered the chat session")
+        rooms_list = app.config.get("CHAT_ROOMS", ["General", "Zero to Knowing"])
 
         return render_template(
             'chat.html',
             username=current_user.username,
-            rooms=app.config["CHAT_ROOMS"]
+            rooms=rooms_list
         )
-    
+
+    active_users = {}
+    @SocketIO.event
+    def connect():
+        try:
+            if 'username' not in session:
+                session['username'] = current_user.username
+
+            active_users[request.sid] = {
+                'username':session['username'],
+                'connected_at': datetime.now().isoformat()
+            }
+
+            emit('active_users',{
+                'users':[user['username'] for user in active_users.values()]
+            }, broadcast=True)
+
+            logger.info({f"User connected {session['username']}"})
+
+        except Exception as e:
+            logger.error(f"Connection error: {str(e)}")
+            return False
+        
+    #disconnect from session
+    @SocketIO.event
+    def disconnect():
+        try:
+            if request.sid in active_users:
+                username= active_users[request.sid]['username']
+                del active_users[request.sid]
+
+            emit('active_users',{
+                'users':[user['username'] for user in active_users.values()]
+            }, broadcast=True)
+
+            logger.info({f"User disconnected: {'username'}"})
+
+        except Exception as e:
+            logger.error(f"Connection error: {str(e)}")
+
+    @SocketIO.on('join')
+    def on_join(data:dict):
+        try:
+            username = current_user.username
+            room = data['room']
+
+            if room not in app.config["CHAT_ROOMS"]:
+                logger.warning("No room available")
+                return
+            
+            join_room(room)
+            active_users[request.sid]['room'] = room
+
+            emit('status', {
+                'msg' : f"{username} has joined the room",
+                'type' : 'join',
+                'timestamp' : datetime.now().isoformat()
+            }, room=room)
+
+            logger.info(f"User {username} has joined {room}")
+
+        except Exception as e:
+            logger.error(str(e))
+
+    @SocketIO.on('leave')
+    def on_leave(data:dict):
+        try:
+            username = session['username']
+            room = data['room']
+
+            leave_room(room)
+            if request.sid in active_users:
+                active_users[request.sid].pop('room', None)
+
+            emit('status', {
+                    'msg' : f"{username} has left the room",
+                    'type' : 'leave',
+                    'timestamp' : datetime.now().isoformat()
+                }, room=room)
+
+            logger.info(f"User {username} has left the room")
+
+        except Exception as e:
+            logger.error(str(e))
+
+    @SocketIO.event
+    def handle_message(data:dict):
+        try:
+            username = current_user.username
+            room = data.get('room', "General")
+            msg_type = data.get("type", 'message')
+            message = data.get('msg', "").strip()
+
+            if not message:
+                return
+            
+            timestamp = datetime.now().isoformat()
+
+            if msg_type == 'private':
+                target_user = data.get('target')
+                if not target_user:
+                    return
+                
+                for sid, user_data in active_users.items():
+                    if user_data['username'] == target_user:
+                        emit('private_message', {
+                            'msg': message,
+                            'from': username,
+                            'to': target_user,
+                            'timestamp': timestamp, 
+                        }, room=sid)
+                        return
+
+            else:
+                if room not in app.config["CHAT_ROOMS"]:
+                    return
+                
+                emit('message', {
+                            'msg': message,
+                            'username':username,
+                            'room':room,
+                            'timestamp':timestamp,
+                        }, room=room)
+
+        except Exception as e:
+            logger.error(str(e))       
+
+
+
 
 
     with app.app_context():
