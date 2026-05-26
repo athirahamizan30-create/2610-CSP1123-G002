@@ -180,3 +180,16 @@ h1 {
 #Accepted {
   background-color: #41be41;
 }
+
+.filter-section {
+  margin-bottom: 20px;
+  padding: 10px;
+}
+
+#time-range {
+  font-weight: bolder;
+  margin-right: 10px;
+  margin-left: 60px;
+  padding: 5px 10px; 
+  border-radius: 5px;
+}
