@@ -132,6 +132,17 @@ h1 {
   margin-top: 5px;
 }
 
+#box2{
+  margin-left: 130px;
+  margin-top: -5px;
+  border-radius: 300px;
+  height: 300px;
+  width: 300px;
+}
+
+.rate{
+  font-size: 35px;
+}
 
 #Total {
   background-color: #bc9ee7;
