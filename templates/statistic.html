@@ -48,45 +48,10 @@
 </head>
 
 <body>  
-<div id="overlay" onclick="toggleSidebar()"></div>
 
-    <div class="sidebar" id="sidebar">
-        <h2>Menu</h2>
-
-        <a href="/dashboard" class="{% if active_page == 'dashboard' %}active{% endif %}">
-            <i class="bxf bx-home-circle"></i>Dashboard
-        </a>
-
-        <a href="javascript:void(0);" onclick="openPopup()">
-            <i class="bxf bx-plus-square"></i>New Application
-        </a>
-
-        <a href="/document">
-            <i class="bxf bx-folder"></i>Documents
-        </a>
-
-        <a href="/reminders" class="{% if active_page == 'reminders' %}active{% endif %}">
-            <i class='bxf bx-bell'></i>Reminders
-        </a>
-
-        <a href="/statistic" class="{% if active_page == 'statistic' %} active {% endif %}">
-            <i class='bxf bx-chart-bar-big-columns'></i>Statistic
-        </a>
-
-        <a href="/account" class="{% if active_page == 'reminders' %}active{% endif %}">
-            <i class='bxf bx-user'></i>Account profile
-        </a>
-
-        <a href="/">
-            <i class="bxf bx-arrow-out-right-square-half"></i>
-            Log Out
-        </a>
-    </div>
 
     <div id="movemain" class="main">        
-        <button class="menu-btn" onclick="toggleSidebar()">
-            <i class="bx bx-menu bx-sm"></i>
-        </button>
+        
 
         <div class ="header-section">
             <h1>Statistic</h1>

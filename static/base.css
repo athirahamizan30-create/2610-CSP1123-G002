@@ -65,3 +65,10 @@
 .sidebar.active ~ .main {
     margin-left: 250px;
 }
+
+.menu-btn {
+    margin-left: 20px;
+    margin-top: 20px;
+    height: 45px;
+    width: 45px;
+}
