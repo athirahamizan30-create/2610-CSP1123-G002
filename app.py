@@ -157,11 +157,13 @@ class Reminder(db.Model):
 
     Date: {reminder.reminder_date}
     """
-                print("Sending email to:", user.email)
+                print("TRY SEND TO:", user.email)
 
-                mail.send(msg)
-
-                print("SENT")
+                try:
+                    mail.send(msg)
+                    print("SENT OK")
+                except Exception as e:
+                    print("EMAIL FAILED:", e)
 
     scheduler = BackgroundScheduler()
     scheduler.add_job(send_reminders, 'interval', minutes=1)
@@ -220,6 +222,7 @@ def create_app():
     app.config['MAIL_SERVER'] = 'smtp.gmail.com'
     app.config['MAIL_PORT'] = 587
     app.config['MAIL_USE_TLS'] = True
+    app.config['MAIL_USE_SSL'] = False
     app.config['MAIL_USERNAME'] = 'your_email@gmail.com'
     app.config['MAIL_PASSWORD'] = 'your_app_password'
     app.config['MAIL_DEFAULT_SENDER'] = 'your_email@gmail.com'
