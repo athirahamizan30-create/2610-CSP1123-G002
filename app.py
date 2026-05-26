@@ -1,9 +1,11 @@
-from flask import Flask, render_template, url_for, request, redirect, flash
+from flask import Flask, render_template, url_for, request, redirect, flash, session
 import mysql.connector
 import re
 import uuid
 import os
 import secrets
+import logging
+import random
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -17,19 +19,41 @@ from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from wtforms import StringField, SubmitField, TextAreaField
 from wtforms.validators import DataRequired, Length, Email, ValidationError
+from typing import Dict
+from flask_socketio import SocketIO, emit, join_room, leave_room
+from werkzeug.middleware.proxy_fix import ProxyFix
+
+
 
 app = Flask(__name__, template_folder="templates", static_folder="static/uploads")
 db= SQLAlchemy()
 login_manager = LoginManager()
 bcrypt = Bcrypt()
 
-app.config['SECRET_KEY'] = 'user_registration_athirah'
+app.config['SECRET_KEY'] = 'secretkey'
 app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://athirah:Tiya071!@localhost/CareerTrack_Database"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=15)
 
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+class config:
+    SECRET_KEY = os.environ.get("SECRET_KEY") or os.urandom(24)
+    DEBUG = os.environ.get("FLASK_DEBUG", "False").lower() in ('true', "1", "t")
+    CORS_ORIGINS = os.environ.get("CORS_ORIGIN", "*")
+
+    CHAT_ROOMS = [
+        "General",
+        "Zero to Knowing"
+    ]
+
 
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
@@ -98,7 +122,6 @@ class NewJob(db.Model):
     dates = db.relationship('JobDate', backref='job', cascade="all, delete")
     reminders = db.relationship('Reminder', backref='job', cascade="all, delete-orphan", passive_deletes=True)
 
-
 class JobDate(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -152,6 +175,7 @@ class UpdateAccountForm(FlaskForm):
 def create_app():
 
     app = Flask(__name__)
+    app.config.from_object(Config)
     bcrypt.init_app(app)
     app.config.from_object(Config)
     mail = Mail()
@@ -180,6 +204,15 @@ def create_app():
     app.config['MAIL_DEFAULT_SENDER'] = 'your_email@gmail.com'
     
     mail.init_app(app)
+
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+    
+    socketio = SocketIO(
+        app,
+        cors_allowed_origins=app.config["CORS_ORIGINS", "*"],
+        logger=True,
+        engineio_logger=True
+    )
 
     @app.route('/', methods=['GET', 'POST'])
     def index():
@@ -609,6 +642,18 @@ def create_app():
 
         image_file = url_for('static', filename='profile_pics/' + current_user.image_file)
         return render_template('account.html', title='Account', image_file=image_file, form=form)
+
+    @app.route("/chat")
+    @login_required
+    def chat():
+        logger.info(f"User {current_user.username} entered the chat session")
+
+        return render_template(
+            'chat.html',
+            username=current_user.username,
+            rooms=app.config["CHAT_ROOMS"]
+        )
+    
 
 
     with app.app_context():
