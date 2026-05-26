@@ -645,7 +645,7 @@ def create_app():
         )
 
     active_users = {}
-    @SocketIO.event
+    @socketio.event
     def connect():
         try:
             if 'username' not in session:
@@ -667,7 +667,7 @@ def create_app():
             return False
         
     #disconnect from session
-    @SocketIO.event
+    @socketio.event
     def disconnect():
         try:
             if request.sid in active_users:
@@ -683,7 +683,7 @@ def create_app():
         except Exception as e:
             logger.error(f"Connection error: {str(e)}")
 
-    @SocketIO.on('join')
+    @socketio.on('join')
     def on_join(data:dict):
         try:
             username = current_user.username
@@ -707,7 +707,7 @@ def create_app():
         except Exception as e:
             logger.error(str(e))
 
-    @SocketIO.on('leave')
+    @socketio.on('leave')
     def on_leave(data:dict):
         try:
             username = session['username']
@@ -728,7 +728,7 @@ def create_app():
         except Exception as e:
             logger.error(str(e))
 
-    @SocketIO.event
+    @socketio.event
     def handle_message(data:dict):
         try:
             username = current_user.username
