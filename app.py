@@ -209,7 +209,7 @@ def create_app():
     
     socketio = SocketIO(
         app,
-        cors_allowed_origins=app.config["CORS_ORIGINS", "*"],
+        cors_allowed_origins=app.config.get("CORS_ORIGINS", "*"),
         logger=True,
         engineio_logger=True
     )
