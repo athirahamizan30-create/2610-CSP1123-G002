@@ -1,5 +1,4 @@
 from flask import Flask, render_template, url_for, request, redirect, flash, session
-import mysql.connector
 import re
 import uuid
 import os
@@ -28,6 +27,7 @@ app = Flask(__name__, template_folder="templates", static_folder="static/uploads
 db= SQLAlchemy()
 login_manager = LoginManager()
 bcrypt = Bcrypt()
+socketio = SocketIO()
 
 app.config['SECRET_KEY'] = 'secretkey'
 app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://athirah:Tiya071!@localhost/CareerTrack_Database"
@@ -37,10 +37,6 @@ app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=15)
 
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
 logger = logging.getLogger(__name__)
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
@@ -64,7 +60,6 @@ class User(UserMixin, db.Model):
         backref="user",
         cascade="all, delete-orphan"
     )
-
 
 class PasswordResetId(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -158,6 +153,15 @@ class UpdateAccountForm(FlaskForm):
             if user:
                 raise ValidationError('That email is taken. Please choose a different one.')
 
+class ChatMessage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    sender = db.Column(db.String(80),nullable=False)
+    room = db.Column(db.String(150),nullable=False)
+    message = db.Column(db.Text,nullable=False)
+    is_private = db.Column(db.Boolean,default=False)
+    timestamp = db.Column(db.DateTime,default=datetime.utcnow)
+
+
 
 def create_app():
 
@@ -194,11 +198,11 @@ def create_app():
 
     app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
     
-    socketio = SocketIO(
+    socketio.init_app(
         app,
         cors_allowed_origins=app.config.get("CORS_ORIGINS", "*"),
-        logger=True,
-        engineio_logger=True
+        logger=False,
+        engineio_logger=False
     )
 
     @app.route('/', methods=['GET', 'POST'])
@@ -632,6 +636,7 @@ def create_app():
         image_file = url_for('static', filename='profile_pics/' + current_user.image_file)
         return render_template('account.html', title='Account', image_file=image_file, form=form)
 
+    app.config["CHAT_ROOMS"] = ["General", "Zero to Knowing"]
     @app.route("/chat")
     @login_required
     def chat():
@@ -656,8 +661,13 @@ def create_app():
                 'connected_at': datetime.now().isoformat()
             }
 
-            emit('active_users',{
-                'users':[user['username'] for user in active_users.values()]
+            unique_users = list(set(
+                user['username']
+                for user in active_users.values()
+            ))
+
+            emit('active_users', {
+                'users': unique_users
             }, broadcast=True)
 
             logger.info({f"User connected {session['username']}"})
@@ -674,8 +684,13 @@ def create_app():
                 username= active_users[request.sid]['username']
                 del active_users[request.sid]
 
-            emit('active_users',{
-                'users':[user['username'] for user in active_users.values()]
+            unique_users = list(set(
+                user['username']
+                for user in active_users.values()
+            ))
+
+            emit('active_users', {
+                'users': unique_users
             }, broadcast=True)
 
             logger.info({f"User disconnected: {'username'}"})
@@ -728,7 +743,7 @@ def create_app():
         except Exception as e:
             logger.error(str(e))
 
-    @socketio.event
+    @socketio.on('message')
     def handle_message(data:dict):
         try:
             username = current_user.username
@@ -738,41 +753,89 @@ def create_app():
 
             if not message:
                 return
-            
             timestamp = datetime.now().isoformat()
-
+            
             if msg_type == 'private':
                 target_user = data.get('target')
                 if not target_user:
                     return
-                
-                for sid, user_data in active_users.items():
-                    if user_data['username'] == target_user:
-                        emit('private_message', {
-                            'msg': message,
-                            'from': username,
-                            'to': target_user,
-                            'timestamp': timestamp, 
-                        }, room=sid)
-                        return
+
+                private_room = create_private_room(
+                    username,
+                    target_user
+                )
+
+                new_message = ChatMessage(sender=username,room=private_room,message=message,is_private=True)
+
+                db.session.add(new_message)
+                db.session.commit()
+
+                emit('message', {'msg': message,'username': username,'room': private_room,'timestamp': timestamp,'private': True}, room=private_room)
 
             else:
                 if room not in app.config["CHAT_ROOMS"]:
                     return
                 
+                new_message = ChatMessage(sender=username,room=room,message=message,is_private=False)
+
+                db.session.add(new_message)
+                db.session.commit()
+
                 emit('message', {
                             'msg': message,
                             'username':username,
                             'room':room,
                             'timestamp':timestamp,
                         }, room=room)
-
         except Exception as e:
             logger.error(str(e))       
 
+    def create_private_room(user1, user2):
+        users = sorted([user1, user2])
+        return f"dm_{users[0]}_{users[1]}"    
 
+    @socketio.on('join_private')
+    def join_private(data):
+        try:
+            target_user = data.get('target')
 
+            if not target_user:
+                return
 
+            username = current_user.username
+
+            private_room = create_private_room(
+                username,
+                target_user
+            )
+
+            join_room(private_room)
+
+            emit('status', {
+                'msg': f"Private chat with {target_user}",
+                'type': 'system'
+            }, room=request.sid)
+
+        except Exception as e:
+            logger.error(str(e))
+
+    @app.route('/get_messages/<room>')
+    @login_required
+    def get_messages(room):
+        messages = ChatMessage.query.filter_by(
+            room=room
+        ).order_by(ChatMessage.timestamp.asc()).all()
+
+        return {
+            "messages": [
+                {
+                    "sender": msg.sender,
+                    "message": msg.message,
+                    "timestamp": msg.timestamp.isoformat()
+                }
+                for msg in messages
+            ]
+        }
 
     with app.app_context():
         db.create_all()
@@ -781,3 +844,4 @@ def create_app():
 if __name__ == '__main__':
     app = create_app()
     app.run(host="0.0.0.0", port=5000, debug=True)
+    socketio.run(app, host="0.0.0.0", port=5000, debug=True)
