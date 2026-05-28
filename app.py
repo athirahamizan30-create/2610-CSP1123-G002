@@ -152,14 +152,15 @@ class UpdateAccountForm(FlaskForm):
 def send_reminders():
     with app.app_context():
 
-        now = datetime.now(timezone.utc)
+        from datetime import datetime
+
+        now = datetime.now()
+        start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        end = now.replace(hour=23, minute=59, second=59, microsecond=999999)
 
         reminders = Reminder.query.filter(
-            and_(
-                Reminder.reminder_date >= now - timedelta(minutes=2),
-                Reminder.reminder_date <= now + timedelta(minutes=2),
-                Reminder.is_done == False
-            )
+            Reminder.reminder_date >= start,
+            Reminder.reminder_date <= end
         ).all()
 
         print("FOUND:", reminders)
@@ -174,21 +175,20 @@ def send_reminders():
             )
 
             msg.body = f"""
-Hello {user.username},
+    Hello {user.username},
 
-Reminder:
-{reminder.message}
+    Reminder:
+    {reminder.message}
 
-Date: {reminder.reminder_date}
-"""
+    Date: {reminder.reminder_date}
+    """
+            print("TRY SEND TO:", user.email)
 
             try:
                 mail.send(msg)
-                reminder.is_done = True
+                print("SENT OK")
             except Exception as e:
                 print("EMAIL FAILED:", e)
-
-        db.session.commit()
 
 def create_app():
 
@@ -379,23 +379,13 @@ def create_app():
                 )
                 db.session.add(job_date)
 
-                reminder_2_days = Reminder(
+                reminder = Reminder(
                     user_id=current_user.id,
                     job_id=job.id,
-                    reminder_date=date_obj - timedelta(days=2),
-                    message=f"{dtype.title()} in 2 days – {job.job_position} at {job.company_name}"
+                    reminder_date=date_obj,
+                    message = f"{dtype.title()} – {job.job_position} at {job.company_name}"
                 )
-
-                db.session.add(reminder_2_days)
-
-                reminder_1_hour = Reminder(
-                    user_id=current_user.id,
-                    job_id=job.id,
-                    reminder_date=date_obj - timedelta(hours=1),
-                    message=f"{dtype.title()} in 1 hour – {job.job_position} at {job.company_name}"
-                )
-
-                db.session.add(reminder_1_hour)
+                db.session.add(reminder)
 
         db.session.commit()
 
@@ -671,4 +661,4 @@ if __name__ == '__main__':
     scheduler = BackgroundScheduler()
     scheduler.add_job(send_reminders, 'interval', minutes=1)
     scheduler.start()
-    app.run(host="0.0.0.0", port=5000, debug=True, use_reloader=False)
+    app.run(host="0.0.0.0", port=5000, debug=True)
