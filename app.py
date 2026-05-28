@@ -22,7 +22,7 @@ from dotenv import load_dotenv
 
 app = Flask(__name__, template_folder="templates", static_folder="static/uploads")
 db= SQLAlchemy()
-mail = Mail(app)
+mail = Mail()
 login_manager = LoginManager()
 bcrypt = Bcrypt()
 load_dotenv()
@@ -123,8 +123,33 @@ class Reminder(db.Model):
 
     def __repr__(self):
         return f"<Reminder {self.reminder_date}>"
+
+class UpdateAccountForm(FlaskForm):
+    username = StringField('Username',
+                           validators=[DataRequired(), Length(min=2, max=20)])
+    email = StringField('Email',
+                        validators=[DataRequired(), Email()])
     
-    def send_reminders():
+    full_name = StringField('Full Name')
+    phone_number = StringField('Phone Number')
+    about_me = TextAreaField('About Me')
+
+    picture = FileField('Update Profile Picture', validators=[FileAllowed(['jpg', 'png'])])
+    submit = SubmitField('Update')
+
+    def validate_username(self, username):
+        if username.data != current_user.username:
+            user = User.query.filter_by(username=username.data).first()
+            if user:
+                raise ValidationError('That username is taken. Please choose a different one.')
+
+    def validate_email(self, email):
+        if email.data != current_user.email:
+            user = User.query.filter_by(email=email.data).first()
+            if user:
+                raise ValidationError('That email is taken. Please choose a different one.')
+
+def send_reminders():
         with app.app_context():
                 
             from datetime import datetime
@@ -165,37 +190,6 @@ class Reminder(db.Model):
                 except Exception as e:
                     print("EMAIL FAILED:", e)
 
-    scheduler = BackgroundScheduler()
-    scheduler.add_job(send_reminders, 'interval', minutes=1)
-    scheduler.start()
-
-
-class UpdateAccountForm(FlaskForm):
-    username = StringField('Username',
-                           validators=[DataRequired(), Length(min=2, max=20)])
-    email = StringField('Email',
-                        validators=[DataRequired(), Email()])
-    
-    full_name = StringField('Full Name')
-    phone_number = StringField('Phone Number')
-    about_me = TextAreaField('About Me')
-
-    picture = FileField('Update Profile Picture', validators=[FileAllowed(['jpg', 'png'])])
-    submit = SubmitField('Update')
-
-    def validate_username(self, username):
-        if username.data != current_user.username:
-            user = User.query.filter_by(username=username.data).first()
-            if user:
-                raise ValidationError('That username is taken. Please choose a different one.')
-
-    def validate_email(self, email):
-        if email.data != current_user.email:
-            user = User.query.filter_by(email=email.data).first()
-            if user:
-                raise ValidationError('That email is taken. Please choose a different one.')
-
-
 def create_app():
 
     app = Flask(__name__)
@@ -205,6 +199,14 @@ def create_app():
     db.init_app(app)
     login_manager.init_app(app)
     login_manager.login_view = "login"
+
+    app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
+    app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT'))
+    app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS') == 'True'
+    app.config['MAIL_USE_SSL'] = os.getenv('MAIL_USE_SSL') == 'True'
+    app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+    app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+    app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_USERNAME')
 
 
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -218,14 +220,6 @@ def create_app():
 
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
-
-    app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-    app.config['MAIL_PORT'] = 587
-    app.config['MAIL_USE_TLS'] = True
-    app.config['MAIL_USE_SSL'] = False
-    app.config['MAIL_USERNAME'] = 'your_email@gmail.com'
-    app.config['MAIL_PASSWORD'] = 'your_app_password'
-    app.config['MAIL_DEFAULT_SENDER'] = 'your_email@gmail.com'
     
     mail.init_app(app)
 
@@ -664,4 +658,7 @@ def create_app():
 
 if __name__ == '__main__':
     app = create_app()
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(send_reminders, 'interval', minutes=1)
+    scheduler.start()
     app.run(host="0.0.0.0", port=5000, debug=True)
