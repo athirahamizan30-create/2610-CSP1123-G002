@@ -19,6 +19,7 @@ from wtforms import StringField, SubmitField, TextAreaField
 from wtforms.validators import DataRequired, Length, Email, ValidationError
 from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
+from zoneinfo import ZoneInfo
 
 app = Flask(__name__, template_folder="templates", static_folder="static/uploads")
 db= SQLAlchemy()
@@ -152,20 +153,21 @@ def send_reminders(app):
 
         from datetime import datetime
 
-        now = datetime.now()
+        MY = ZoneInfo("Asia/Kuala_Lumpur")
+        now = datetime.now(MY)
 
         reminders = Reminder.query.filter(
-             and_(
-                Reminder.reminder_date >= now - timedelta(minutes=1),
-                Reminder.reminder_date <= now + timedelta(minutes=1),
+                Reminder.reminder_date <= now,
                 Reminder.is_done == False
-            )
         ).all()
 
         print("FOUND:", reminders)
 
         for reminder in reminders:
             user = db.session.get(User, reminder.user_id)
+
+            local_time = reminder.reminder_date.astimezone(MY)
+            formatted_time = local_time.strftime("%d-%m-%Y %H:%M")
 
             msg = Message(
                 subject='Reminder Notification',
@@ -179,7 +181,7 @@ def send_reminders(app):
     Reminder:
     {reminder.message}
 
-    Date: {reminder.reminder_date}
+    Date: {formatted_time}
     """
             print("TRY SEND TO:", user.email)
 
@@ -188,6 +190,7 @@ def send_reminders(app):
                 reminder.is_done = True
                 db.session.commit()
             except Exception as e:
+                db.session.rollback()
                 print("EMAIL FAILED:", e)
 
 def create_app():
@@ -359,7 +362,7 @@ def create_app():
             reminder = Reminder(
                 user_id=current_user.id,
                 job_id=job.id,
-                reminder_date=app_date_obj - timedelta(days=1),
+                reminder_date = app_date_obj,
                 message="Upcoming application deadline"
             )
             db.session.add(reminder)
@@ -381,7 +384,7 @@ def create_app():
                 reminder = Reminder(
                     user_id=current_user.id,
                     job_id=job.id,
-                    reminder_date=date_obj - timedelta(hours=1),
+                    reminder_date = date_obj,
                     message = f"{dtype.title()} – {job.job_position} at {job.company_name}"
                 )
                 db.session.add(reminder)
@@ -518,7 +521,7 @@ def create_app():
                 reminder = Reminder(
                     user_id=current_user.id,
                     job_id=id,
-                    reminder_date=parsed_date - timedelta(hours=1),
+                    reminder_date = parsed_date,
                     message = f"{t.title()} - {job.job_position} at {job.company_name}"
                 )
 
@@ -657,7 +660,7 @@ def create_app():
 
 if __name__ == '__main__':
     app = create_app()
-    scheduler = BackgroundScheduler()
-    scheduler.add_job(func=send_reminders, trigger='interval', minutes=1, args=[app])
+    scheduler = BackgroundScheduler(job_defaults={'coalesce': True, 'misfire_grace_time': 60})
+    scheduler.add_job(func=send_reminders,trigger='interval', minutes=1, args=[app])
     scheduler.start()
     app.run(host="0.0.0.0", port=5000, debug=True)
