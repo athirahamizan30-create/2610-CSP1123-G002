@@ -152,16 +152,15 @@ def send_reminders(app):
     with app.app_context():
 
         MY = ZoneInfo("Asia/Kuala_Lumpur")
-        now = datetime.now(timezone.utc)
+        now = datetime.now()
 
         print("NOW:", now)
 
         reminders = Reminder.query.filter(
             Reminder.is_done == False,
-            Reminder.reminder_date <= now + timedelta(hours=1),
-            Reminder.reminder_date > now + timedelta(hours=1) - timedelta(minutes=1)
+            Reminder.reminder_date <= now
         ).all()
-
+        
         all_reminders = Reminder.query.all()
         for r in all_reminders:
             print("DB:", r.reminder_date, "DONE:", r.is_done)
@@ -361,25 +360,7 @@ def create_app():
         db.session.add(job)
         db.session.commit()
 
-        event_time = datetime.strptime(dvalue, "%Y-%m-%dT%H:%M")
-
-        job_date = JobDate(
-            job_id=job.id,
-            date_type=dtype,
-            date_value=event_time.date()
-        )
-        db.session.add(job_date)
-
-        reminder_time = event_time - timedelta(hours=1)
-
-        reminder = Reminder(
-            user_id=current_user.id,
-            job_id=job.id,
-            reminder_date=reminder_time,
-            message=f"{dtype.title()} – {job.job_position} at {job.company_name}"
-        )
-
-        db.session.add(reminder)
+        
 
         date_types = request.form.getlist('date_type[]')
         date_values = request.form.getlist('date_value[]')
