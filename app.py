@@ -360,37 +360,44 @@ def create_app():
         db.session.add(job)
         db.session.commit()
 
-        MY = ZoneInfo("Asia/Kuala_Lumpur")
-        if application_date:
-            app_date_obj = app_date_obj.replace(tzinfo=MY)
+        event_time = datetime.strptime(dvalue, "%Y-%m-%dT%H:%M")
 
-            reminder = Reminder(
-                user_id=current_user.id,
-                job_id=job.id,
-                reminder_date = (date_obj - timedelta(hours=1)).replace(tzinfo=MY),
-                message="Upcoming application deadline"
-            )
-            db.session.add(reminder)
+        job_date = JobDate(
+            job_id=job.id,
+            date_type=dtype,
+            date_value=event_time.date()
+        )
+        db.session.add(job_date)
+
+        reminder_time = event_time - timedelta(hours=1)
+
+        reminder = Reminder(
+            user_id=current_user.id,
+            job_id=job.id,
+            reminder_date=reminder_time,
+            message=f"{dtype.title()} – {job.job_position} at {job.company_name}"
+        )
+
+        db.session.add(reminder)
 
         date_types = request.form.getlist('date_type[]')
         date_values = request.form.getlist('date_value[]')
 
         for dtype, dvalue in zip(date_types, date_values):
             if dvalue:
-                MY = ZoneInfo("Asia/Kuala_Lumpur")
-                date_obj = datetime.strptime(dvalue, "%Y-%m-%dT%H:%M").replace(tzinfo=MY)
+                event_time = datetime.strptime(dvalue, "%Y-%m-%dT%H:%M")
 
                 job_date = JobDate(
                     job_id=job.id,
                     date_type=dtype,
-                    date_value=date_obj.date()
+                    date_value=event_time.date()
                 )
                 db.session.add(job_date)
 
                 reminder = Reminder(
                     user_id=current_user.id,
                     job_id=job.id,
-                    reminder_date = (date_obj - timedelta(hours=1)).replace(tzinfo=MY),
+                    reminder_date=event_time - timedelta(hours=1),
                     message = f"{dtype.title()} – {job.job_position} at {job.company_name}"
                 )
                 db.session.add(reminder)
@@ -514,8 +521,7 @@ def create_app():
         for t, v in zip(date_types, date_values):
 
             if v:
-                MY = ZoneInfo("Asia/Kuala_Lumpur")
-                parsed_date = datetime.fromisoformat(v).replace(tzinfo=MY)
+                parsed_date = datetime.fromisoformat(v)
 
                 new_date = JobDate(
                     job_id=id,
@@ -528,8 +534,8 @@ def create_app():
                 reminder = Reminder(
                     user_id=current_user.id,
                     job_id=id,
-                    reminder_date = parsed_date - timedelta(hours=1),
-                    message = f"{t.title()} - {job.job_position} at {job.company_name}"
+                    reminder_date=parsed_date - timedelta(hours=1),
+                    message=f"{t.title()} - {job.job_position} at {job.company_name}"
                 )
 
                 db.session.add(reminder)
