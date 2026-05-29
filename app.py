@@ -37,11 +37,9 @@ app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=15)
 
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-db = SQLAlchemy(app)
-login_manager = LoginManager(app)
+db = SQLAlchemy()
+login_manager = LoginManager()
 login_manager.login_view = "login"
-with app.app_context():
-    db.create_all()
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -149,18 +147,19 @@ class UpdateAccountForm(FlaskForm):
             if user:
                 raise ValidationError('That email is taken. Please choose a different one.')
 
-def send_reminders():
+def send_reminders(app):
     with app.app_context():
 
         from datetime import datetime
 
         now = datetime.now()
-        start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        end = now.replace(hour=23, minute=59, second=59, microsecond=999999)
 
         reminders = Reminder.query.filter(
-            Reminder.reminder_date >= start,
-            Reminder.reminder_date <= end
+             and_(
+                Reminder.reminder_date >= now - timedelta(minutes=1),
+                Reminder.reminder_date <= now + timedelta(minutes=1),
+                Reminder.is_done == False
+            )
         ).all()
 
         print("FOUND:", reminders)
@@ -186,7 +185,8 @@ def send_reminders():
 
             try:
                 mail.send(msg)
-                print("SENT OK")
+                reminder.is_done = True
+                db.session.commit()
             except Exception as e:
                 print("EMAIL FAILED:", e)
 
@@ -195,7 +195,6 @@ def create_app():
     app = Flask(__name__)
     bcrypt.init_app(app)
     app.config.from_object(Config)
-    mail = Mail()
     db.init_app(app)
     login_manager.init_app(app)
     login_manager.login_view = "login"
@@ -382,7 +381,7 @@ def create_app():
                 reminder = Reminder(
                     user_id=current_user.id,
                     job_id=job.id,
-                    reminder_date=date_obj,
+                    reminder_date=date_obj - timedelta(hours=1),
                     message = f"{dtype.title()} – {job.job_position} at {job.company_name}"
                 )
                 db.session.add(reminder)
@@ -519,7 +518,7 @@ def create_app():
                 reminder = Reminder(
                     user_id=current_user.id,
                     job_id=id,
-                    reminder_date=parsed_date,
+                    reminder_date=parsed_date - timedelta(hours=1),
                     message = f"{t.title()} - {job.job_position} at {job.company_name}"
                 )
 
@@ -659,6 +658,6 @@ def create_app():
 if __name__ == '__main__':
     app = create_app()
     scheduler = BackgroundScheduler()
-    scheduler.add_job(send_reminders, 'interval', minutes=1)
+    scheduler.add_job(func=send_reminders, trigger='interval', minutes=1, args=[app])
     scheduler.start()
     app.run(host="0.0.0.0", port=5000, debug=True)
