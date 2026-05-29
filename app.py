@@ -152,13 +152,14 @@ def send_reminders(app):
     with app.app_context():
 
         MY = ZoneInfo("Asia/Kuala_Lumpur")
-        now = datetime.now(MY)
+        now = datetime.now(timezone.utc)
 
         print("NOW:", now)
 
         reminders = Reminder.query.filter(
-            Reminder.reminder_date <= now,
-            Reminder.is_done == False
+            Reminder.is_done == False,
+            Reminder.reminder_date <= now + timedelta(hours=1),
+            Reminder.reminder_date > now + timedelta(hours=1) - timedelta(minutes=1)
         ).all()
 
         all_reminders = Reminder.query.all()
