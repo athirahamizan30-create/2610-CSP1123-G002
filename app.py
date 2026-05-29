@@ -151,15 +151,19 @@ class UpdateAccountForm(FlaskForm):
 def send_reminders(app):
     with app.app_context():
 
-        from datetime import datetime
-
         MY = ZoneInfo("Asia/Kuala_Lumpur")
         now = datetime.now(MY)
 
+        print("NOW:", now)
+
         reminders = Reminder.query.filter(
-                Reminder.reminder_date <= now,
-                Reminder.is_done == False
+            Reminder.reminder_date <= now,
+            Reminder.is_done == False
         ).all()
+
+        all_reminders = Reminder.query.all()
+        for r in all_reminders:
+            print("DB:", r.reminder_date, "DONE:", r.is_done)
 
         print("FOUND:", reminders)
 
@@ -176,13 +180,13 @@ def send_reminders(app):
             )
 
             msg.body = f"""
-    Hello {user.username},
+Hello {user.username},
 
-    Reminder:
-    {reminder.message}
+Reminder:
+{reminder.message}
 
-    Date: {formatted_time}
-    """
+Date: {formatted_time}
+"""
             print("TRY SEND TO:", user.email)
 
             try:
@@ -356,13 +360,14 @@ def create_app():
         db.session.add(job)
         db.session.commit()
 
+        MY = ZoneInfo("Asia/Kuala_Lumpur")
         if application_date:
-            app_date_obj = datetime.strptime(application_date, "%Y-%m-%d")
+            app_date_obj = app_date_obj.replace(tzinfo=MY)
 
             reminder = Reminder(
                 user_id=current_user.id,
                 job_id=job.id,
-                reminder_date = app_date_obj,
+                reminder_date = (date_obj - timedelta(hours=1)).replace(tzinfo=MY),
                 message="Upcoming application deadline"
             )
             db.session.add(reminder)
@@ -372,7 +377,8 @@ def create_app():
 
         for dtype, dvalue in zip(date_types, date_values):
             if dvalue:
-                date_obj = datetime.strptime(dvalue, "%Y-%m-%dT%H:%M")
+                MY = ZoneInfo("Asia/Kuala_Lumpur")
+                date_obj = datetime.strptime(dvalue, "%Y-%m-%dT%H:%M").replace(tzinfo=MY)
 
                 job_date = JobDate(
                     job_id=job.id,
@@ -384,7 +390,7 @@ def create_app():
                 reminder = Reminder(
                     user_id=current_user.id,
                     job_id=job.id,
-                    reminder_date = date_obj,
+                    reminder_date = (date_obj - timedelta(hours=1)).replace(tzinfo=MY),
                     message = f"{dtype.title()} – {job.job_position} at {job.company_name}"
                 )
                 db.session.add(reminder)
@@ -508,7 +514,8 @@ def create_app():
         for t, v in zip(date_types, date_values):
 
             if v:
-                parsed_date = datetime.fromisoformat(v)
+                MY = ZoneInfo("Asia/Kuala_Lumpur")
+                parsed_date = datetime.fromisoformat(v).replace(tzinfo=MY)
 
                 new_date = JobDate(
                     job_id=id,
@@ -521,7 +528,7 @@ def create_app():
                 reminder = Reminder(
                     user_id=current_user.id,
                     job_id=id,
-                    reminder_date = parsed_date,
+                    reminder_date = parsed_date - timedelta(hours=1),
                     message = f"{t.title()} - {job.job_position} at {job.company_name}"
                 )
 
