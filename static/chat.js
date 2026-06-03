@@ -6,12 +6,7 @@ let roomMessages = {};
 const userList = document.getElementById('active-users');
 
 // Socket Event Listeners
-socket.on('connect', () => {
-
-    if (!currentRoom) {
-        currentRoom = "General";
-    }
-
+socket.on('connect', () =>{
     joinRoom(currentRoom);
 });
 
