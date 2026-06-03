@@ -12,7 +12,7 @@ from config import Config
 from flask_mail import Mail, Message
 from flask_bcrypt import Bcrypt
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import select, func, and_
+from sqlalchemy import select, func, and_ , or_
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from wtforms import StringField, SubmitField, TextAreaField
@@ -237,24 +237,44 @@ def create_app():
     @login_required
     def dashboard():
 
-        full_time = NewJob.query.filter_by(user_id=current_user.id, job_type='Full-Time').all()
+        search = request.args.get('search', '').strip()
+        status = request.args.get('status', '').strip()
 
-        part_time = NewJob.query.filter_by(user_id=current_user.id, job_type='Part-Time').all()
+        query = NewJob.query.filter_by(user_id=current_user.id)
 
-        intern = NewJob.query.filter_by(user_id=current_user.id, job_type='Intern/Trainee').all()
+        # SEARCH
+        if search:
+            query = query.filter(
+                or_(
+                    NewJob.company_name.ilike(f"%{search}%"),
+                    NewJob.job_position.ilike(f"%{search}%"),
+                    NewJob.location.ilike(f"%{search}%"),
+                    NewJob.job_status.ilike(f"%{search}%")
+                )
+            )
 
-        all_jobs = full_time + part_time + intern
+        # STATUS FILTER
+        if status:
+            query = query.filter(NewJob.job_status == status)
 
+        jobs = query.all()
+
+        # Split AFTER filtering
+        full_time = [job for job in jobs if job.job_type == "Full-Time"]
+        part_time = [job for job in jobs if job.job_type == "Part-Time"]
+        intern = [job for job in jobs if job.job_type == "Intern/Trainee"]
+
+        # FIX: build dates from FILTERED jobs
         job_dates = {}
 
-        for job in all_jobs:
-            job_dates[job.id] = []
-
-            for d in job.dates:
-                job_dates[job.id].append({
+        for job in jobs:
+            job_dates[job.id] = [
+                {
                     "date_type": d.date_type,
                     "date_value": d.date_value.strftime("%Y-%m-%dT%H:%M")
-                })
+                }
+                for d in job.dates
+            ]
 
         return render_template(
             "dashboard.html",
