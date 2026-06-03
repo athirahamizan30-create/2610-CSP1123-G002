@@ -37,9 +37,14 @@
     {% for room in rooms %}
     <div
         class="room-item"
-        onclick="joinRoom('{{ room.name }}')">{{ room.name }}</div>
+        data-room="{{ room.name }}"
+        onclick="joinRoom('{{ room.name }}')">
+
+        {{ room.name }}
+
+    </div>
     {% endfor %}
-</div>
+    </div>
 
         <div class="user-list">
             <h3>Online Users</h3>

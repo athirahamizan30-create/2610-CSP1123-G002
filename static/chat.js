@@ -6,8 +6,13 @@ let roomMessages = {};
 const userList = document.getElementById('active-users');
 
 // Socket Event Listeners
-socket.on('connect', () =>{
-    joinRoom('General');
+socket.on('connect', () => {
+
+    if (!currentRoom) {
+        currentRoom = "General";
+    }
+
+    joinRoom(currentRoom);
 });
 
 socket.on('message', (data) =>{
@@ -89,11 +94,21 @@ function joinRoom(room){
         room: currentRoom
     });
     currentRoom = room;
+
+    document.getElementById(
+        'chat-title'
+    ).textContent = room;
+
     socket.emit('join', {
         room
     });
 
     loadMessages(room);
+
+    console.log(
+        "Current room:",
+        currentRoom
+    );
 }
 
 
