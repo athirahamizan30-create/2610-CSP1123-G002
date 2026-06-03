@@ -161,7 +161,28 @@ class ChatMessage(db.Model):
     is_private = db.Column(db.Boolean,default=False)
     timestamp = db.Column(db.DateTime,default=datetime.utcnow)
 
+class ChatRoom(db.Model):
+    id = db.Column(
+        db.Integer,
+        primary_key=True
+    )
 
+    name = db.Column(
+        db.String(100),
+        unique=True,
+        nullable=False
+    )
+
+    created_by = db.Column(
+        db.Integer,
+        db.ForeignKey('user.id'),
+        nullable=False
+    )
+
+    created_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow
+    )
 
 def create_app():
 
@@ -636,17 +657,17 @@ def create_app():
         image_file = url_for('static', filename='profile_pics/' + current_user.image_file)
         return render_template('account.html', title='Account', image_file=image_file, form=form)
 
-    app.config["CHAT_ROOMS"] = ["General", "Zero to Knowing"]
     @app.route("/chat")
     @login_required
     def chat():
         logger.info(f"User {current_user.username} entered the chat session")
-        rooms_list = app.config.get("CHAT_ROOMS", ["General", "Zero to Knowing"])
+        rooms = ChatRoom.query.all()
+
 
         return render_template(
             'chat.html',
             username=current_user.username,
-            rooms=rooms_list
+            rooms=rooms
         )
 
     active_users = {}
@@ -836,6 +857,29 @@ def create_app():
                 for msg in messages
             ]
         }
+
+    @app.route('/create-room', methods=['POST'])
+    @login_required
+    def create_room():
+
+        room_name = request.form.get( "room_name").strip()
+
+        if not room_name:
+            flash("Room name required","danger")
+            return redirect(url_for("chat"))
+
+        existing_room = ( ChatRoom.query.filter_by(name=room_name).first())
+
+        if existing_room:
+            flash("Room already exists", "warning")
+            return redirect(url_for("chat"))
+
+        new_room = ChatRoom(name=room_name,created_by=current_user.id)
+        db.session.add(new_room)
+        db.session.commit()
+
+        flash("Chatroom created!","success")
+        return redirect(url_for("chat"))
 
     with app.app_context():
         db.create_all()
