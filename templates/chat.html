@@ -18,13 +18,28 @@
 
     <div class="sidebar">
         <div class="room-list">
-            <h3>Rooms</h3>
-            {% for room in rooms %}
-            <div class="room-item" onclick="joinRoom('{{room}}')">
-                {{room}}
-            </div>
-            {% endfor %}
-        </div>
+
+    <h3>Rooms</h3>
+
+    <button onclick="showRoomForm()">
+        + Create Room
+    </button>
+
+    <div id="room-form" style="display:none;">
+        <form method="POST" action="/create-room">
+            <input type="text" name="room_name" placeholder="Room name" required>
+            <button type="submit">
+                Create
+            </button>
+        </form>
+    </div>
+
+    {% for room in rooms %}
+    <div
+        class="room-item"
+        onclick="joinRoom('{{ room.name }}')">{{ room.name }}</div>
+    {% endfor %}
+</div>
 
         <div class="user-list">
             <h3>Online Users</h3>
@@ -48,8 +63,27 @@
             <button onclick="sendMessage()">Send</button>
         </div>
     </div>
-
 </div>
+<script>
+function showRoomForm() {
+
+    const form =
+        document.getElementById(
+            "room-form"
+        );
+
+    if (
+        form.style.display ===
+        "none"
+    ) {
+        form.style.display =
+            "block";
+    } else {
+        form.style.display =
+            "none";
+    }
+}
+</script>
 <script src="{{url_for('static', filename='chat.js')}}"></script>
 {% endblock %}
 </body>

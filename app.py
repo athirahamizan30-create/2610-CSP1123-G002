@@ -725,8 +725,8 @@ def create_app():
             username = current_user.username
             room = data['room']
 
-            if room not in app.config["CHAT_ROOMS"]:
-                logger.warning("No room available")
+            room_exists = (ChatRoom.query.filter_by(name=room).first())
+            if not room_exists:
                 return
             
             join_room(room)
@@ -794,7 +794,8 @@ def create_app():
                 emit('message', {'msg': message,'username': username,'room': private_room,'timestamp': timestamp,'private': True}, room=private_room)
 
             else:
-                if room not in app.config["CHAT_ROOMS"]:
+                room_exists = (ChatRoom.query.filter_by(name=room).first())
+                if not room_exists:
                     return
                 
                 new_message = ChatMessage(sender=username,room=room,message=message,is_private=False)
