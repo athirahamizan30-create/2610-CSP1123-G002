@@ -167,7 +167,7 @@ class ChatMessage(db.Model):
     timestamp = db.Column(db.DateTime,default=datetime.utcnow)
 
 class ChatRoom(db.Model):
-    
+
     id = db.Column(
         db.Integer,
         primary_key=True
@@ -189,6 +189,7 @@ class ChatRoom(db.Model):
         db.DateTime,
         default=datetime.utcnow
     )
+    
 def send_reminders(app):
     with app.app_context():
 
