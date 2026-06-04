@@ -1,7 +1,7 @@
 body {
     margin: 0;
     font-family: Arial;
-    background-color: beige;
+    background-color: #F1E2D1;
 }
 
 .sidebar {
@@ -10,7 +10,7 @@ body {
     top: 0;
     width: 250px;
     height: 100%;
-    background: #edeeca;  /* your color */
+    background: #F1E2D1;
     transition: left 0.3s ease;
 }
 
@@ -26,6 +26,8 @@ body {
 .sidebar h2,
 .sidebar a {
     padding-left: 15px;
+    font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    font-weight: bolder;
 }
 
 .sidebar a i {
@@ -37,11 +39,11 @@ body {
 }
 
 .sidebar a:hover{
-    background-color: #b19104;
+    background-color: #DCC3AA;
 }
 
 .sidebar a.active{
-    background-color: #a3bb7c;
+    background-color: #F1E2D1;
     font-weight: bold;
 }
 
@@ -53,6 +55,7 @@ body {
     font-size: 20px;
     padding: 10px;
     cursor: pointer;
+    background-color: #8f3c3c;
 }
 
 .main {
@@ -127,12 +130,12 @@ body {
 }
 
 .tab-btn.active {
-  background: #cfa771;
+  background: #8f3c3c;
   color: white;
 }
 
 .tab-btn.active:hover{
-    background-color: #c49c68;
+    background-color: #cd6161;
 }
 
 .tab-btn:hover{
@@ -286,6 +289,7 @@ body {
     padding: 12px;
     border-radius: 12px;
     margin-bottom: 20px;
+    background-color: transparent;
 }
 
 .filter-group input,
@@ -304,7 +308,7 @@ body {
 
 .apply-btn {
     padding: 10px 16px;
-    background: #bdaf5f;
+    background: #8f3c3c;
     color: white;
     border: none;
     border-radius: 8px;
@@ -312,5 +316,5 @@ body {
 }
 
 .apply-btn:hover {
-    background-color: #a89b53;
+    background-color: #cd6161;
 }
