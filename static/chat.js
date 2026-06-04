@@ -96,6 +96,12 @@ function joinRoom(room){
         'chat-title'
     ).textContent = room;
 
+    document
+    .getElementById(
+        'view-profile-btn'
+    ).style.display =
+    'none';
+
     socket.emit('join', {
         room
     });
@@ -124,6 +130,15 @@ function openPrivateChat(user){
     });
 
     document.getElementById('chat-title').textContent =user;
+    
+    const profileBtn =document.getElementById('view-profile-btn');
+    profileBtn.style.display =
+        'block';
+
+    profileBtn.onclick =
+    function () {
+        openProfilePopup(user);
+    };
 
     loadMessages(currentRoom);
 }
@@ -212,5 +227,61 @@ document.addEventListener(
     });
 });
 
+async function openProfilePopup(user){
 
+    const response =
+        await fetch(
+            `/get_profile/${user}`
+        );
+
+    const data =
+        await response.json();
+
+    document.getElementById(
+        'popup-profile-pic'
+    ).src =
+        data.image;
+
+    document.getElementById(
+        'popup-username'
+    ).textContent =
+        data.username;
+
+    document.getElementById(
+        'popup-fullname'
+    ).textContent =
+        data.full_name
+        || 'Not Set';
+
+    document.getElementById(
+        'popup-email'
+    ).textContent =
+        data.email
+        || 'Not Set';
+
+    document.getElementById(
+        'popup-phone'
+    ).textContent =
+        data.phone
+        || 'Not Set';
+
+    document.getElementById(
+        'popup-about'
+    ).textContent =
+        data.about_me
+        || 'No description';
+
+    document.getElementById(
+        'profile-popup'
+    ).style.display =
+        'flex';
+}
+
+function closeProfilePopup(){
+
+    document.getElementById(
+        'profile-popup'
+    ).style.display =
+        'none';
+}
 

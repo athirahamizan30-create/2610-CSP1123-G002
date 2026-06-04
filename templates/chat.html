@@ -62,7 +62,7 @@
             View Profile
             </button>
         </div>
-        
+
         <div id="chat"></div>
 
         <div class="input-area">
@@ -97,6 +97,42 @@ function showRoomForm() {
 }
 </script>
 <script src="{{url_for('static', filename='chat.js')}}"></script>
+
+<div id="profile-popup" class="popup-overlay">
+
+    <div class="popup-card">
+
+        <span class="close-btn" onclick="closeProfilePopup()">
+           ×
+        </span>
+
+        <img id="popup-profile-pic" class="popup-profile-pic">
+
+        <h2 id="popup-username"></h2>
+
+        <p>
+            <strong>Full Name:</strong>
+            <span id="popup-fullname"></span>
+        </p>
+
+        <p>
+            <strong>Email:</strong>
+            <span id="popup-email"></span>
+        </p>
+
+        <p>
+            <strong>Phone:</strong>
+            <span id="popup-phone"></span>
+        </p>
+
+        <p>
+            <strong>About Me:</strong>
+            <span id="popup-about"></span>
+        </p>
+
+    </div>
+
+</div>
 
 </body>
 </html>

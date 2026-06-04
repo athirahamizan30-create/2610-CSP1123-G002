@@ -1,4 +1,4 @@
-from flask import Flask, render_template, url_for, request, redirect, flash, session
+from flask import Flask, render_template, url_for, request, redirect, flash, session, jsonify
 import re
 import uuid
 import os
@@ -690,7 +690,7 @@ def create_app():
         random_hex = secrets.token_hex(8)
         _, f_ext = os.path.splitext(form_picture.filename)
         picture_fn = random_hex + f_ext
-        picture_path = os.path.join(app.root_path, 'static/profile_pics', picture_fn)
+        picture_path = os.path.join(app.root_path, 'static/uploads/profile_pics', picture_fn)
         form_picture.save(picture_path)
 
         return picture_fn
@@ -967,7 +967,38 @@ def create_app():
             chats.add(other_user)
         return {"chats": list(chats)}
 
+    @app.route('/get_profile/<username>')
+    @login_required
+    def get_profile(username):
 
+        user = User.query.filter_by(
+            username=username
+        ).first_or_404()
+
+        image_file = url_for(
+            'static',
+            filename=f'profile_pics/{user.image_file}'
+        )
+
+        return jsonify({
+            "username":
+                user.username,
+
+            "full_name":
+                user.full_name,
+
+            "email":
+                user.email,
+
+            "phone":
+                user.phone_number,
+
+            "about_me":
+                user.about_me,
+
+            "image":
+                image_file
+        })
 
     with app.app_context():
         db.create_all()
