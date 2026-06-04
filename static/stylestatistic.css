@@ -1,117 +1,104 @@
-body{
-  background-color: antiquewhite;
+body {
+  background-color: #edeeca; 
+  margin: 0;
+  padding: 0;
 }
 
 .sidebar {
-    height: 100%; 
-    width: 0; 
-    position: fixed; 
-    z-index: 1; 
+    position: fixed;
+    left: -250px;
     top: 0;
-    left: 0;
-    background: rgb(206, 156, 89);
-    color: rgb(0, 0, 0);
-    overflow-x: hidden; 
-    padding-top: 60px;
-    transition: 0.5s; 
-}
-
-.sidebar h2 {
-    margin-bottom: 20px;
-    padding: 20px;
-    color: rgb(0, 0, 0);
+    width: 250px;
+    height: 100%;
+    background: #edeeca;  
+    transition: left 0.3s ease;
+    z-index: 1000; 
 }
 
 .sidebar a {
     display: block;
     color: rgb(0, 0, 0);
+    margin: 10px 0;
     text-decoration: none;
-    padding: 20px;
-    margin-bottom: 5px;
-    border-radius: 5px;
-    padding: 8px 8px 8px 32px;
-    transition: 0.5s;
-    cursor: pointer;
-    flex-grow: 1;
-    font-size: larger;
-    font-weight: bold;
+    padding: 10px;
+    transition: 0.3s;
 }
 
-.sidebar .closebtn {
-  position: absolute;
-  top: 0;
-  right: 25px;
-  font-size: 36px;
-  margin-left: 50px;
-  text-decoration: none;
+.sidebar h2,
+.sidebar a {
+    padding-left: 15px;
+}
+
+.sidebar a i {
+    font-size: 20px;
+}
+
+.sidebar.active {
+    left: 0;
 }
 
 .sidebar a:hover {
-    background: rgb(150, 115, 69);
+    background-color: #b19104;
+}
+
+.sidebar a.active {
+    background-color: #a3bb7c;
+    font-weight: bold;
+}
+
+#overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.55); 
+    display: none;
+    z-index: 998; 
+}
+
+#overlay.active {
+    display: block;
 }
 
 .main {
-    flex: 1;
     padding: 20px;
+    transition: margin-left 0.3s;
+    background-color: #edeeca; 
+    min-height: 100vh;
 }
 
-.openbtn {
-  font-size: 20px;
-  cursor: pointer;
-  background-color: rgb(206, 156, 89);
-  color: white;
-  padding: 10px 15px;
-  border: none;
-  border-radius: 10px;
-  float: left;
-  margin-right: 30px; 
-}
-
-.openbtn:hover {
-  background-color: #4f6479;
-}
-
-#movemain {
-  transition: margin-left .5s;
-  padding: 20px;
-  margin-left: 0;
-}
-
-.header-section {
-    display: flex;
-    align-items: center;
-    gap: 20px; 
-    margin-bottom: 20px;
+.sidebar.active ~ .main {
+    margin-left: 250px;
 }
 
 h1 {
   font-size: 40px;
   text-decoration: underline;
-  display:flex;
+  display: flex;
   align-items: center;
-  gap: 20px;
-  float:left;
+  margin-left: 60px;
+  gap: 30px;
+  float: left;
 }
 
 .card {
   box-shadow: 0 4px 10px 0 rgba(0,0,0,0.2);
   transition: 0.3s;
-  width: 200px;
-  height: 100px;
+  width: 180px;
+  height: 95px; 
   border-radius: 20px;
-  margin: 20px 20px;
-  display: inline-block;
+  margin: 20px 10px;
+  display: flex;             
   flex-direction: column;    
   justify-content: center;  
   align-items: center;      
   text-align: center;
 }
 
-
-.line1 .line2 {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
 }
 
 .card:hover {
@@ -125,7 +112,6 @@ h1 {
 .databoard {
   display: flex;
   align-items: flex-start;
-  gap: 20px;
 }
 
 .right-box {
@@ -135,44 +121,75 @@ h1 {
 }
 
 .container h4 {
-  font-size: 20px;
+  font-size: 18px;
+  margin: 0;
 }
 
-.container p{
-  font-size: 20px;
+.container p {
+  font-size: 19px;
   font-weight: bolder;
   margin-bottom: 5px;
-  margin-top: -10px;
+  margin-top: 5px;
 }
 
-#Total{
+#box2{
+  margin-left: 130px;
+  margin-top: -5px;
+  border-radius: 300px;
+  height: 300px;
+  width: 300px;
+}
+
+.rate{
+  font-size: 35px;
+}
+
+#box2 p{
+  font-size: 40px;
+  color: rgba(122, 29, 131, 0.699); 
+}
+
+#Total {
   background-color: #bc9ee7;
 }
 
-#Interested{
+#Interested {
   background-color: #ffff99;
 }
 
-#Applied{
+#Applied {
   background-color: #99ffff;
 }
 
-#Rejected{
+#Rejected {
   background-color: #bd4a4a;
 }
 
-#Stage1{
+#Stage1 {
   background-color: #99ccff;
 }
 
-#Stage2{
+#Stage2 {
   background-color: #3474b4;
 }
 
-#Interview{
+#Interview {
   background-color: #299b9b;
 }
 
-#Accepted{
+#Accepted {
   background-color: #41be41;
+}
+
+.filter-section {
+  margin-bottom: 20px;
+  padding: 10px;
+}
+
+#time-range {
+  font-weight: bolder;
+  margin-right: 10px;
+  margin-left: 60px;
+  padding: 5px 10px; 
+  border-radius: 5px;
 }

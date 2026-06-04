@@ -1,5 +1,8 @@
 <!DOCTYPE html>
 <html>
+{% extends "base.html" %}
+
+{% block content %}
 <head>
     <title>Statistic</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='stylestatistic.css') }}">
@@ -44,45 +47,28 @@
     </script>
 </head>
 
-<body>
-{% extends "base.html" %}
-
-{% block content %}
-    <div id="mySidebar" class="sidebar">  
-        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
-        <h2>My Jobs</h2>
-
-        <a href="/dashboard">Dashboard</a>
-        <a href="javascript:void(0);" onclick="openPopup()">New Application</a>
-        <a href="/document">Documents</a>
-        <a href="/reminders">Reminders</a>
-        <a href="/">Log Out</a>
-
-        <script>
-            function openNav() {
-            document.getElementById("mySidebar").style.width = "250px";
-            document.getElementById("movemain").style.marginLeft = "250px";
-            }
-
-        <!--push back the content to the left -->
-            function closeNav() {
-            document.getElementById("mySidebar").style.width = "0";
-            document.getElementById("movemain").style.marginLeft = "0";
-            }
-        </script>
-    </div>
-
-    <div id="movemain" class="main">
+<body>  
+    <div id="movemain" class="main">        
         <div class ="header-section">
-            <button class="openbtn" onclick="openNav()">&#9776;</button>
             <h1>Statistic</h1>
         </div>
+        <br><br><br>
+
+        <div class="filter-section">
+        <form method="GET" action="{{ url_for('statistic') }}" id="filterForm">
+        <label for="time_range" id="time-range">View Statistics For:</label>
+        <select name="time_range" id="time_range" onchange="document.getElementById('filterForm').submit();">
+            <option value="all" {% if current_filter == 'all' %}selected{% endif %}>All Time</option>
+            <option value="week" {% if current_filter == 'week' %}selected{% endif %}>Past 7 Days</option>
+            <option value="month" {% if current_filter == 'month' %}selected{% endif %}>Past 30 Days</option>
+        </select>
+    </form>
+</div>
 
         <div class="databoard">
-            <div id="columnchart_material" style="width: 1200px; height: 750px;"></div>
-
+            <div id="columnchart_material" style="width: 1000px; height: 500px;"></div>
             <div class="right-box">
-                <div class="line1">
+                <div class="cards-grid">
                     <div id="Total" class="card">
                         <div class="container">
                             <h4><b>Total Application</b></h4>
@@ -110,9 +96,7 @@
                             <p>{{stats.get('rejected', 0)}}</p>
                         </div>
                     </div>
-                </div>
 
-                <div class="line2">
                     <div id="Stage1" class="card">
                         <div class="container">
                             <h4><b>Stage 1</b></h4>
@@ -141,11 +125,29 @@
                         </div>
                     </div>
                 </div>
+
+                <div id="box2">
+                    <div class="card" id="box2">
+                        <div class="container">
+                            <b class="rate">Rate of Acceptance</b>
+                            <p>{% if total > 0 %}
+                                {{ ((stats.get('accepted', 0) / total) * 100) | round(2) }}%
+                                {% else %}
+                                    0%
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </div>
-</div>
-
-
+        </div>
     </div>
+<script>
+function toggleSidebar() {
+    document.getElementById("sidebar").classList.toggle("active");
+    document.getElementById("overlay").classList.toggle("active");
+}
+</script>
 {% endblock %}
 </body>
 </html>
