@@ -1,5 +1,7 @@
 <!DOCTYPE html>
 <html>
+{% extends "base.html" %}
+{% block content %}
 <head>
     <title>Reminders</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
@@ -88,6 +90,6 @@
         document.getElementById("overlay").classList.toggle("active");
     }
     </script>
-
+{% endblock %}
 </body>
 </html>

@@ -1,5 +1,7 @@
 <!DOCTYPE html>
 <html>
+{% extends "base.html" %}
+{% block content %}
 <head>
     <title>Job Application Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
@@ -446,6 +448,6 @@
     }
 
     </script>
-
+{% endblock %}
 </body>
 </html>
