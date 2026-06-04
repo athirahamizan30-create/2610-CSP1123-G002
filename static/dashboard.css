@@ -57,6 +57,7 @@ body {
     cursor: pointer;
     background-color: #F1E2D1;
     margin-left: -30px;
+    border-radius: 18px;
 }
 
 .main {
