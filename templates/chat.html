@@ -9,9 +9,6 @@
 </head>
 
 <body>
-{% extends "base.html" %}
-
-{% block content %}
 
 <h2>Welcome, <span id="username">{{username}}</span></h2>
 <div class="container">
@@ -90,7 +87,6 @@ function showRoomForm() {
 }
 </script>
 <script src="{{url_for('static', filename='chat.js')}}"></script>
-{% endblock %}
 </body>
 </html>
 
