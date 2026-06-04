@@ -37,6 +37,11 @@
             <i class='bxf bx-user'></i>Account profile
         </a>
 
+        <a href="/chat">
+            <i class="bxf bx-discussion"></i>
+            chat
+        </a>
+
         <a href="/">
             <i class="bxf bx-arrow-out-right-square-half"></i>
             Log Out
@@ -50,6 +55,13 @@
     <div class="content">
         {% block content %}{% endblock %}
     </div>
+
+        <script>
+    function toggleSidebar() {
+        document.getElementById("sidebar").classList.toggle("active");
+        document.getElementById("overlay").classList.toggle("active");
+    }
+    </script>
     
     <div id="ai-chatbot-wrapper">
         <script type="module">
