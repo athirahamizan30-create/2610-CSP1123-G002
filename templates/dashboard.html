@@ -65,6 +65,30 @@
 
         <h1>Job Application Dashboard</h1>
 
+        <form method="GET" action="{{ url_for('dashboard') }}" class="filters">
+
+            <div class="filter-group">
+                <input type="text" name="search" placeholder="Search jobs..."
+                    value="{{ request.args.get('search', '') }}">
+            </div>
+
+            <div class="filter-group">
+                <select name="status">
+                    <option value="">All Status</option>
+                    <option value="applied">Interested</option>
+                    <option value="applied">Applied</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="interview">Stage 1</option>
+                    <option value="rejected">Stage 2</option>
+                    <option value="interview">Interview</option>
+                    <option value="accepted">Accepted</option>
+                </select>
+            </div>
+
+            <button type="submit" class="apply-btn">Apply</button>
+
+        </form>
+
     <div class="tabs">
     <button class="tab-btn active" onclick="openTab(event, 'full')">Full-Time</button>
     <button class="tab-btn" onclick="openTab(event, 'part')">Part-Time</button>
