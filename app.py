@@ -720,7 +720,7 @@ def create_app():
             form.phone_number.data = current_user.phone_number 
             form.about_me.data = current_user.about_me 
 
-        image_file = url_for('static', filename='profile_pics/' + current_user.image_file)
+        image_file = url_for('static',filename='uploads/profile_pics/' +current_user.image_file)
         return render_template('account.html', title='Account', image_file=image_file, form=form)
 
     @app.route("/chat")
@@ -977,7 +977,7 @@ def create_app():
 
         image_file = url_for(
             'static',
-            filename=f'profile_pics/{user.image_file}'
+            filename=f'uploads/profile_pics/{user.image_file}'
         )
 
         return jsonify({
