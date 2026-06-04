@@ -48,14 +48,15 @@ body {
 }
 
 .main {
-    padding: 20px;
+    padding: 20px;margin-left: 40px;
 }
 
 .menu-btn {
     font-size: 20px;
     padding: 10px;
     cursor: pointer;
-    background-color: #8f3c3c;
+    background-color: #F1E2D1;
+    margin-left: -30px;
 }
 
 .main {
@@ -93,6 +94,7 @@ body {
     border-radius: 15px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     transition: 0.3s;
+    margin-left: 20px;    
 }
 
 .card:hover {
@@ -118,6 +120,7 @@ body {
   display: flex;
   gap: 10px;
   margin-bottom: 20px;
+  margin-left: 40px;
 }
 
 .tab-btn {
@@ -290,6 +293,7 @@ body {
     border-radius: 12px;
     margin-bottom: 20px;
     background-color: transparent;
+    margin-left: 40px;
 }
 
 .filter-group input,
@@ -317,4 +321,16 @@ body {
 
 .apply-btn:hover {
     background-color: #cd6161;
+}
+
+h1{
+    font-family:Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+    font-size: 50px;
+    margin-left: 40px;    
+}
+
+header{
+    width: 100%;
+    height: 80px;
+    background-color: #810B38;
 }
