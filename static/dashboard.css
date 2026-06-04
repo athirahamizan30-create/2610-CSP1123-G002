@@ -277,3 +277,40 @@ body {
 .reminder-card:hover {
     transform: scale(1.05);
 }
+
+.filters {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    background: beige;
+    padding: 12px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+.filter-group input,
+.filter-group select {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    outline: none;
+    min-width: 180px;
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+    border-color: #4a90e2;
+}
+
+.apply-btn {
+    padding: 10px 16px;
+    background: #bdaf5f;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.apply-btn:hover {
+    background-color: #a89b53;
+}

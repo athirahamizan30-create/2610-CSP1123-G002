@@ -12,17 +12,24 @@ from config import Config
 from flask_mail import Mail, Message
 from flask_bcrypt import Bcrypt
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import select, func
+from sqlalchemy import select, func, and_ , or_
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from wtforms import StringField, SubmitField, TextAreaField
 from wtforms.validators import DataRequired, Length, Email, ValidationError
+from apscheduler.schedulers.background import BackgroundScheduler
+from dotenv import load_dotenv
+from zoneinfo import ZoneInfo
 
 app = Flask(__name__, template_folder="templates", static_folder="static/uploads")
 db= SQLAlchemy()
+mail = Mail()
 login_manager = LoginManager()
 bcrypt = Bcrypt()
+load_dotenv()
 
+app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
 app.config['SECRET_KEY'] = 'user_registration_athirah'
 app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://athirah:Tiya071!@localhost/CareerTrack_Database"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -31,11 +38,9 @@ app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=15)
 
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-db = SQLAlchemy(app)
-login_manager = LoginManager(app)
+db = SQLAlchemy()
+login_manager = LoginManager()
 login_manager.login_view = "login"
-with app.app_context():
-    db.create_all()
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -118,16 +123,96 @@ class Reminder(db.Model):
     def __repr__(self):
         return f"<Reminder {self.reminder_date}>"
 
+class UpdateAccountForm(FlaskForm):
+    username = StringField('Username',
+                           validators=[DataRequired(), Length(min=2, max=20)])
+    email = StringField('Email',
+                        validators=[DataRequired(), Email()])
+    
+    full_name = StringField('Full Name')
+    phone_number = StringField('Phone Number')
+    about_me = TextAreaField('About Me')
+
+    picture = FileField('Update Profile Picture', validators=[FileAllowed(['jpg', 'png'])])
+    submit = SubmitField('Update')
+
+    def validate_username(self, username):
+        if username.data != current_user.username:
+            user = User.query.filter_by(username=username.data).first()
+            if user:
+                raise ValidationError('That username is taken. Please choose a different one.')
+
+    def validate_email(self, email):
+        if email.data != current_user.email:
+            user = User.query.filter_by(email=email.data).first()
+            if user:
+                raise ValidationError('That email is taken. Please choose a different one.')
+
+def send_reminders(app):
+    with app.app_context():
+
+        MY = ZoneInfo("Asia/Kuala_Lumpur")
+        now = datetime.now()
+
+        print("NOW:", now)
+
+        reminders = Reminder.query.filter(
+            Reminder.is_done == False,
+            Reminder.reminder_date <= now
+        ).all()
+        
+        all_reminders = Reminder.query.all()
+        for r in all_reminders:
+            print("DB:", r.reminder_date, "DONE:", r.is_done)
+
+        print("FOUND:", reminders)
+
+        for reminder in reminders:
+            user = db.session.get(User, reminder.user_id)
+
+            local_time = reminder.reminder_date.astimezone(MY)
+            formatted_time = local_time.strftime("%d-%m-%Y %H:%M")
+
+            msg = Message(
+                subject='Reminder Notification',
+                sender=app.config['MAIL_USERNAME'],
+                recipients=[user.email]
+            )
+
+            msg.body = f"""
+Hello {user.username},
+
+Reminder:
+{reminder.message}
+
+Date: {formatted_time}
+"""
+            print("TRY SEND TO:", user.email)
+
+            try:
+                mail.send(msg)
+                reminder.is_done = True
+                db.session.commit()
+            except Exception as e:
+                db.session.rollback()
+                print("EMAIL FAILED:", e)
 
 def create_app():
 
     app = Flask(__name__)
     bcrypt.init_app(app)
     app.config.from_object(Config)
-    mail = Mail()
     db.init_app(app)
     login_manager.init_app(app)
     login_manager.login_view = "login"
+
+    app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
+    app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT'))
+    app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS') == 'True'
+    app.config['MAIL_USE_SSL'] = os.getenv('MAIL_USE_SSL') == 'True'
+    app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+    app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+    app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_USERNAME')
 
 
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -141,13 +226,6 @@ def create_app():
 
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
-
-    app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-    app.config['MAIL_PORT'] = 587
-    app.config['MAIL_USE_TLS'] = True
-    app.config['MAIL_USERNAME'] = 'your_email@gmail.com'
-    app.config['MAIL_PASSWORD'] = 'your_app_password'
-    app.config['MAIL_DEFAULT_SENDER'] = 'your_email@gmail.com'
     
     mail.init_app(app)
 
@@ -159,24 +237,44 @@ def create_app():
     @login_required
     def dashboard():
 
-        full_time = NewJob.query.filter_by(user_id=current_user.id, job_type='Full-Time').all()
+        search = request.args.get('search', '').strip()
+        status = request.args.get('status', '').strip()
 
-        part_time = NewJob.query.filter_by(user_id=current_user.id, job_type='Part-Time').all()
+        query = NewJob.query.filter_by(user_id=current_user.id)
 
-        intern = NewJob.query.filter_by(user_id=current_user.id, job_type='Intern/Trainee').all()
+        # SEARCH
+        if search:
+            query = query.filter(
+                or_(
+                    NewJob.company_name.ilike(f"%{search}%"),
+                    NewJob.job_position.ilike(f"%{search}%"),
+                    NewJob.location.ilike(f"%{search}%"),
+                    NewJob.job_status.ilike(f"%{search}%")
+                )
+            )
 
-        all_jobs = full_time + part_time + intern
+        # STATUS FILTER
+        if status:
+            query = query.filter(NewJob.job_status == status)
 
+        jobs = query.all()
+
+        # Split AFTER filtering
+        full_time = [job for job in jobs if job.job_type == "Full-Time"]
+        part_time = [job for job in jobs if job.job_type == "Part-Time"]
+        intern = [job for job in jobs if job.job_type == "Intern/Trainee"]
+
+        # FIX: build dates from FILTERED jobs
         job_dates = {}
 
-        for job in all_jobs:
-            job_dates[job.id] = []
-
-            for d in job.dates:
-                job_dates[job.id].append({
+        for job in jobs:
+            job_dates[job.id] = [
+                {
                     "date_type": d.date_type,
                     "date_value": d.date_value.strftime("%Y-%m-%dT%H:%M")
-                })
+                }
+                for d in job.dates
+            ]
 
         return render_template(
             "dashboard.html",
@@ -258,7 +356,7 @@ def create_app():
     
     @login_manager.user_loader
     def load_user(user_id):
-        return User.query.get(int(user_id))
+        return db.session.get(User, int(user_id))
 
     @app.route('/logout')
     def logout():
@@ -282,35 +380,26 @@ def create_app():
         db.session.add(job)
         db.session.commit()
 
-        if application_date:
-            app_date_obj = datetime.strptime(application_date, "%Y-%m-%d")
-
-            reminder = Reminder(
-                user_id=current_user.id,
-                job_id=job.id,
-                reminder_date=app_date_obj - timedelta(days=1),
-                message="Upcoming application deadline"
-            )
-            db.session.add(reminder)
+        
 
         date_types = request.form.getlist('date_type[]')
         date_values = request.form.getlist('date_value[]')
 
         for dtype, dvalue in zip(date_types, date_values):
             if dvalue:
-                date_obj = datetime.strptime(dvalue, "%Y-%m-%dT%H:%M")
+                event_time = datetime.strptime(dvalue, "%Y-%m-%dT%H:%M")
 
                 job_date = JobDate(
                     job_id=job.id,
                     date_type=dtype,
-                    date_value=date_obj.date()
+                    date_value=event_time.date()
                 )
                 db.session.add(job_date)
 
                 reminder = Reminder(
                     user_id=current_user.id,
                     job_id=job.id,
-                    reminder_date=date_obj,
+                    reminder_date=event_time - timedelta(hours=1),
                     message = f"{dtype.title()} – {job.job_position} at {job.company_name}"
                 )
                 db.session.add(reminder)
@@ -447,8 +536,8 @@ def create_app():
                 reminder = Reminder(
                     user_id=current_user.id,
                     job_id=id,
-                    reminder_date=parsed_date,
-                    message = f"{t.title()} - {job.job_position} at {job.company_name}"
+                    reminder_date=parsed_date - timedelta(hours=1),
+                    message=f"{t.title()} - {job.job_position} at {job.company_name}"
                 )
 
                 db.session.add(reminder)
@@ -586,4 +675,7 @@ def create_app():
 
 if __name__ == '__main__':
     app = create_app()
+    scheduler = BackgroundScheduler(job_defaults={'coalesce': True, 'misfire_grace_time': 60})
+    scheduler.add_job(func=send_reminders,trigger='interval', minutes=1, args=[app])
+    scheduler.start()
     app.run(host="0.0.0.0", port=5000, debug=True)
