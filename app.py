@@ -1,9 +1,9 @@
-from flask import Flask, render_template, url_for, request, redirect, flash
-import mysql.connector
+from flask import Flask, render_template, url_for, request, redirect, flash, session
 import re
 import uuid
 import os
 import secrets
+import logging
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -17,6 +17,9 @@ from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from wtforms import StringField, SubmitField, TextAreaField
 from wtforms.validators import DataRequired, Length, Email, ValidationError
+from typing import Dict
+from flask_socketio import SocketIO, emit, join_room, leave_room
+from werkzeug.middleware.proxy_fix import ProxyFix
 from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
 from zoneinfo import ZoneInfo
@@ -26,6 +29,9 @@ db= SQLAlchemy()
 mail = Mail()
 login_manager = LoginManager()
 bcrypt = Bcrypt()
+socketio = SocketIO()
+
+app.config['SECRET_KEY'] = 'secretkey'
 load_dotenv()
 
 app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
@@ -38,8 +44,9 @@ app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=15)
 
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-db = SQLAlchemy()
-login_manager = LoginManager()
+logger = logging.getLogger(__name__)
+db = SQLAlchemy(app)
+login_manager = LoginManager(app)
 login_manager.login_view = "login"
 
 class User(UserMixin, db.Model):
@@ -47,13 +54,17 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
+    image_file= db.Column(db.String(20), nullable=False, default='default.jpg')
+    full_name = db.Column(db.String(100), nullable=True)
+    phone_number = db.Column(db.String(20), nullable=True)
+    about_me = db.Column(db.Text, nullable=True)
+
 
     password_reset_ids = db.relationship(
         "PasswordResetId",
         backref="user",
         cascade="all, delete-orphan"
     )
-
 
 class PasswordResetId(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -97,7 +108,6 @@ class NewJob(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     dates = db.relationship('JobDate', backref='job', cascade="all, delete")
     reminders = db.relationship('Reminder', backref='job', cascade="all, delete-orphan", passive_deletes=True)
-
 
 class JobDate(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -148,6 +158,37 @@ class UpdateAccountForm(FlaskForm):
             if user:
                 raise ValidationError('That email is taken. Please choose a different one.')
 
+class ChatMessage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    sender = db.Column(db.String(80),nullable=False)
+    room = db.Column(db.String(150),nullable=False)
+    message = db.Column(db.Text,nullable=False)
+    is_private = db.Column(db.Boolean,default=False)
+    timestamp = db.Column(db.DateTime,default=datetime.utcnow)
+
+class ChatRoom(db.Model):
+    
+    id = db.Column(
+        db.Integer,
+        primary_key=True
+    )
+
+    name = db.Column(
+        db.String(100),
+        unique=True,
+        nullable=False
+    )
+
+    created_by = db.Column(
+        db.Integer,
+        db.ForeignKey('user.id'),
+        nullable=False
+    )
+
+    created_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow
+    )
 def send_reminders(app):
     with app.app_context():
 
@@ -200,6 +241,7 @@ Date: {formatted_time}
 def create_app():
 
     app = Flask(__name__)
+    app.config.from_object(Config)
     bcrypt.init_app(app)
     app.config.from_object(Config)
     db.init_app(app)
@@ -228,6 +270,15 @@ def create_app():
         os.makedirs(app.config['UPLOAD_FOLDER'])
     
     mail.init_app(app)
+
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+    
+    socketio.init_app(
+        app,
+        cors_allowed_origins=app.config.get("CORS_ORIGINS", "*"),
+        logger=False,
+        engineio_logger=False
+    )
 
     @app.route('/', methods=['GET', 'POST'])
     def index():
@@ -497,6 +548,7 @@ def create_app():
             return render_template("reset_password.html")
     
     @app.route('/document')
+    @login_required
     def document():
         docs = Document.query.order_by(Document.filename.asc()).all()
         return render_template("document.html", docs=docs)  
@@ -581,6 +633,7 @@ def create_app():
         )
 
     @app.route('/file_upload', methods=["POST"])
+    @login_required
     def file_upload():
         file = request.files['file']
         if file:
@@ -592,7 +645,7 @@ def create_app():
             save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(save_path)
 
-            new_doc = Document(filename=filename, file_path=save_path)
+            new_doc = Document(filename=filename, file_path=save_path, user_id=current_user.id)
             db.session.add(new_doc)
             db.session.commit()
 
@@ -600,6 +653,7 @@ def create_app():
         return "Upload Failed"
 
     @app.route('/delete_file/<int:doc_id>')
+    @login_required
     def delete_file(doc_id):
         doc = Document.query.get_or_404(doc_id)
 
@@ -620,7 +674,7 @@ def create_app():
 
     @app.route('/statistic')
     def statistic():
-        results = db.session.query(NewJob.job_status, func.count(NewJob.job_status)).group_by(NewJob.job_status).all()
+        results = db.session.query(NewJob.job_status, func.count(NewJob.job_status)).filter(NewJob.user_id == current_user.id).group_by(NewJob.job_status).all()
 
         stats_dict = {status: count for status, count in results}
     
@@ -668,6 +722,230 @@ def create_app():
         image_file = url_for('static', filename='profile_pics/' + current_user.image_file)
         return render_template('account.html', title='Account', image_file=image_file, form=form)
 
+    @app.route("/chat")
+    @login_required
+    def chat():
+        logger.info(f"User {current_user.username} entered the chat session")
+        rooms = ChatRoom.query.all()
+
+
+        return render_template(
+            'chat.html',
+            username=current_user.username,
+            rooms=rooms
+        )
+
+    active_users = {}
+    @socketio.event
+    def connect():
+        try:
+            if 'username' not in session:
+                session['username'] = current_user.username
+
+            active_users[request.sid] = {
+                'username':session['username'],
+                'connected_at': datetime.now().isoformat()
+            }
+
+            unique_users = list(set(
+                user['username']
+                for user in active_users.values()
+            ))
+
+            emit('active_users', {
+                'users': unique_users
+            }, broadcast=True)
+
+            logger.info({f"User connected {session['username']}"})
+
+        except Exception as e:
+            logger.error(f"Connection error: {str(e)}")
+            return False
+        
+    #disconnect from session
+    @socketio.event
+    def disconnect():
+        try:
+            if request.sid in active_users:
+                username= active_users[request.sid]['username']
+                del active_users[request.sid]
+
+            unique_users = list(set(
+                user['username']
+                for user in active_users.values()
+            ))
+
+            emit('active_users', {
+                'users': unique_users
+            }, broadcast=True)
+
+            logger.info({f"User disconnected: {'username'}"})
+
+        except Exception as e:
+            logger.error(f"Connection error: {str(e)}")
+
+    @socketio.on('join')
+    def on_join(data:dict):
+        try:
+            username = current_user.username
+            room = data['room']
+
+            room_exists = (ChatRoom.query.filter_by(name=room).first())
+            if not room_exists:
+                return
+            
+            join_room(room)
+            active_users[request.sid]['room'] = room
+
+            emit('status', {
+                'msg' : f"{username} has joined the room",
+                'type' : 'join',
+                'timestamp' : datetime.now().isoformat()
+            }, room=room)
+
+            logger.info(f"User {username} has joined {room}")
+
+        except Exception as e:
+            logger.error(str(e))
+
+    @socketio.on('leave')
+    def on_leave(data:dict):
+        try:
+            username = session['username']
+            room = data['room']
+
+            leave_room(room)
+            if request.sid in active_users:
+                active_users[request.sid].pop('room', None)
+
+            emit('status', {
+                    'msg' : f"{username} has left the room",
+                    'type' : 'leave',
+                    'timestamp' : datetime.now().isoformat()
+                }, room=room)
+
+            logger.info(f"User {username} has left the room")
+
+        except Exception as e:
+            logger.error(str(e))
+
+    @socketio.on('message')
+    def handle_message(data:dict):
+        try:
+            username = current_user.username
+            room = data.get('room', "General")
+            msg_type = data.get("type", 'message')
+            message = data.get('msg', "").strip()
+
+            if not message:
+                return
+            timestamp = datetime.now().isoformat()
+            
+            if msg_type == 'private':
+                target_user = data.get('target')
+                if not target_user:
+                    return
+
+                private_room = create_private_room(
+                    username,
+                    target_user
+                )
+
+                new_message = ChatMessage(sender=username,room=private_room,message=message,is_private=True)
+
+                db.session.add(new_message)
+                db.session.commit()
+
+                emit('message', {'msg': message,'username': username,'room': private_room,'timestamp': timestamp,'private': True}, room=private_room)
+
+            else:
+                room_exists = (ChatRoom.query.filter_by(name=room).first())
+                if not room_exists:
+                    return
+                
+                new_message = ChatMessage(sender=username,room=room,message=message,is_private=False)
+
+                db.session.add(new_message)
+                db.session.commit()
+
+                emit('message', {
+                            'msg': message,
+                            'username':username,
+                            'room':room,
+                            'timestamp':timestamp,
+                        }, room=room)
+        except Exception as e:
+            logger.error(str(e))       
+
+    def create_private_room(user1, user2):
+        users = sorted([user1, user2])
+        return f"dm_{users[0]}_{users[1]}"    
+
+    @socketio.on('join_private')
+    def join_private(data):
+        try:
+            target_user = data.get('target')
+
+            if not target_user:
+                return
+
+            username = current_user.username
+
+            private_room = create_private_room(
+                username,
+                target_user
+            )
+
+            join_room(private_room)
+
+            emit('status', {
+                'msg': f"Private chat with {target_user}",
+                'type': 'system'
+            }, room=request.sid)
+
+        except Exception as e:
+            logger.error(str(e))
+
+    @app.route('/get_messages/<room>')
+    @login_required
+    def get_messages(room):
+        messages = ChatMessage.query.filter_by(
+            room=room
+        ).order_by(ChatMessage.timestamp.asc()).all()
+
+        return {
+            "messages": [
+                {
+                    "sender": msg.sender,
+                    "message": msg.message,
+                    "timestamp": msg.timestamp.isoformat()
+                }
+                for msg in messages
+            ]
+        }
+
+    @app.route('/create-room', methods=['POST'])
+    @login_required
+    def create_room():
+
+        room_name = request.form.get( "room_name").strip()
+
+        if not room_name:
+            flash("Room name required","danger")
+            return redirect(url_for("chat"))
+
+        existing_room = ( ChatRoom.query.filter_by(name=room_name).first())
+
+        if existing_room:
+            flash("Room already exists", "warning")
+            return redirect(url_for("chat"))
+
+        new_room = ChatRoom(name=room_name,created_by=current_user.id)
+        db.session.add(new_room)
+        db.session.commit()
+
+        flash("Chatroom created!","success")
+        return redirect(url_for("chat"))
 
     with app.app_context():
         db.create_all()
@@ -675,6 +953,7 @@ def create_app():
 
 if __name__ == '__main__':
     app = create_app()
+    socketio.run(app, host="0.0.0.0", port=5000, debug=True)
     scheduler = BackgroundScheduler(job_defaults={'coalesce': True, 'misfire_grace_time': 60})
     scheduler.add_job(func=send_reminders,trigger='interval', minutes=1, args=[app])
     scheduler.start()
