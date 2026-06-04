@@ -948,6 +948,27 @@ def create_app():
         flash("Chatroom created!","success")
         return redirect(url_for("chat"))
 
+    @app.route('/private_chats')
+    @login_required
+    def private_chats():
+
+        username = current_user.username
+        messages = ChatMessage.query.filter(ChatMessage.is_private == True,ChatMessage.room.contains(username)).all()
+        chats = set()
+
+        for msg in messages:
+            room_parts = msg.room.replace('dm_','').split('_')
+            other_user = (
+                room_parts[0]
+                if room_parts[1] == username
+                else room_parts[1]
+            )
+
+            chats.add(other_user)
+        return {"chats": list(chats)}
+
+
+
     with app.app_context():
         db.create_all()
         return app

@@ -26,9 +26,11 @@ socket.on('status', (data) => {
     addMessage('System', data.msg, 'system');
 });
 
-socket.on('active_users', (data) => { // Note: Changed 'active.users' to 'active_users' to match your backend emit
+socket.on('active_users', (data) => { 
+
     userList.innerHTML = data.users.map(
     (user) => 
+        
         `<div class="user-item" onclick="openPrivateChat('${user}')">
             ${user}
         </div>`
@@ -121,6 +123,8 @@ function openPrivateChat(user){
         target: user
     });
 
+    document.getElementById('chat-title').textContent =user;
+
     loadMessages(currentRoom);
 }
 
@@ -160,9 +164,53 @@ async function loadMessages(room) {
     });
 }
 
+async function loadRecentChats() {
 
+    const response =
+        await fetch('/private_chats');
 
+    const data =
+        await response.json();
 
+    const chatList =
+        document.getElementById(
+            'recent-chats'
+        );
+
+    chatList.innerHTML =
+        data.chats.map(user => `
+            <div
+                class="user-item"
+                onclick="openPrivateChat('${user}')"
+            >
+                ${user}
+            </div>
+        `).join('');
+}
+
+document.addEventListener(
+    'DOMContentLoaded',
+    () => {
+
+    loadRecentChats();
+
+    document
+    .querySelectorAll(
+        '.room-item'
+    )
+    .forEach(item => {
+
+        if (
+            item.textContent.trim()
+            === currentRoom
+        ) {
+            item.classList
+            .add(
+                'active-room'
+            );
+        }
+    });
+});
 
 
 

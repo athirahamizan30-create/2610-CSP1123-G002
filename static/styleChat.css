@@ -43,11 +43,11 @@ h2 {
     flex-direction: column;
 }
 
-.room-list, .user-list {
+.room-list, .user-list, .recent-list{
     padding: 15px;
 }
 
-.room-list h3, .user-list h3 {
+.room-list h3, .user-list h3, .recent-list h3{
     color: var(--primary);
     margin-top: 0;
     padding-bottom: 10px;
@@ -88,6 +88,26 @@ h2 {
     padding: 20px;
     overflow-y: auto;
     background: white;
+}
+
+.chat-header {
+    padding: 15px 25px;
+    border-bottom: 1px solid #ddd;
+    background: white;
+
+    display: flex;
+    align-items: center;
+}
+
+#chat-title {
+    margin: 0;
+
+    font-size: 30px;   /* size */
+    font-weight: 600;
+
+    color: var(--primary);
+
+    text-align: left;  /* left, center, right */
 }
 
 .message { 

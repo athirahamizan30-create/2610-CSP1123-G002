@@ -9,9 +9,6 @@
 </head>
 
 <body>
-{% extends "base.html" %}
-
-{% block content %}
 
 <h2>Welcome, <span id="username">{{username}}</span></h2>
 <div class="container">
@@ -50,12 +47,22 @@
             <h3>Online Users</h3>
             <div id="active-users"></div>
         </div>
+
+        <div class="recent-list">
+        <h3>Recent Chats</h3>
+        <div id="recent-chats"></div>
+        </div>
     </div>
 
     <div class="main-chat">
         <div class="chat-header">
             <h3 id="chat-title">General</h3>
+
+            <button id="view-profile-btn" style="display: none;">
+            View Profile
+            </button>
         </div>
+        
         <div id="chat"></div>
 
         <div class="input-area">
@@ -90,7 +97,7 @@ function showRoomForm() {
 }
 </script>
 <script src="{{url_for('static', filename='chat.js')}}"></script>
-{% endblock %}
+
 </body>
 </html>
 
