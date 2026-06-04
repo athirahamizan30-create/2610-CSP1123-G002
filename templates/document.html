@@ -1,5 +1,7 @@
 <!DOCTYPE html>
 <html>
+{% extends "base.html" %}
+{% block content %}
 <head>
     <title>
         Document Organiser
@@ -8,37 +10,8 @@
 </head>
 
 <body>
-{% extends "base.html" %}
-
-{% block content %}
-    <div id="mySidebar" class="sidebar">  
-        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
-        <h2>My Jobs</h2>
-
-        <a href="/dashboard">Dashboard</a>
-        <a href="/add_job">New Application</a>
-        <a href="/document">Documents</a>
-        <a href="/reminders">Reminders</a>
-        <a href="/">Log Out</a>
-        <a href="/statistic">Statistic</a>
-
-        <script>
-            function openNav() {
-            document.getElementById("mySidebar").style.width = "250px";
-            document.getElementById("movemain").style.marginLeft = "250px";
-            }
-
-        <!--push back the content to the left -->
-            function closeNav() {
-            document.getElementById("mySidebar").style.width = "0";
-            document.getElementById("movemain").style.marginLeft = "0";
-            }
-        </script>
-    </div>
-
     <div id="movemain" class="main">
         <div class ="header-section">
-            <button class="openbtn" onclick="openNav()">&#9776;</button>
             <h1>Documents Organiser</h1>
         </div>
 
@@ -57,6 +30,7 @@
                 };
             };
             </script>
+        </div>
 
         <div class="file-grid-container">
             {% for doc in docs %} 
@@ -80,8 +54,15 @@
             </div>
             {% endfor %}
         </div>
-        </div>
     </div>
+
+<script>
+function toggleSidebar() {
+    document.getElementById("sidebar").classList.toggle("active");
+    document.getElementById("overlay").classList.toggle("active");
+}
+</script>
+
 {% endblock %}
     
 </body>
