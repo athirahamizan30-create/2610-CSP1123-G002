@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>
+        chat
+    </title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styleChat.css') }}">
+</head>
+
+<body>
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2>Welcome, <span id="username">{{username}}</span></h2>
+<div class="container">
+
+    <div class="sidebar">
+        <div class="room-list">
+
+    <h3>Rooms</h3>
+
+    <button onclick="showRoomForm()">
+        + Create Room
+    </button>
+
+    <div id="room-form" style="display:none;">
+        <form method="POST" action="/create-room">
+            <input type="text" name="room_name" placeholder="Room name" required>
+            <button type="submit">
+                Create
+            </button>
+        </form>
+    </div>
+
+    {% for room in rooms %}
+    <div
+        class="room-item"
+        data-room="{{ room.name }}"
+        onclick="joinRoom('{{ room.name }}')">
+
+        {{ room.name }}
+
+    </div>
+    {% endfor %}
+    </div>
+
+        <div class="user-list">
+            <h3>Online Users</h3>
+            <div id="active-users"></div>
+        </div>
+    </div>
+
+    <div class="main-chat">
+        <div class="chat-header">
+            <h3 id="chat-title">General</h3>
+        </div>
+        <div id="chat"></div>
+
+        <div class="input-area">
+            <input
+                type="text"
+                id="message"
+                placeholder="Enter text here.."
+                onkeypress="handleKeyPress(event)"
+            >
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+</div>
+<script>
+function showRoomForm() {
+
+    const form =
+        document.getElementById(
+            "room-form"
+        );
+
+    if (
+        form.style.display ===
+        "none"
+    ) {
+        form.style.display =
+            "block";
+    } else {
+        form.style.display =
+            "none";
+    }
+}
+</script>
+<script src="{{url_for('static', filename='chat.js')}}"></script>
+{% endblock %}
+</body>
+</html>
+
+
+
+
+
+
+
+

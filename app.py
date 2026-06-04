@@ -1,9 +1,9 @@
-from flask import Flask, render_template, url_for, request, redirect, flash
-import mysql.connector
+from flask import Flask, render_template, url_for, request, redirect, flash, session
 import re
 import uuid
 import os
 import secrets
+import logging
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -12,17 +12,30 @@ from config import Config
 from flask_mail import Mail, Message
 from flask_bcrypt import Bcrypt
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import select, func
+from sqlalchemy import select, func, and_ , or_
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from wtforms import StringField, SubmitField, TextAreaField
 from wtforms.validators import DataRequired, Length, Email, ValidationError
+from typing import Dict
+from flask_socketio import SocketIO, emit, join_room, leave_room
+from werkzeug.middleware.proxy_fix import ProxyFix
+from apscheduler.schedulers.background import BackgroundScheduler
+from dotenv import load_dotenv
+from zoneinfo import ZoneInfo
 
 app = Flask(__name__, template_folder="templates", static_folder="static/uploads")
 db= SQLAlchemy()
+mail = Mail()
 login_manager = LoginManager()
 bcrypt = Bcrypt()
+socketio = SocketIO()
 
+app.config['SECRET_KEY'] = 'secretkey'
+load_dotenv()
+
+app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
 app.config['SECRET_KEY'] = 'user_registration_athirah'
 app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://athirah:Tiya071!@localhost/CareerTrack_Database"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -31,11 +44,10 @@ app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=15)
 
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
+logger = logging.getLogger(__name__)
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = "login"
-with app.app_context():
-    db.create_all()
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -46,6 +58,7 @@ class User(UserMixin, db.Model):
     full_name = db.Column(db.String(100), nullable=True)
     phone_number = db.Column(db.String(20), nullable=True)
     about_me = db.Column(db.Text, nullable=True)
+
 
     password_reset_ids = db.relationship(
         "PasswordResetId",
@@ -145,15 +158,103 @@ class UpdateAccountForm(FlaskForm):
             if user:
                 raise ValidationError('That email is taken. Please choose a different one.')
 
+class ChatMessage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    sender = db.Column(db.String(80),nullable=False)
+    room = db.Column(db.String(150),nullable=False)
+    message = db.Column(db.Text,nullable=False)
+    is_private = db.Column(db.Boolean,default=False)
+    timestamp = db.Column(db.DateTime,default=datetime.utcnow)
+
+class ChatRoom(db.Model):
+    
+    id = db.Column(
+        db.Integer,
+        primary_key=True
+    )
+
+    name = db.Column(
+        db.String(100),
+        unique=True,
+        nullable=False
+    )
+
+    created_by = db.Column(
+        db.Integer,
+        db.ForeignKey('user.id'),
+        nullable=False
+    )
+
+    created_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow
+    )
+def send_reminders(app):
+    with app.app_context():
+
+        MY = ZoneInfo("Asia/Kuala_Lumpur")
+        now = datetime.now()
+
+        print("NOW:", now)
+
+        reminders = Reminder.query.filter(
+            Reminder.is_done == False,
+            Reminder.reminder_date <= now
+        ).all()
+        
+        all_reminders = Reminder.query.all()
+        for r in all_reminders:
+            print("DB:", r.reminder_date, "DONE:", r.is_done)
+
+        print("FOUND:", reminders)
+
+        for reminder in reminders:
+            user = db.session.get(User, reminder.user_id)
+
+            local_time = reminder.reminder_date.astimezone(MY)
+            formatted_time = local_time.strftime("%d-%m-%Y %H:%M")
+
+            msg = Message(
+                subject='Reminder Notification',
+                sender=app.config['MAIL_USERNAME'],
+                recipients=[user.email]
+            )
+
+            msg.body = f"""
+Hello {user.username},
+
+Reminder:
+{reminder.message}
+
+Date: {formatted_time}
+"""
+            print("TRY SEND TO:", user.email)
+
+            try:
+                mail.send(msg)
+                reminder.is_done = True
+                db.session.commit()
+            except Exception as e:
+                db.session.rollback()
+                print("EMAIL FAILED:", e)
+
 def create_app():
 
     app = Flask(__name__)
+    app.config.from_object(Config)
     bcrypt.init_app(app)
     app.config.from_object(Config)
-    mail = Mail()
     db.init_app(app)
     login_manager.init_app(app)
     login_manager.login_view = "login"
+
+    app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
+    app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT'))
+    app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS') == 'True'
+    app.config['MAIL_USE_SSL'] = os.getenv('MAIL_USE_SSL') == 'True'
+    app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+    app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+    app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_USERNAME')
 
 
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -167,15 +268,17 @@ def create_app():
 
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
-
-    app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-    app.config['MAIL_PORT'] = 587
-    app.config['MAIL_USE_TLS'] = True
-    app.config['MAIL_USERNAME'] = 'your_email@gmail.com'
-    app.config['MAIL_PASSWORD'] = 'your_app_password'
-    app.config['MAIL_DEFAULT_SENDER'] = 'your_email@gmail.com'
     
     mail.init_app(app)
+
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+    
+    socketio.init_app(
+        app,
+        cors_allowed_origins=app.config.get("CORS_ORIGINS", "*"),
+        logger=False,
+        engineio_logger=False
+    )
 
     @app.route('/', methods=['GET', 'POST'])
     def index():
@@ -185,24 +288,44 @@ def create_app():
     @login_required
     def dashboard():
 
-        full_time = NewJob.query.filter_by(user_id=current_user.id, job_type='Full-Time').all()
+        search = request.args.get('search', '').strip()
+        status = request.args.get('status', '').strip()
 
-        part_time = NewJob.query.filter_by(user_id=current_user.id, job_type='Part-Time').all()
+        query = NewJob.query.filter_by(user_id=current_user.id)
 
-        intern = NewJob.query.filter_by(user_id=current_user.id, job_type='Intern/Trainee').all()
+        # SEARCH
+        if search:
+            query = query.filter(
+                or_(
+                    NewJob.company_name.ilike(f"%{search}%"),
+                    NewJob.job_position.ilike(f"%{search}%"),
+                    NewJob.location.ilike(f"%{search}%"),
+                    NewJob.job_status.ilike(f"%{search}%")
+                )
+            )
 
-        all_jobs = full_time + part_time + intern
+        # STATUS FILTER
+        if status:
+            query = query.filter(NewJob.job_status == status)
 
+        jobs = query.all()
+
+        # Split AFTER filtering
+        full_time = [job for job in jobs if job.job_type == "Full-Time"]
+        part_time = [job for job in jobs if job.job_type == "Part-Time"]
+        intern = [job for job in jobs if job.job_type == "Intern/Trainee"]
+
+        # FIX: build dates from FILTERED jobs
         job_dates = {}
 
-        for job in all_jobs:
-            job_dates[job.id] = []
-
-            for d in job.dates:
-                job_dates[job.id].append({
+        for job in jobs:
+            job_dates[job.id] = [
+                {
                     "date_type": d.date_type,
                     "date_value": d.date_value.strftime("%Y-%m-%dT%H:%M")
-                })
+                }
+                for d in job.dates
+            ]
 
         return render_template(
             "dashboard.html",
@@ -284,7 +407,7 @@ def create_app():
     
     @login_manager.user_loader
     def load_user(user_id):
-        return User.query.get(int(user_id))
+        return db.session.get(User, int(user_id))
 
     @app.route('/logout')
     def logout():
@@ -308,35 +431,26 @@ def create_app():
         db.session.add(job)
         db.session.commit()
 
-        if application_date:
-            app_date_obj = datetime.strptime(application_date, "%Y-%m-%d")
-
-            reminder = Reminder(
-                user_id=current_user.id,
-                job_id=job.id,
-                reminder_date=app_date_obj - timedelta(days=1),
-                message="Upcoming application deadline"
-            )
-            db.session.add(reminder)
+        
 
         date_types = request.form.getlist('date_type[]')
         date_values = request.form.getlist('date_value[]')
 
         for dtype, dvalue in zip(date_types, date_values):
             if dvalue:
-                date_obj = datetime.strptime(dvalue, "%Y-%m-%dT%H:%M")
+                event_time = datetime.strptime(dvalue, "%Y-%m-%dT%H:%M")
 
                 job_date = JobDate(
                     job_id=job.id,
                     date_type=dtype,
-                    date_value=date_obj.date()
+                    date_value=event_time.date()
                 )
                 db.session.add(job_date)
 
                 reminder = Reminder(
                     user_id=current_user.id,
                     job_id=job.id,
-                    reminder_date=date_obj,
+                    reminder_date=event_time - timedelta(hours=1),
                     message = f"{dtype.title()} – {job.job_position} at {job.company_name}"
                 )
                 db.session.add(reminder)
@@ -434,6 +548,7 @@ def create_app():
             return render_template("reset_password.html")
     
     @app.route('/document')
+    @login_required
     def document():
         docs = Document.query.order_by(Document.filename.asc()).all()
         return render_template("document.html", docs=docs)  
@@ -473,8 +588,8 @@ def create_app():
                 reminder = Reminder(
                     user_id=current_user.id,
                     job_id=id,
-                    reminder_date=parsed_date,
-                    message = f"{t.title()} - {job.job_position} at {job.company_name}"
+                    reminder_date=parsed_date - timedelta(hours=1),
+                    message=f"{t.title()} - {job.job_position} at {job.company_name}"
                 )
 
                 db.session.add(reminder)
@@ -518,6 +633,7 @@ def create_app():
         )
 
     @app.route('/file_upload', methods=["POST"])
+    @login_required
     def file_upload():
         file = request.files['file']
         if file:
@@ -529,7 +645,7 @@ def create_app():
             save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(save_path)
 
-            new_doc = Document(filename=filename, file_path=save_path)
+            new_doc = Document(filename=filename, file_path=save_path, user_id=current_user.id)
             db.session.add(new_doc)
             db.session.commit()
 
@@ -537,6 +653,7 @@ def create_app():
         return "Upload Failed"
 
     @app.route('/delete_file/<int:doc_id>')
+    @login_required
     def delete_file(doc_id):
         doc = Document.query.get_or_404(doc_id)
 
@@ -557,7 +674,7 @@ def create_app():
 
     @app.route('/statistic')
     def statistic():
-        results = db.session.query(NewJob.job_status, func.count(NewJob.job_status)).group_by(NewJob.job_status).all()
+        results = db.session.query(NewJob.job_status, func.count(NewJob.job_status)).filter(NewJob.user_id == current_user.id).group_by(NewJob.job_status).all()
 
         stats_dict = {status: count for status, count in results}
     
@@ -605,6 +722,230 @@ def create_app():
         image_file = url_for('static', filename='profile_pics/' + current_user.image_file)
         return render_template('account.html', title='Account', image_file=image_file, form=form)
 
+    @app.route("/chat")
+    @login_required
+    def chat():
+        logger.info(f"User {current_user.username} entered the chat session")
+        rooms = ChatRoom.query.all()
+
+
+        return render_template(
+            'chat.html',
+            username=current_user.username,
+            rooms=rooms
+        )
+
+    active_users = {}
+    @socketio.event
+    def connect():
+        try:
+            if 'username' not in session:
+                session['username'] = current_user.username
+
+            active_users[request.sid] = {
+                'username':session['username'],
+                'connected_at': datetime.now().isoformat()
+            }
+
+            unique_users = list(set(
+                user['username']
+                for user in active_users.values()
+            ))
+
+            emit('active_users', {
+                'users': unique_users
+            }, broadcast=True)
+
+            logger.info({f"User connected {session['username']}"})
+
+        except Exception as e:
+            logger.error(f"Connection error: {str(e)}")
+            return False
+        
+    #disconnect from session
+    @socketio.event
+    def disconnect():
+        try:
+            if request.sid in active_users:
+                username= active_users[request.sid]['username']
+                del active_users[request.sid]
+
+            unique_users = list(set(
+                user['username']
+                for user in active_users.values()
+            ))
+
+            emit('active_users', {
+                'users': unique_users
+            }, broadcast=True)
+
+            logger.info({f"User disconnected: {'username'}"})
+
+        except Exception as e:
+            logger.error(f"Connection error: {str(e)}")
+
+    @socketio.on('join')
+    def on_join(data:dict):
+        try:
+            username = current_user.username
+            room = data['room']
+
+            room_exists = (ChatRoom.query.filter_by(name=room).first())
+            if not room_exists:
+                return
+            
+            join_room(room)
+            active_users[request.sid]['room'] = room
+
+            emit('status', {
+                'msg' : f"{username} has joined the room",
+                'type' : 'join',
+                'timestamp' : datetime.now().isoformat()
+            }, room=room)
+
+            logger.info(f"User {username} has joined {room}")
+
+        except Exception as e:
+            logger.error(str(e))
+
+    @socketio.on('leave')
+    def on_leave(data:dict):
+        try:
+            username = session['username']
+            room = data['room']
+
+            leave_room(room)
+            if request.sid in active_users:
+                active_users[request.sid].pop('room', None)
+
+            emit('status', {
+                    'msg' : f"{username} has left the room",
+                    'type' : 'leave',
+                    'timestamp' : datetime.now().isoformat()
+                }, room=room)
+
+            logger.info(f"User {username} has left the room")
+
+        except Exception as e:
+            logger.error(str(e))
+
+    @socketio.on('message')
+    def handle_message(data:dict):
+        try:
+            username = current_user.username
+            room = data.get('room', "General")
+            msg_type = data.get("type", 'message')
+            message = data.get('msg', "").strip()
+
+            if not message:
+                return
+            timestamp = datetime.now().isoformat()
+            
+            if msg_type == 'private':
+                target_user = data.get('target')
+                if not target_user:
+                    return
+
+                private_room = create_private_room(
+                    username,
+                    target_user
+                )
+
+                new_message = ChatMessage(sender=username,room=private_room,message=message,is_private=True)
+
+                db.session.add(new_message)
+                db.session.commit()
+
+                emit('message', {'msg': message,'username': username,'room': private_room,'timestamp': timestamp,'private': True}, room=private_room)
+
+            else:
+                room_exists = (ChatRoom.query.filter_by(name=room).first())
+                if not room_exists:
+                    return
+                
+                new_message = ChatMessage(sender=username,room=room,message=message,is_private=False)
+
+                db.session.add(new_message)
+                db.session.commit()
+
+                emit('message', {
+                            'msg': message,
+                            'username':username,
+                            'room':room,
+                            'timestamp':timestamp,
+                        }, room=room)
+        except Exception as e:
+            logger.error(str(e))       
+
+    def create_private_room(user1, user2):
+        users = sorted([user1, user2])
+        return f"dm_{users[0]}_{users[1]}"    
+
+    @socketio.on('join_private')
+    def join_private(data):
+        try:
+            target_user = data.get('target')
+
+            if not target_user:
+                return
+
+            username = current_user.username
+
+            private_room = create_private_room(
+                username,
+                target_user
+            )
+
+            join_room(private_room)
+
+            emit('status', {
+                'msg': f"Private chat with {target_user}",
+                'type': 'system'
+            }, room=request.sid)
+
+        except Exception as e:
+            logger.error(str(e))
+
+    @app.route('/get_messages/<room>')
+    @login_required
+    def get_messages(room):
+        messages = ChatMessage.query.filter_by(
+            room=room
+        ).order_by(ChatMessage.timestamp.asc()).all()
+
+        return {
+            "messages": [
+                {
+                    "sender": msg.sender,
+                    "message": msg.message,
+                    "timestamp": msg.timestamp.isoformat()
+                }
+                for msg in messages
+            ]
+        }
+
+    @app.route('/create-room', methods=['POST'])
+    @login_required
+    def create_room():
+
+        room_name = request.form.get( "room_name").strip()
+
+        if not room_name:
+            flash("Room name required","danger")
+            return redirect(url_for("chat"))
+
+        existing_room = ( ChatRoom.query.filter_by(name=room_name).first())
+
+        if existing_room:
+            flash("Room already exists", "warning")
+            return redirect(url_for("chat"))
+
+        new_room = ChatRoom(name=room_name,created_by=current_user.id)
+        db.session.add(new_room)
+        db.session.commit()
+
+        flash("Chatroom created!","success")
+        return redirect(url_for("chat"))
 
     with app.app_context():
         db.create_all()
@@ -612,4 +953,8 @@ def create_app():
 
 if __name__ == '__main__':
     app = create_app()
+    socketio.run(app, host="0.0.0.0", port=5000, debug=True)
+    scheduler = BackgroundScheduler(job_defaults={'coalesce': True, 'misfire_grace_time': 60})
+    scheduler.add_job(func=send_reminders,trigger='interval', minutes=1, args=[app])
+    scheduler.start()
     app.run(host="0.0.0.0", port=5000, debug=True)
