@@ -208,3 +208,23 @@ body{
 .container.active .toggle-right{
     transform: translateX(200%);
   }
+
+.form-container h1{
+    font-size: 45px;
+}
+
+.form-container ul{
+    margin-left: 30px;
+    margin-top: 10px;
+}
+
+.form-container p{
+    margin-bottom: -3px;
+    font-size: 17px;
+    font-weight: 400;
+}
+
+.toggle-panel p{
+    font-size: 17px;
+}
+
