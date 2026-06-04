@@ -391,7 +391,7 @@
         }
 
         dates.forEach(date => {
-            addEditDate(date.date_type, date.date_value);
+            addEditDate(date.date_type, date.date_value?.slice(0, 16));
         });
     }
 
@@ -431,7 +431,7 @@
 
             </select>
 
-            <input type="datetime-local" name="date_value[]" value="${value ? value.replace(' ', 'T') : ''}">
+            <input type="datetime-local" name="date_value[]" value="${value || ''}">
 
             <button type="button" onclick="removeDate(this)" class="remove-date-btn">
                 <i class="bxf bx-x-square bx-sm"></i>

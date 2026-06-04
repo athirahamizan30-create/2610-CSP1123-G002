@@ -293,7 +293,6 @@ def create_app():
 
         query = NewJob.query.filter_by(user_id=current_user.id)
 
-        # SEARCH
         if search:
             query = query.filter(
                 or_(
@@ -304,18 +303,15 @@ def create_app():
                 )
             )
 
-        # STATUS FILTER
         if status:
             query = query.filter(NewJob.job_status == status)
 
         jobs = query.all()
 
-        # Split AFTER filtering
         full_time = [job for job in jobs if job.job_type == "Full-Time"]
         part_time = [job for job in jobs if job.job_type == "Part-Time"]
         intern = [job for job in jobs if job.job_type == "Intern/Trainee"]
 
-        # FIX: build dates from FILTERED jobs
         job_dates = {}
 
         for job in jobs:
@@ -443,7 +439,7 @@ def create_app():
                 job_date = JobDate(
                     job_id=job.id,
                     date_type=dtype,
-                    date_value=event_time.date()
+                    date_value=event_time
                 )
                 db.session.add(job_date)
 
