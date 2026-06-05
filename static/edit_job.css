@@ -106,7 +106,7 @@ select {
     color: #da0707f1;
 }
 .delete-btn {
-    background: #577c58af;
+    background: #8f3c3c;
     color: white;
     border: none;
     padding: 6px 10px;
@@ -116,11 +116,11 @@ select {
 }
 
 .delete-btn:hover {
-    background: #cfa771;
+    background: #cd6161;
 }
 
 .edit-btn {
-    background-color: #577c58af;
+    background-color: #8f3c3c;
     color: white;
     padding: 6px 14px;
     border: none;
@@ -130,7 +130,7 @@ select {
 }
 
 .edit-btn:hover{
-    background-color: #cfa771;
+    background-color: #cd6161;
 }
 
 .date-row {

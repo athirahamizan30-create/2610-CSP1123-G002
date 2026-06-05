@@ -296,6 +296,23 @@
 
     {% include 'job.html' %}
 
+    <div id="ai-chatbot-wrapper">
+        <script type="module">
+            import Chatbot from "https://cdn.jsdelivr.net/npm/@denserai/embed-chat@1/dist/web.min.js";
+            Chatbot.init({
+            chatbotId: "chatbot_gcntvcndfh5ldda4vt4y4",
+            theme: {
+                button: {
+                    size: 'large',   
+                    bottom: 40,      
+                    right: 40,       
+                    color: '#abc17c' 
+                    },
+                }, 
+            });
+        </script>  
+    </div>
+
     <script>
     function toggleSidebar() {
         document.getElementById("sidebar").classList.toggle("active");
