@@ -1,5 +1,5 @@
 .main {
-  background-color: rgb(227, 217, 207);
+  background-color: #F1E2D1;
   min-height: 100vh;
   width: 100%;
   padding: 40px 0;
@@ -10,13 +10,21 @@ body{
 }
 
 .top-header{
+.main h1{
+  font-family:Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+  color: rgb(0, 0, 0);
+  margin-left: 40px;
+  font-size: 45px
+}
+
+header{
     width: 100%;
-    height: 60px;
-    background-color: #c5b2ab;
+    height: 80px;
+    background-color: #810B38;
 }
 
 .card-container {
-  background-color: #fff;
+  background-color: #DCC3AA;
   border-radius: 10px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
   padding: 30px;
@@ -62,7 +70,7 @@ profile-left img {
 .account-heading {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #333;
+  color: #810B38;
 }
 
 .text-secondary {
@@ -83,7 +91,7 @@ img.rounded-circle {
 legend {
   font-size: 28px;
   font-weight: 600;
-  color: #333;
+  color: #810B38;
 }
 
 .form-group {
@@ -102,7 +110,7 @@ legend {
 }
 
 .btn-primary {
-  background-color: #007bff;
+  background-color: #810B38;
   border: none;
   padding: 10px 20px;
   border-radius: 6px;
@@ -111,7 +119,7 @@ legend {
 }
 
 .btn-primary:hover {
-  background-color: #0056b3;
+  background-color: #cd6161;
 }
 
 .invalid-feedback {
@@ -134,75 +142,4 @@ legend {
   img.rounded-circle {
     margin-bottom: 15px;
   }
-}
-
-
-.sidebar {
-    position: fixed;
-    left: -250px;   /* hide completely */
-    top: 0;
-    width: 250px;
-    height: 100%;
-    background: #edeeca;  /* your color */
-    transition: left 0.3s ease;
-}
-
-.sidebar a {
-    display: block;
-    color: rgb(0, 0, 0);
-    margin: 10px 0;
-    text-decoration: none;
-    padding: 10px;
-    transition: 0.3s;
-}
-
-.sidebar h2,
-.sidebar a {
-    padding-left: 15px;
-}
-
-.sidebar a i {
-    font-size: 20px;
-}
-
-.sidebar.active {
-    left: 0;
-}
-
-.sidebar a:hover{
-    background-color: #b19104;
-}
-
-.sidebar a.active{
-    background-color: #a3bb7c;
-    font-weight: bold;
-}
-
-.main {
-    padding: 20px;
-}
-
-.menu-btn {
-    font-size: 20px;
-    padding: 10px;
-    cursor: pointer;
-}
-
-
-.sidebar.active ~ .main {
-    margin-left: 250px;
-}
-
-#overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.5);
-    display: none;
-}
-
-#overlay.active {
-    display: block;
 }

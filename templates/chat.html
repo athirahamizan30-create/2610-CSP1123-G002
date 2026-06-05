@@ -47,12 +47,22 @@
             <h3>Online Users</h3>
             <div id="active-users"></div>
         </div>
+
+        <div class="recent-list">
+        <h3>Recent Chats</h3>
+        <div id="recent-chats"></div>
+        </div>
     </div>
 
     <div class="main-chat">
         <div class="chat-header">
             <h3 id="chat-title">General</h3>
+
+            <button id="view-profile-btn" style="display: none;">
+            View Profile
+            </button>
         </div>
+
         <div id="chat"></div>
 
         <div class="input-area">
@@ -87,6 +97,43 @@ function showRoomForm() {
 }
 </script>
 <script src="{{url_for('static', filename='chat.js')}}"></script>
+
+<div id="profile-popup" class="popup-overlay">
+
+    <div class="popup-card">
+
+        <span class="close-btn" onclick="closeProfilePopup()">
+           ×
+        </span>
+
+        <img id="popup-profile-pic" class="popup-profile-pic">
+
+        <h2 id="popup-username"></h2>
+
+        <p>
+            <strong>Full Name:</strong>
+            <span id="popup-fullname"></span>
+        </p>
+
+        <p>
+            <strong>Email:</strong>
+            <span id="popup-email"></span>
+        </p>
+
+        <p>
+            <strong>Phone:</strong>
+            <span id="popup-phone"></span>
+        </p>
+
+        <p>
+            <strong>About Me:</strong>
+            <span id="popup-about"></span>
+        </p>
+
+    </div>
+
+</div>
+
 </body>
 </html>
 

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, url_for, request, redirect, flash, session
+from flask import Flask, render_template, url_for, request, redirect, flash, session, jsonify
 import re
 import uuid
 import os
@@ -167,7 +167,7 @@ class ChatMessage(db.Model):
     timestamp = db.Column(db.DateTime,default=datetime.utcnow)
 
 class ChatRoom(db.Model):
-    
+
     id = db.Column(
         db.Integer,
         primary_key=True
@@ -189,6 +189,7 @@ class ChatRoom(db.Model):
         db.DateTime,
         default=datetime.utcnow
     )
+    
 def send_reminders(app):
     with app.app_context():
 
@@ -689,7 +690,7 @@ def create_app():
         random_hex = secrets.token_hex(8)
         _, f_ext = os.path.splitext(form_picture.filename)
         picture_fn = random_hex + f_ext
-        picture_path = os.path.join(app.root_path, 'static/profile_pics', picture_fn)
+        picture_path = os.path.join(app.root_path, 'static/uploads/profile_pics', picture_fn)
         form_picture.save(picture_path)
 
         return picture_fn
@@ -719,7 +720,7 @@ def create_app():
             form.phone_number.data = current_user.phone_number 
             form.about_me.data = current_user.about_me 
 
-        image_file = url_for('static', filename='profile_pics/' + current_user.image_file)
+        image_file = url_for('static',filename='uploads/profile_pics/' +current_user.image_file)
         return render_template('account.html', title='Account', image_file=image_file, form=form)
 
     @app.route("/chat")
@@ -946,6 +947,58 @@ def create_app():
 
         flash("Chatroom created!","success")
         return redirect(url_for("chat"))
+
+    @app.route('/private_chats')
+    @login_required
+    def private_chats():
+
+        username = current_user.username
+        messages = ChatMessage.query.filter(ChatMessage.is_private == True,ChatMessage.room.contains(username)).all()
+        chats = set()
+
+        for msg in messages:
+            room_parts = msg.room.replace('dm_','').split('_')
+            other_user = (
+                room_parts[0]
+                if room_parts[1] == username
+                else room_parts[1]
+            )
+
+            chats.add(other_user)
+        return {"chats": list(chats)}
+
+    @app.route('/get_profile/<username>')
+    @login_required
+    def get_profile(username):
+
+        user = User.query.filter_by(
+            username=username
+        ).first_or_404()
+
+        image_file = url_for(
+            'static',
+            filename=f'uploads/profile_pics/{user.image_file}'
+        )
+
+        return jsonify({
+            "username":
+                user.username,
+
+            "full_name":
+                user.full_name,
+
+            "email":
+                user.email,
+
+            "phone":
+                user.phone_number,
+
+            "about_me":
+                user.about_me,
+
+            "image":
+                image_file
+        })
 
     with app.app_context():
         db.create_all()

@@ -26,9 +26,11 @@ socket.on('status', (data) => {
     addMessage('System', data.msg, 'system');
 });
 
-socket.on('active_users', (data) => { // Note: Changed 'active.users' to 'active_users' to match your backend emit
+socket.on('active_users', (data) => { 
+
     userList.innerHTML = data.users.map(
     (user) => 
+        
         `<div class="user-item" onclick="openPrivateChat('${user}')">
             ${user}
         </div>`
@@ -94,6 +96,12 @@ function joinRoom(room){
         'chat-title'
     ).textContent = room;
 
+    document
+    .getElementById(
+        'view-profile-btn'
+    ).style.display =
+    'none';
+
     socket.emit('join', {
         room
     });
@@ -120,6 +128,17 @@ function openPrivateChat(user){
     socket.emit('join_private', {
         target: user
     });
+
+    document.getElementById('chat-title').textContent =user;
+    
+    const profileBtn =document.getElementById('view-profile-btn');
+    profileBtn.style.display =
+        'block';
+
+    profileBtn.onclick =
+    function () {
+        openProfilePopup(user);
+    };
 
     loadMessages(currentRoom);
 }
@@ -160,9 +179,109 @@ async function loadMessages(room) {
     });
 }
 
+async function loadRecentChats() {
 
+    const response =
+        await fetch('/private_chats');
 
+    const data =
+        await response.json();
 
+    const chatList =
+        document.getElementById(
+            'recent-chats'
+        );
 
+    chatList.innerHTML =
+        data.chats.map(user => `
+            <div
+                class="user-item"
+                onclick="openPrivateChat('${user}')"
+            >
+                ${user}
+            </div>
+        `).join('');
+}
 
+document.addEventListener(
+    'DOMContentLoaded',
+    () => {
+
+    loadRecentChats();
+
+    document
+    .querySelectorAll(
+        '.room-item'
+    )
+    .forEach(item => {
+
+        if (
+            item.textContent.trim()
+            === currentRoom
+        ) {
+            item.classList
+            .add(
+                'active-room'
+            );
+        }
+    });
+});
+
+async function openProfilePopup(user){
+
+    const response =
+        await fetch(
+            `/get_profile/${user}`
+        );
+
+    const data =
+        await response.json();
+
+    document.getElementById(
+        'popup-profile-pic'
+    ).src =
+        data.image;
+
+    document.getElementById(
+        'popup-username'
+    ).textContent =
+        data.username;
+
+    document.getElementById(
+        'popup-fullname'
+    ).textContent =
+        data.full_name
+        || 'Not Set';
+
+    document.getElementById(
+        'popup-email'
+    ).textContent =
+        data.email
+        || 'Not Set';
+
+    document.getElementById(
+        'popup-phone'
+    ).textContent =
+        data.phone
+        || 'Not Set';
+
+    document.getElementById(
+        'popup-about'
+    ).textContent =
+        data.about_me
+        || 'No description';
+
+    document.getElementById(
+        'profile-popup'
+    ).style.display =
+        'flex';
+}
+
+function closeProfilePopup(){
+
+    document.getElementById(
+        'profile-popup'
+    ).style.display =
+        'none';
+}
 
