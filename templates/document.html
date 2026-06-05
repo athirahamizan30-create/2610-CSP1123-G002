@@ -57,50 +57,8 @@
             {% endfor %}
         </div>
     </div>
-
-    {% include 'job.html' %}
-
-    <script>
-    function toggleSidebar() {
-        document.getElementById("sidebar").classList.toggle("active");
-        document.getElementById("overlay").classList.toggle("active");
-    }
-    </script>
-
-    <script>
-    document.addEventListener("DOMContentLoaded", function () {
-
-        const popup = document.getElementById("popupForm");
-        const sidebar = document.getElementById("sidebar");
-        const overlay = document.getElementById("overlay");
-
-        window.openPopup = function () {
-            popup.classList.add("show");
-
-            if (sidebar) sidebar.classList.remove("active");
-            if (overlay) overlay.classList.remove("active");
-        }
-
-        window.closePopup = function () {
-            popup.classList.remove("show");
-            sidebar.classList.remove("active");
-            overlay.classList.remove("active");
-        }
-
-        popup.addEventListener("click", function (event) {
-            if (event.target === popup) {
-                closePopup();
-            }
-        });
-
-        window.toggleSidebar = function () {
-            sidebar.classList.toggle("active");
-            overlay.classList.toggle("active");
-        }
-
-    });
-    </script>
-{% endblock %}
     
+{% include 'job.html' %}
+{% endblock %}  
 </body>
 </html>

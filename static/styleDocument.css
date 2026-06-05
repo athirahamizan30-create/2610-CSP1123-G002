@@ -1,7 +1,11 @@
 body {
     margin: 0;
     font-family: Arial;
-    background-color: #edeeca;
+    background-color: #F1E2D1;
+}
+
+.main{
+    background-color: #F1E2D1;
 }
 
 .container {
@@ -18,12 +22,14 @@ body {
 }
 
 h1 {
-  font-size: 40px;
-  text-decoration: underline;
   display:flex;
   align-items: center;
   gap: 20px;
   float:left;
+  font-family:Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+  font-size: 60px;
+  margin-left: 40px;
+  font-weight: bold;
 }
 
 .file-grid-container {
@@ -34,7 +40,7 @@ h1 {
 }
 
 .file-card {
-    background-color: #74777a;
+    background-color: #b09275;
     border: 1px solid #e0e0e0;
     border-radius: 10px;
     padding: 15px;
@@ -48,7 +54,7 @@ h1 {
 .file-card:hover {
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     transform: translateY(-2px);
-    background: #bab9c6;
+    background: #947659;
 }
 
 .file-icon {
@@ -66,6 +72,7 @@ h1 {
     margin-bottom: 8px;
     padding: 5px;
     box-sizing: border-box;
+    color:#ffffff;
 }
 
 .view-btn , .delete-btn {
@@ -85,10 +92,10 @@ h1 {
 
 .view-btn:hover{
     text-decoration: underline;
-    color: #4f6479;
+    color: #e0cab5;
 }
 
 .delete-btn:hover {
     text-decoration: underline;
-    color: #ad4254;
+    color: #a01212;
 }

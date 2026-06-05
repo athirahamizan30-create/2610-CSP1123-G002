@@ -1,5 +1,5 @@
 body {
-  background-color: #edeeca; 
+  background-color: #F1E2D1; 
   margin: 0;
   padding: 0;
 }
@@ -10,7 +10,7 @@ body {
     top: 0;
     width: 250px;
     height: 100%;
-    background: #edeeca;  
+    background: #F1E2D1;  
     transition: left 0.3s ease;
     z-index: 1000; 
 }
@@ -64,7 +64,7 @@ body {
 .main {
     padding: 20px;
     transition: margin-left 0.3s;
-    background-color: #edeeca; 
+    background-color: #F1E2D1; 
     min-height: 100vh;
 }
 
@@ -73,13 +73,14 @@ body {
 }
 
 h1 {
-  font-size: 40px;
-  text-decoration: underline;
-  display: flex;
+  display:flex;
   align-items: center;
-  margin-left: 60px;
-  gap: 30px;
-  float: left;
+  gap: 20px;
+  float:left;
+  font-family:Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+  font-size: 60px;
+  margin-left: 40px;
+  font-weight: bold;
 }
 
 .card {
