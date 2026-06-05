@@ -1,0 +1,38 @@
+/* Put form on RIGHT side */
+.forgot-password {
+    left: 50%;
+    width: 50%;
+    opacity: 1;
+    z-index: 2;
+}
+
+/* Put toggle on LEFT side */
+.forgot-toggle {
+    left: 0;
+    width: 50%;
+    border-radius: 0 150px 100px 0;
+}
+
+/* Freeze toggle position */
+.forgot-toggle .toggle {
+    left: 0;
+    width: 100%;
+    transform: none;
+}
+
+/* Center text in toggle */
+.forgot-panel {
+    width: 100%;
+    transform: none;
+}
+
+/* Disable animation */
+.forgot-container * {
+    transition: none !important;
+}
+
+/* Better spacing */
+.signup_link {
+    text-align: center;
+    margin-top: 15px;
+}
