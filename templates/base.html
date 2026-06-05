@@ -74,6 +74,13 @@
     </div>
 
     <script>
+    function toggleSidebar() {
+        document.getElementById("sidebar").classList.toggle("active");
+        document.getElementById("overlay").classList.toggle("active");
+    }
+    </script>
+
+    <script>
     document.addEventListener("DOMContentLoaded", function () {
 
         const popup = document.getElementById("popupForm");
