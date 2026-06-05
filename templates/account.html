@@ -1,13 +1,18 @@
-{% extends "base.html" %}
-{% block content %}
 
+<header>{% extends "base.html" %}
+
+{% block content %}</header>
 <link rel="stylesheet" href="{{ url_for('static', filename='styleAccount.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css')}}">
 <link rel="stylesheet" href="{{ url_for('static', filename='edit_job.css')}}">
 <div class="top-header">
 
 </div>
+<title>User profile</title>
 <div class="main">
+
+     <h1>User profile</h1>
+
   <div class="container mt-5"> 
     <form method="POST" action="" enctype="multipart/form-data" class="mt-4">
     {{ form.hidden_tag() }} 
@@ -106,5 +111,4 @@
     </div>
   </div>
 </div>
-{% include 'job.html' %}
 {% endblock %} 
