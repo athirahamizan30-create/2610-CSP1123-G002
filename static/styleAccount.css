@@ -5,6 +5,11 @@
   padding: 40px 0;
 }
 
+body{
+  background-color: rgb(227, 217, 207);
+}
+
+.top-header 
 .main h1{
   font-family:Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
   color: rgb(0, 0, 0);
@@ -138,5 +143,3 @@ legend {
     margin-bottom: 15px;
   }
 }
-
-
