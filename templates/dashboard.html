@@ -58,10 +58,12 @@
         
     </div>
 
+    <header>
     <div class="main">
         <button class="menu-btn" onclick="toggleSidebar()">
-            <i class="bx bx-menu bx-sm"></i>
+            <i class="bx bx-menu bx-sm" style="color: #333333;"></i>
         </button>
+        </header>
 
         <h1>Job Application Dashboard</h1>
 
@@ -75,7 +77,7 @@
             <div class="filter-group">
                 <select name="status">
                     <option value="">All Status</option>
-                    <option value="applied">Interested</option>
+                    <option value="interested">Interested</option>
                     <option value="applied">Applied</option>
                     <option value="rejected">Rejected</option>
                     <option value="interview">Stage 1</option>
@@ -88,7 +90,6 @@
             <button type="submit" class="apply-btn">Apply</button>
 
         </form>
-
     <div class="tabs">
     <button class="tab-btn active" onclick="openTab(event, 'full')">Full-Time</button>
     <button class="tab-btn" onclick="openTab(event, 'part')">Part-Time</button>

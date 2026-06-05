@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
 {% extends "base.html" %}
-
 {% block content %}
 <head>
     <title>Statistic</title>
@@ -63,7 +62,7 @@
             <option value="month" {% if current_filter == 'month' %}selected{% endif %}>Past 30 Days</option>
         </select>
     </form>
-</div>
+    </div>
 
         <div class="databoard">
             <div id="columnchart_material" style="width: 1000px; height: 500px;"></div>
@@ -142,12 +141,7 @@
             </div>
         </div>
     </div>
-<script>
-function toggleSidebar() {
-    document.getElementById("sidebar").classList.toggle("active");
-    document.getElementById("overlay").classList.toggle("active");
-}
-</script>
-{% endblock %}
+
+{% endblock %} 
 </body>
 </html>
