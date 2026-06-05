@@ -365,7 +365,7 @@ def create_app():
                     user = User(username=username, email=email, password_hash=pw_hash)
                     db.session.add(user)
                     db.session.commit()
-                    return redirect(url_for('login'))
+                    return redirect(url_for('index'))
                 except IntegrityError:
                     db.session.rollback()
                     errors.append("that username or email is already registered")
@@ -403,7 +403,7 @@ def create_app():
                 return redirect(url_for("dashboard"))
             
 
-        return render_template('login.html', errors=errors)
+        return render_template('index.html', errors=errors)
     
     @login_manager.user_loader
     def load_user(user_id):

@@ -2,43 +2,86 @@
 <html lang="en">
 <head>
     <title> Landing Page</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styleindex.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='styleindex.css') }}">
-  
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 </head>
+
 <body>  
-    <div class="main">
-        <div class="navbar">
-            <div class="icon">
-                <h2 class="logo">CareerTrack</h2>
-                    <div class="menu">
-                        <ul>
-                            <li><a href="/index">HOME</a></li>
-                            <li><a href="#">ABOUT</a></li>
-                            <li><a href="#">CONTACT</a></li>
-                            <li><a href="/login">LOGIN</a></li>
-                            <li><a href="/register">REGISTER</a></li>
-                        </ul>
-                    </div>
-            </div>
+
+    <div class="container" id="container">
+        <div class="form-container sign-up">
+            <form action="{{ url_for('login') }}" method="post">
+                <h1>Login</h1>
+                <div class="error">
+                {% if errors %}
+                <div>
+                    <ul>
+                        {% for e in errors %}
+                        <li>
+                            {{ e }} 
+                        </li>
+                        {% endfor %}           
+                    </ul>
+                </div>
+                {% endif %}
+                </div>
+                <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" class="form-control" id="email" name="email" required>
+                </div>
+
+                <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" class="form-control" id="password" name="password" required>
+                </div>
+                <a href="/forgot_password">Forget Your Password?</a>
+
+                <button type="submit">Sign In</button>
+            </form>
         </div>
 
-
-
-        <div class="content">
-            <h1>Introduction to <br><span>CareerTrack</span></h1>
-            <p class="par">The process of finding a job could be a bit difficult to handle for some people. <br> people might lose track of the jobs that they have already applied for, <br>
-                which may cause them to lose the opportunities that they supposed to grab. <br>
-                Therefore, a web-based application called <br>
-                CareerTrack to help users to track their application status, <br>
-                record important details of the jobs and organise essential documents. <br>
-                This system also includes the ability to set the important dates and also categorise <br> the job based on the type of employment.</p>
-
-
-         </div>
+        <div class="form-container sign-in">
+            <form action="{{ url_for('register') }}" method="post">
+                <h1>Welcome to CareerTrack!</h1>
+                <br>
+                <h3>We are here to help you</h3>
+                <ul>
+                    <li>Track Your Job applications</li>
+                    <li>Organize Your Professional Documents</li>
+                    <li>Record Important Details of the Jobs</li>
+                </ul>
+                <p>Interested? <br> Register your account now !</p>
+                
+                <button type="submit">Sign In</button>
+            </form>
+        </div>
+        
+        <div class="toggle-container">
+            <div class="toggle">
+                <div class="toggle-panel toggle-left">
+                    <h1>Welcome Back!</h1>
+                    <p>Enter your personal details to access your account</p>
+                    <button class="hidden" id="login">i dont have an account</button>
+                </div>
+                <div class="toggle-panel toggle-right">
+                    <h1>Hello, Friend!</h1>
+                    <h2>Don't have an account?</h2>
+                    <p>Register with your account details to use all of site features</p>
+                    <button class="hidden" id="register">Click here to Login</button>
+                </div>
+            </div>
+        </div>
     </div>
-    
 
+    <script src="IndexScript.js"></script>
+
+    <script src="{{ url_for('static', filename='IndexScript.js') }}"></script>
 
 </body>
 </html>
+
+
+
 
