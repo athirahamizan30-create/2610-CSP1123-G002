@@ -444,13 +444,22 @@ def create_app():
                 )
                 db.session.add(job_date)
 
-                reminder = Reminder(
+                reminder_2days = Reminder(
+                    user_id=current_user.id,
+                    job_id=job.id,
+                    reminder_date=event_time - timedelta(days=2),
+                    message=f"{dtype.title()} - {job.job_position} at {job.company_name}"
+                )
+
+                reminder_1hour = Reminder(
                     user_id=current_user.id,
                     job_id=job.id,
                     reminder_date=event_time - timedelta(hours=1),
-                    message = f"{dtype.title()} – {job.job_position} at {job.company_name}"
+                    message=f"{dtype.title()} - {job.job_position} at {job.company_name}"
                 )
-                db.session.add(reminder)
+                
+                db.session.add(reminder_2days)
+                db.session.add(reminder_1hour)
 
         db.session.commit()
 
@@ -582,14 +591,22 @@ def create_app():
                 )
                 db.session.add(new_date)
 
-                reminder = Reminder(
+                reminder_2days = Reminder(
+                    user_id=current_user.id,
+                    job_id=id,
+                    reminder_date=parsed_date - timedelta(days=2),
+                    message=f"{t.title()} - {job.job_position} at {job.company_name} (in 2 days)"
+                )
+
+                reminder_1hour = Reminder(
                     user_id=current_user.id,
                     job_id=id,
                     reminder_date=parsed_date - timedelta(hours=1),
-                    message=f"{t.title()} - {job.job_position} at {job.company_name}"
+                    message=f"{t.title()} - {job.job_position} at {job.company_name} (in 1 hour)"
                 )
 
-                db.session.add(reminder)
+                db.session.add(reminder_2days)
+                db.session.add(reminder_1hour)
 
         db.session.commit()
 
@@ -1002,8 +1019,7 @@ def create_app():
 
 if __name__ == '__main__':
     app = create_app()
-    socketio.run(app, host="0.0.0.0", port=5000, debug=True)
     scheduler = BackgroundScheduler(job_defaults={'coalesce': True, 'misfire_grace_time': 60})
     scheduler.add_job(func=send_reminders,trigger='interval', minutes=1, args=[app])
     scheduler.start()
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    socketio.run(app, host="0.0.0.0", port=5000, debug=True)
