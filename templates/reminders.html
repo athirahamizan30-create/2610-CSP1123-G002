@@ -70,15 +70,15 @@
 
        <h2>Upcoming</h2>
 
-        {% for r in upcoming_reminders %}
+        {% for event in upcoming_events %}
         <div class="reminder-card">
 
             <div class="reminder-title">
-                {{ r.message }}
+                {{ event.title }}
             </div>
 
             <div class="reminder-date">
-                {{ r.reminder_date.strftime('%d %b %Y %I:%M %p') }}
+                {{ event.date_value.strftime("%d %b %Y %I:%M %p") }}
             </div>
 
         </div>
@@ -86,15 +86,15 @@
 
         <h2>Past Activity</h2>
 
-        {% for r in past_reminders %}
+        {% for event in past_events %}
         <div class="reminder-card past-card">
 
             <div class="reminder-title">
-                {{ r.message }}
+                {{ event.title }}
             </div>
 
             <div class="reminder-date">
-                {{ r.reminder_date.strftime('%d %b %Y %I:%M %p') }}
+                {{ event.date_value.strftime("%d %b %Y %I:%M %p") }}
             </div>
 
         </div>

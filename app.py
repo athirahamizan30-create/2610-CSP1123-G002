@@ -122,11 +122,13 @@ class Reminder(db.Model):
     __tablename__ = 'reminders'
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    job_id = db.Column(db.Integer, db.ForeignKey('new_job.id', ondelete='CASCADE'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    job_id = db.Column(db.Integer, db.ForeignKey('new_job.id'))
+
     reminder_date = db.Column(db.DateTime, nullable=False)
+
+    reminder_type = db.Column(db.String(20))
     message = db.Column(db.String(255))
-    is_done = db.Column(db.Boolean, default=False)
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -189,31 +191,58 @@ class ChatRoom(db.Model):
         db.DateTime,
         default=datetime.utcnow
     )
-    
+
+class Notification(db.Model):
+    __tablename__ = 'notifications'
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    reminder_id = db.Column(
+        db.Integer,
+        db.ForeignKey('reminders.id'),
+        nullable=False
+    )
+
+    sent_at = db.Column(db.DateTime)
+
+    status = db.Column(
+        db.String(20),
+        default='pending'
+    )
+
+    email = db.Column(db.String(120))
+
+    error_message = db.Column(db.Text)
+
 def send_reminders(app):
     with app.app_context():
 
         MY = ZoneInfo("Asia/Kuala_Lumpur")
-        now = datetime.now()
+        now = datetime.now(MY)
 
         print("NOW:", now)
 
         reminders = Reminder.query.filter(
-            Reminder.is_done == False,
             Reminder.reminder_date <= now
         ).all()
         
         all_reminders = Reminder.query.all()
         for r in all_reminders:
-            print("DB:", r.reminder_date, "DONE:", r.is_done)
+            print("DB:", r.reminder_date)
 
         print("FOUND:", reminders)
 
         for reminder in reminders:
-            user = db.session.get(User, reminder.user_id)
 
-            local_time = reminder.reminder_date.astimezone(MY)
-            formatted_time = local_time.strftime("%d-%m-%Y %H:%M")
+            already_sent = Notification.query.filter_by(
+                reminder_id=reminder.id,
+                status="sent"
+            ).first()
+
+            if already_sent:
+                continue
+
+            user = User.query.get(reminder.user_id)
 
             msg = Message(
                 subject='Reminder Notification',
@@ -227,16 +256,38 @@ Hello {user.username},
 Reminder:
 {reminder.message}
 
-Date: {formatted_time}
+Date: 
+{reminder.reminder_date.strftime('%d %b %Y %I:%M %p')}
 """
             print("TRY SEND TO:", user.email)
 
             try:
                 mail.send(msg)
-                reminder.is_done = True
+                notification = Notification(
+                    reminder_id=reminder.id,
+                    sent_at=datetime.now(),
+                    status="sent",
+                    email=user.email
+                )
+
+                db.session.add(notification)
                 db.session.commit()
+
+                print(f"EMAIL SENT -> {user.email}")
+
             except Exception as e:
                 db.session.rollback()
+
+                notification = Notification(
+                    reminder_id=reminder.id,
+                    sent_at=datetime.now(),
+                    status="failed",
+                    email=user.email,
+                    error_message=str(e)
+                )
+
+                db.session.add(notification)
+                db.session.commit()
                 print("EMAIL FAILED:", e)
 
 def create_app():
@@ -428,8 +479,6 @@ def create_app():
         db.session.add(job)
         db.session.commit()
 
-        
-
         date_types = request.form.getlist('date_type[]')
         date_values = request.form.getlist('date_value[]')
 
@@ -438,6 +487,7 @@ def create_app():
                 event_time = datetime.strptime(dvalue, "%Y-%m-%dT%H:%M")
 
                 job_date = JobDate(
+                    user_id=current_user.id,
                     job_id=job.id,
                     date_type=dtype,
                     date_value=event_time
@@ -448,6 +498,7 @@ def create_app():
                     user_id=current_user.id,
                     job_id=job.id,
                     reminder_date=event_time - timedelta(days=2),
+                    reminder_type="2_days_before",
                     message=f"{dtype.title()} - {job.job_position} at {job.company_name}"
                 )
 
@@ -455,6 +506,7 @@ def create_app():
                     user_id=current_user.id,
                     job_id=job.id,
                     reminder_date=event_time - timedelta(hours=1),
+                    reminder_type="1_hour_before",
                     message=f"{dtype.title()} - {job.job_position} at {job.company_name}"
                 )
                 
@@ -625,25 +677,42 @@ def create_app():
     @login_required
     def reminders():
 
-        reminders = Reminder.query.filter_by(
+        events = JobDate.query.filter_by(
             user_id=current_user.id
-        ).order_by(Reminder.reminder_date).all()
+        ).order_by(JobDate.date_value).all()
 
-        now = datetime.now()
+        upcoming_events = []
+        past_events = []
 
-        upcoming_reminders = []
-        past_reminders = []
+        now = datetime.now().date()
 
-        for reminder in reminders:
-            if reminder.reminder_date >= now:
-                upcoming_reminders.append(reminder)
+        for event in events:
+
+            event_date = event.date_value
+
+            if hasattr(event_date, "date"):
+                event_date = event_date.date()
+
+            if event_date >= now:
+                upcoming_events.append(event)
             else:
-                past_reminders.append(reminder)
+                past_events.append(event)
+
+            job = NewJob.query.get(event.job_id)
+
+            if job:
+                event.title = (
+                    f"{event.date_type} - "
+                    f"{job.job_position} at "
+                    f"{job.company_name}"
+                )
+            else:
+                event.title = event.date_type
 
         return render_template(
             "reminders.html",
-            upcoming_reminders=upcoming_reminders,
-            past_reminders=past_reminders
+            upcoming_events=upcoming_events,
+            past_events=past_events
         )
 
     @app.route('/file_upload', methods=["POST"])
