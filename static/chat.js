@@ -1,6 +1,5 @@
 let socket = io();
 let currentRoom = "General"
-let username = document.getElementById("username").textContent;
 let roomMessages = {};
 
 const userList = document.getElementById('active-users');
@@ -14,7 +13,8 @@ socket.on('message', (data) =>{
     addMessage(
         data.username, 
         data.msg, 
-        data.username === username ? 'own' : 'other'
+        data.username === username ? 'own' : 'other',
+        data.timestamp
     );
 })
 
@@ -39,18 +39,27 @@ socket.on('active_users', (data) => {
 
 //Socket function
 
-function addMessage(sender, message, type) {
+function addMessage(sender, message, type, timestamp) {
     if (! roomMessages [currentRoom]) {
         roomMessages [currentRoom] = [];
     }
 
-    roomMessages[currentRoom].push({ sender, message, type});
+    roomMessages[currentRoom].push({ sender, message, type, timestamp});
 
     const chat = document.getElementById('chat');
     const messageDiv = document.createElement('div');
 
     messageDiv.className = `message ${type}`;
-    messageDiv.textContent = `${sender}: ${message}`;
+
+     const time = timestamp
+        ? new Date(timestamp).toLocaleString()
+        : "";
+
+    messageDiv.innerHTML = `
+    <div class="sender">${sender}</div>
+    <div class="text">${message}</div>
+    <div class="time">${time}</div>
+    `;
 
     chat.appendChild(messageDiv);
     chat.scrollTop = chat.scrollHeight;
@@ -172,9 +181,8 @@ async function loadMessages(room) {
         addMessage(
             msg.sender,
             msg.message,
-            msg.sender === username
-                ? 'own'
-                : 'other'
+            msg.sender === username ? 'own' : 'other',
+            msg.timestamp
         );
     });
 }
@@ -257,12 +265,6 @@ async function openProfilePopup(user){
         'popup-email'
     ).textContent =
         data.email
-        || 'Not Set';
-
-    document.getElementById(
-        'popup-phone'
-    ).textContent =
-        data.phone
         || 'Not Set';
 
     document.getElementById(
