@@ -1,46 +1,66 @@
-*{
-    margin: 0;
-    box-sizing: border-box;
-    padding: 0;
-    transition-duration: 200ms ;
-}
-
-body{
-    min-height: 100vh;
+.enquiry-container {
     display: flex;
-    flex-direction: column;
-    padding: 24px;
     justify-content: center;
     align-items: center;
+    padding: 40px 20px;
+    min-height: calc(100vh - 80px);
+    background-color: #F1E2D1;
 }
 
-form{
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    max-width: 450px;
+.enquiry-card {
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
     width: 100%;
-    margin: 0 auto;
+    max-width: 550px;
 }
 
-input, textarea {
+.enquiry-card h3 {
+    margin-bottom: 8px;
+    color: #333333;
+    font-weight: 600;
+}
+
+.enquiry-card p {
+    color: #777777;
+    font-size: 14px;
+    margin-bottom: 25px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group input, 
+.form-group textarea {
     width: 100%;
-    background: transparent;
-    padding: 8px;
+    padding: 12px 15px;
+    border: 1px solid #dcdcdc;
+    border-radius: 6px;
+    font-size: 15px;
     outline: none;
+    transition: border-color 0.2s ease;
 }
 
-input:focus, textarea:focus {
-    outline:none;
-    border-color: navy;
+.form-group input:focus, 
+.form-group textarea:focus {
+    border-color: #abc17c; 
 }
 
-button{
-    margin-left: auto;
-    padding: 14px 28px;
+.submit-btn {
+    width: 100%;
+    padding: 13px;
+    background-color: #810B38;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
 }
 
-input, textarea, button{
-    border-radius: 5px;
-    border: 1px solid skyblue
+.submit-btn:hover {
+    background-color: #cd6161;
 }

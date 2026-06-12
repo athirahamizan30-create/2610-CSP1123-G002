@@ -1015,48 +1015,38 @@ def create_app():
                 image_file
         })
     
-    @app.route('/api/inquiry', methods=['POST'])
-    def handle_inquiry():
-        try:
-            data = request.get_json()
-            if not data:
-                return jsonify({"success": False, "message": "No data provided"}), 400
+    @app.route('/enquiry', methods=['GET', 'POST'])
+    def enquiry():
+        if request.method == 'POST':
+            try:
+                # Read data sent from the JavaScript fetch request
+                data = request.get_json()
+                if not data:
+                    return jsonify({"success": False, "message": "No data provided"}), 400
 
-            name = data.get('name')
-            email = data.get('email')
-            message_content = data.get('message')
+                name = data.get('name')
+                email = data.get('email')
+                message_content = data.get('message')
 
-            # Validate that the user filled out everything
-            if not name or not email or not message_content:
-                return jsonify({"success": False, "message": "All fields are required."}), 400
+                if not name or not email or not message_content:
+                    return jsonify({"success": False, "message": "All fields are required."}), 400
 
-            # Create the email message using your existing Flask-Mail configuration
-            msg = Message(
-                subject=f"New Inquiry from {name}",
-                recipients=[app.config['MAIL_USERNAME']] # Sends directly to your email inbox
-            )
-            
-            msg.body = f"""
-You have received a new inquiry from your website form.
+                # Build and send the email
+                msg = Message(
+                    subject=f"New Inquiry from {name}",
+                    recipients=[app.config['MAIL_USERNAME']]
+                )
+                msg.body = f"Name: {name}\nEmail: {email}\n\nMessage:\n{message_content}"
+                
+                mail.send(msg)
+                return jsonify({"success": True, "message": "Inquiry sent successfully!"}), 200
 
---------------------------------------------------
-Name:    {name}
-Email:   {email}
---------------------------------------------------
+            except Exception as e:
+                logger.error(f"Inquiry submission failed: {str(e)}")
+                return jsonify({"success": False, "message": "Server error. Could not send email."}), 500
 
-Message:
-{message_content}
-
---------------------------------------------------
-"""
-            # Send the email using your global mail instance
-            mail.send(msg)
-            return jsonify({"success": True, "message": "Inquiry sent successfully!"}), 200
-
-        except Exception as e:
-            logger.error(f"Inquiry submission failed: {str(e)}")
-            return jsonify({"success": False, "message": "Server error. Could not send email."}), 500
-        
+        # If it's a GET request (user just clicking the link), show the page!
+        return render_template('enquiry.html')
 
 
     with app.app_context():
@@ -1065,7 +1055,8 @@ Message:
 
 if __name__ == '__main__':
     app = create_app()
-    socketio.run(app, host="0.0.0.0", port=5000, debug=True)
     scheduler = BackgroundScheduler(job_defaults={'coalesce': True, 'misfire_grace_time': 60})
     scheduler.add_job(func=send_reminders,trigger='interval', minutes=1, args=[app])
     scheduler.start()
+
+    socketio.run(app, host="0.0.0.0", port=5000, debug=True)
