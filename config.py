@@ -12,4 +12,4 @@ class Config:
     MAIL_PASSWORD = config("MAIL_PASSWORD")
     MAIL_DEFAULT_SENDER_NAME = config("MAIL_DEFAULT_SENDER_NAME")
     MAIL_DEFAULT_SENDER = f"{MAIL_DEFAULT_SENDER_NAME} <{MAIL_USERNAME}>"
-    CHAT_ROOMS = ["General", "Zero to Knowing"]
+  

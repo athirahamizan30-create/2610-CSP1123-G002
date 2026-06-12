@@ -111,18 +111,19 @@ class JobDate(db.Model):
     job_id = db.Column(db.Integer, db.ForeignKey('new_job.id'))
     date_type = db.Column(db.String(50))
     date_value = db.Column(db.DateTime)
-
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Reminder(db.Model):
     __tablename__ = 'reminders'
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    job_id = db.Column(db.Integer, db.ForeignKey('new_job.id', ondelete='CASCADE'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    job_id = db.Column(db.Integer, db.ForeignKey('new_job.id'))
+
     reminder_date = db.Column(db.DateTime, nullable=False)
+
+    reminder_type = db.Column(db.String(50))
     message = db.Column(db.String(255))
-    is_done = db.Column(db.Boolean, default=False)
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -185,31 +186,70 @@ class ChatRoom(db.Model):
         db.DateTime,
         default=datetime.utcnow
     )
-    
+
+class Notification(db.Model):
+    __tablename__ = 'notifications'
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    reminder_id = db.Column(
+        db.Integer,
+        db.ForeignKey('reminders.id'),
+        nullable=False
+    )
+
+    sent_at = db.Column(db.DateTime)
+
+    status = db.Column(
+        db.String(20),
+        default='pending'
+    )
+
+    email = db.Column(db.String(120))
+
+    error_message = db.Column(db.Text)
+
 def send_reminders(app):
     with app.app_context():
 
         MY = ZoneInfo("Asia/Kuala_Lumpur")
-        now = datetime.now()
+        now = datetime.now(MY)
 
         print("NOW:", now)
 
-        reminders = Reminder.query.filter(
-            Reminder.is_done == False,
-            Reminder.reminder_date <= now
-        ).all()
+        reminders = Reminder.query.filter(Reminder.reminder_date <= now).all()
         
         all_reminders = Reminder.query.all()
         for r in all_reminders:
-            print("DB:", r.reminder_date, "DONE:", r.is_done)
+            print("DB:", r.reminder_date)
 
         print("FOUND:", reminders)
 
         for reminder in reminders:
-            user = db.session.get(User, reminder.user_id)
 
-            local_time = reminder.reminder_date.astimezone(MY)
-            formatted_time = local_time.strftime("%d-%m-%Y %H:%M")
+            if reminder.reminder_type == "applied":
+                timing_text = "Your application has been submitted successfully."
+
+            elif reminder.reminder_type == "2_days_before":
+                timing_text = "This event is coming up in 2 days."
+
+            elif reminder.reminder_type == "1_hour_before":
+                timing_text = "This event starts in 1 hour."
+
+            else:
+                timing_text = "You have an upcoming event."
+
+            job_date = JobDate.query.filter_by(job_id=reminder.job_id).first()
+
+            already_sent = Notification.query.filter_by(
+                reminder_id=reminder.id,
+                status="sent"
+            ).first()
+
+            if already_sent:
+                continue
+
+            user = db.session.get(User, reminder.user_id)
 
             msg = Message(
                 subject='Reminder Notification',
@@ -217,23 +257,44 @@ def send_reminders(app):
                 recipients=[user.email]
             )
 
-            msg.body = f"""
-Hello {user.username},
+            if reminder.reminder_type == "applied":
 
-Reminder:
-{reminder.message}
+                msg.body = f"""
+            Hello {user.username},
 
-Date: {formatted_time}
-"""
+            {timing_text}
+
+            {reminder.message}
+            """
+
+            else:
+
+                msg.body = f"""
+            Hello {user.username},
+
+            {timing_text}
+
+            {reminder.message}
+
+            Event Date:
+            {job_date.date_value.strftime('%d %b %Y %I:%M %p')}
+            """
             print("TRY SEND TO:", user.email)
 
-            try:
-                mail.send(msg)
-                reminder.is_done = True
-                db.session.commit()
-            except Exception as e:
-                db.session.rollback()
-                print("EMAIL FAILED:", e)
+            mail.send(msg)
+            notification = Notification(
+                reminder_id=reminder.id,
+                sent_at=datetime.now(),
+                status="sent",
+                email=user.email
+            )
+
+            db.session.add(notification)
+
+            if reminder.reminder_type == "applied":
+                db.session.delete(reminder)
+
+            db.session.commit()
 
 def create_app():
 
@@ -290,7 +351,6 @@ def create_app():
 
         query = NewJob.query.filter_by(user_id=current_user.id)
 
-        # SEARCH
         if search:
             query = query.filter(
                 or_(
@@ -301,22 +361,19 @@ def create_app():
                 )
             )
 
-        # STATUS FILTER
         if status:
             query = query.filter(NewJob.job_status == status)
 
         jobs = query.all()
 
-        # Split AFTER filtering
         full_time = [job for job in jobs if job.job_type == "Full-Time"]
         part_time = [job for job in jobs if job.job_type == "Part-Time"]
         intern = [job for job in jobs if job.job_type == "Intern/Trainee"]
 
-        # FIX: build dates from FILTERED jobs
-        job_dates = {}
+        job_date = {}
 
         for job in jobs:
-            job_dates[job.id] = [
+            job_date[job.id] = [
                 {
                     "date_type": d.date_type,
                     "date_value": d.date_value.strftime("%Y-%m-%dT%H:%M")
@@ -332,8 +389,9 @@ def create_app():
             full_time=full_time,
             part_time=part_time,
             intern=intern,
-            job_dates=job_dates,
+            job_dates=job_date,
             image_file=profile_image,
+            job_dates=job_date
         )
     
     @app.route('/register', methods=["GET", "POST"])
@@ -431,8 +489,6 @@ def create_app():
         db.session.add(job)
         db.session.commit()
 
-        
-
         date_types = request.form.getlist('date_type[]')
         date_values = request.form.getlist('date_value[]')
 
@@ -441,19 +497,45 @@ def create_app():
                 event_time = datetime.strptime(dvalue, "%Y-%m-%dT%H:%M")
 
                 job_date = JobDate(
+                    user_id=current_user.id,
                     job_id=job.id,
                     date_type=dtype,
-                    date_value=event_time.date()
+                    date_value=event_time
                 )
                 db.session.add(job_date)
 
-                reminder = Reminder(
-                    user_id=current_user.id,
-                    job_id=job.id,
-                    reminder_date=event_time - timedelta(hours=1),
-                    message = f"{dtype.title()} – {job.job_position} at {job.company_name}"
-                )
-                db.session.add(reminder)
+                if dtype.lower() == "applied":
+
+                    reminder = Reminder(
+                        user_id=current_user.id,
+                        job_id=job.id,
+                        reminder_date=datetime.now(),
+                        reminder_type="applied",
+                        message=f"You have applied for {job.job_position} at {job.company_name}"
+                    )
+
+                    db.session.add(reminder)
+
+                else:
+
+                    reminder_2days = Reminder(
+                        user_id=current_user.id,
+                        job_id=job.id,
+                        reminder_date=event_time - timedelta(days=2),
+                        reminder_type="2_days_before",
+                        message=f"{dtype.title()} - {job.job_position} at {job.company_name}"
+                    )
+
+                    reminder_1hour = Reminder(
+                        user_id=current_user.id,
+                        job_id=job.id,
+                        reminder_date=event_time - timedelta(hours=1),
+                        reminder_type="1_hour_before",
+                        message=f"{dtype.title()} - {job.job_position} at {job.company_name}"
+                    )
+
+                    db.session.add(reminder_2days)
+                    db.session.add(reminder_1hour)
 
         db.session.commit()
 
@@ -581,18 +663,42 @@ def create_app():
                     job_id=id,
                     user_id=current_user.id,
                     date_type=t,
-                    date_value=datetime.fromisoformat(v)
+                    date_value=parsed_date
                 )
                 db.session.add(new_date)
 
-                reminder = Reminder(
-                    user_id=current_user.id,
-                    job_id=id,
-                    reminder_date=parsed_date - timedelta(hours=1),
-                    message=f"{t.title()} - {job.job_position} at {job.company_name}"
-                )
+                if t.lower() == "applied":
 
-                db.session.add(reminder)
+                    reminder = Reminder(
+                        user_id=current_user.id,
+                        job_id=job.id,
+                        reminder_date=datetime.now(),
+                        reminder_type="applied",
+                        message=f"You have applied for {job.job_position} at {job.company_name}"
+                    )
+
+                    db.session.add(reminder)
+
+                else:
+
+                    reminder_2days = Reminder(
+                        user_id=current_user.id,
+                        job_id=job.id,
+                        reminder_date=parsed_date - timedelta(days=2),
+                        reminder_type="2_days_before",
+                        message=f"{t.title()} - {job.job_position} at {job.company_name}"
+                    )
+
+                    reminder_1hour = Reminder(
+                        user_id=current_user.id,
+                        job_id=job.id,
+                        reminder_date=parsed_date - timedelta(hours=1),
+                        reminder_type="1_hour_before",
+                        message=f"{t.title()} - {job.job_position} at {job.company_name}"
+                    )
+
+                    db.session.add(reminder_2days)
+                    db.session.add(reminder_1hour)
 
         db.session.commit()
 
@@ -611,25 +717,37 @@ def create_app():
     @login_required
     def reminders():
 
-        reminders = Reminder.query.filter_by(
+        events = JobDate.query.filter_by(
             user_id=current_user.id
-        ).order_by(Reminder.reminder_date).all()
+        ).order_by(JobDate.date_value).all()
+
+        upcoming_events = []
+        past_events = []
 
         now = datetime.now()
 
-        upcoming_reminders = []
-        past_reminders = []
+        for event in events:
 
-        for reminder in reminders:
-            if reminder.reminder_date >= now:
-                upcoming_reminders.append(reminder)
+            if event.date_value >= now:
+                upcoming_events.append(event)
             else:
-                past_reminders.append(reminder)
+                past_events.append(event)
+
+            job = db.session.get(NewJob, event.job_id)
+
+            if job:
+                event.title = (
+                    f"{event.date_type} - "
+                    f"{job.job_position} at "
+                    f"{job.company_name}"
+                )
+            else:
+                event.title = event.date_type
 
         return render_template(
             "reminders.html",
-            upcoming_reminders=upcoming_reminders,
-            past_reminders=past_reminders
+            upcoming_events=upcoming_events,
+            past_events=past_events
         )
 
     @app.route('/file_upload', methods=["POST"])
@@ -871,6 +989,30 @@ def create_app():
 
                 db.session.add(new_message)
                 db.session.commit()
+
+               
+                receiver = User.query.filter_by(username=target_user).first()
+
+                is_online = any(user_data["username"] == target_user for user_data in active_users.values())
+
+                if receiver and not is_online:
+                    msg = Message( subject="You have a new private message", recipients=[receiver.email])
+                    msg.body = f"""
+                Hello {receiver.username},
+                You have received a new private message from {username}.
+
+                Message:
+                "{message}"
+
+                Log in to CareerTrack to reply.
+
+                Regards,
+                CareerTrack
+                """
+                    try:
+                        mail.send(msg)
+                    except Exception as e:
+                        print("Email failed:", e)
 
                 emit('message', {'msg': message,'username': username,'room': private_room,'timestamp': timestamp,'private': True}, room=private_room)
 

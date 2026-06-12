@@ -7,6 +7,8 @@
         Document Organiser
     </title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styleDocument.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='edit_job.css')}}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css')}}">
 </head>
 
 <body>
@@ -55,7 +57,7 @@
             {% endfor %}
         </div>
     </div>
-
+    
 {% include 'job.html' %}
 {% endblock %}  
 </body>
