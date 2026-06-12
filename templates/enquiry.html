@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Enquiry Form{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='styleEnquiry.css') }}">
+
+<div class="enquiry-container">
+    <div class="enquiry-card">
+        <h3>Submit an Enquiry</h3>
+        <p>Fill out the fields below to reach our support team directly via email.</p>
+        
+        <form id="enquiryForm">
+            <div class="form-group">
+                <input type="text" id="nameInput" placeholder="Enter name" required autocomplete="off"/>
+            </div>
+            <div class="form-group">
+                <input type="email" id="emailInput" placeholder="Enter email" required autocomplete="off"/>
+            </div>
+            <div class="form-group">
+                <textarea id="messageInput" placeholder="Enter message" rows="5" required></textarea>
+            </div>
+            <button type="submit" class="submit-btn">Send Enquiry</button>
+        </form>
+    </div>
+</div>
+
+<script>
+document.getElementById('enquiryForm').addEventListener('submit', async function(event) {
+    event.preventDefault(); // Stops the page from breaking/reloading
+
+    const nameVal = document.getElementById('nameInput').value;
+    const emailVal = document.getElementById('emailInput').value;
+    const messageVal = document.getElementById('messageInput').value;
+
+    try {
+        // Send the data cleanly to your Flask backend endpoint
+        const response = await fetch('/enquiry', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                name: nameVal,
+                email: emailVal,
+                message: messageVal
+            })
+        });
+
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            alert(result.message);
+            document.getElementById('enquiryForm').reset(); // Clears form fields
+        } else {
+            alert("Error: " + (result.message || "Something went wrong"));
+        }
+    } catch (error) {
+        console.error("Transmission failed:", error);
+        alert("Failed to communicate with the application server.");
+    }
+});
+</script>
+
+{% include "job.html" %}
+{% endblock %}
