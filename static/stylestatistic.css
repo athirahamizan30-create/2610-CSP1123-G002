@@ -183,18 +183,15 @@ h1 {
 }
 
 .filters {
-    display: flex !important;
+    display: flex;
     flex-direction: row;
     gap: 15px;
     align-items: center;
-    background: beige;
+    background-color: transparent;
     padding: 12px;
     border-radius: 12px;
     margin-bottom: 20px;
-    background-color: transparent;
-    width: max-content;         
-    position: relative;        
-    left: -130px;
+    margin-left: 20px; 
 }
 
 .filter-group{
@@ -208,6 +205,7 @@ h1 {
     border: 1px solid #ddd;
     outline: none;
     min-width: 180px;
+    background-color: white;
 }
 
 .filter-group input:focus,

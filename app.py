@@ -678,21 +678,14 @@ def create_app():
         date_range = request.args.get('date_range', '').strip()
 
         cards_query = db.session.query(NewJob.job_status, func.count(NewJob.id)).filter(NewJob.user_id == current_user.id)
-
         chart_query = db.session.query(NewJob.job_status, func.count(NewJob.id)).filter(NewJob.user_id == current_user.id)
 
         if date_range in ['7', '30']:
             days_to_subtract = int(date_range)
-        
             date_threshold = datetime.now() - timedelta(days=days_to_subtract)
         
-            valid_job_ids = db.session.query(JobDate.job_id).filter(JobDate.date_value >= date_threshold).filter(JobDate.user_id == current_user.id).subquery()
-
-            cards_query = cards_query.filter(NewJob.id.in_(valid_job_ids))
-            chart_query = chart_query.filter(NewJob.id.in_(valid_job_ids))
-        
-        cards_query = cards_query.filter(NewJob.id.in_(valid_job_ids))
-        chart_query = chart_query.filter(NewJob.id.in_(valid_job_ids))
+            cards_query = cards_query.filter(NewJob.created_at >= date_threshold)
+            chart_query = chart_query.filter(NewJob.created_at >= date_threshold)
 
         all_results = cards_query.group_by(NewJob.job_status).all()
         stats_dict = {status: count for status, count in all_results}
@@ -700,13 +693,13 @@ def create_app():
 
         if selected_status:
             chart_query = chart_query.filter(NewJob.job_status == selected_status)
-        
+    
         chart_results = chart_query.group_by(NewJob.job_status).all()
 
         return render_template('statistic.html', 
-           status_data=chart_results,
-           stats=stats_dict,          
-           total=total_count)
+            status_data=chart_results,
+            stats=stats_dict,          
+            total=total_count)
         
     def save_picture(form_picture):
         random_hex = secrets.token_hex(8)
