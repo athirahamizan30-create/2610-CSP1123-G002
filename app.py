@@ -519,6 +519,9 @@ def create_app():
                     message=f"{dtype.title()} - {job.job_position} at {job.company_name}"
                 )
                 
+                print("2 DAYS TYPE:", reminder_2days.reminder_type)
+                print("1 HOUR TYPE:", reminder_1hour.reminder_type)
+
                 db.session.add(reminder_2days)
                 db.session.add(reminder_1hour)
 
@@ -654,16 +657,18 @@ def create_app():
 
                 reminder_2days = Reminder(
                     user_id=current_user.id,
-                    job_id=id,
-                    reminder_date=parsed_date - timedelta(days=2),
-                    message=f"{t.title()} - {job.job_position} at {job.company_name} (in 2 days)"
+                    job_id=job.id,
+                    reminder_date=event_time - timedelta(days=2),
+                    reminder_type="2_days_before",
+                    message=f"{dtype.title()} - {job.job_position} at {job.company_name}"
                 )
 
                 reminder_1hour = Reminder(
                     user_id=current_user.id,
-                    job_id=id,
-                    reminder_date=parsed_date - timedelta(hours=1),
-                    message=f"{t.title()} - {job.job_position} at {job.company_name} (in 1 hour)"
+                    job_id=job.id,
+                    reminder_date=event_time - timedelta(hours=1),
+                    reminder_type="1_hour_before",
+                    message=f"{dtype.title()} - {job.job_position} at {job.company_name}"
                 )
 
                 db.session.add(reminder_2days)
@@ -702,7 +707,7 @@ def create_app():
             else:
                 past_events.append(event)
 
-            job = NewJob.query.get(event.job_id)
+            job = db.session.get(NewJob, event.job_id)
 
             if job:
                 event.title = (
