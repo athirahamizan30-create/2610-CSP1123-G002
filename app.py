@@ -333,7 +333,7 @@ def create_app():
             part_time=part_time,
             intern=intern,
             job_dates=job_dates,
-            image_file=profile_image
+            image_file=profile_image,
         )
     
     @app.route('/register', methods=["GET", "POST"])

@@ -66,25 +66,25 @@
         
         <div class="hero">
         <nav>         
-            <img src="{{ image_file }}" class="user-pic" onclick="toggleMenu()">
+            <img src="{{ image_file }}" class="user-pic" id="profile-icon" onclick="toggleMenu()">
 
             <div class="sub-menu-wrap" id="subMenu">
                 <div class="sub-menu">
                     <div class="user-info">
-                        <img src="images/profile.JPG">
-                        <h2>Syaira Hani</h2>
+                        <img src="{{ image_file }}">
+                        <h2>{{ current_user.full_name }}</h2>
                     </div>
                     <hr>
 
-                    <a href="#" class="sub-menu-link">
-                        <img src="images/profile.JPG">
+                    <a href="/account" class="sub-menu-link">
+                        <i class='bxf bx-user'></i>
                         <p>Edit Profile</p>
                         <span>></span>
                     </a>
 
-                    <a href="#" class="sub-menu-link">
-                        <img src="images/profile.JPG">
-                        <p>Help</p>
+                    <a href="/" class="sub-menu-link">
+                        <i class="bxf bx-arrow-out-right-square-half"></i>
+                        <p>Logout</p>
                         <span>></span>
                     </a>                    
 
@@ -479,10 +479,18 @@
 
     <script>
     let subMenu = document.getElementById("subMenu")
+    let menuBtn = document.getElementById("profile-icon");
 
     function toggleMenu(){
         subMenu.classList.toggle("open-menu")
     }
+    document.addEventListener("click", function(event) {
+        if (subMenu.classList.contains("open-menu")) {
+            if (!subMenu.contains(event.target) && !menuBtn.contains(event.target)) {
+            subMenu.classList.remove("open-menu");
+        }
+        }
+    });
     </script>
 
 </body>
