@@ -1,7 +1,7 @@
 :root {
     --primary: #2c3e50;
     --secondary: #34495e;
-    --accent: #3498db;
+    --accent: #8f3c3c;
     --light: #ecf0f1;
     --success: #2ecc71;
     --warning: #f1c40f;
@@ -15,27 +15,20 @@ body {
     margin: 0; 
     padding: 0; 
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f5f6fa;
+    background-color: #F1E2D1;
     color: var(--text-dark);
 }
 
-h2 {
-    color: var(--primary);
-    padding: 20px;
-    margin: 0;
-    background: white;
-    box-shadow: var(--shadow);
-}
-
-.container { 
+.chat-container { 
     display: flex; 
     gap: 20px; 
     height: calc(100vh - 85px);
     padding: 20px;
 }
 
-.sidebar { 
+.chat-sidebar { 
     width: 250px;
+    flex-shrink: 0;
     background: white;
     border-radius: 10px;
     box-shadow: var(--shadow);
@@ -63,7 +56,7 @@ h2 {
 }
 
 .room-item:hover, .user-item:hover {
-    background: var(--light);
+    background: #cd6161;
     transform: translateX(5px);
 }
 
@@ -101,6 +94,7 @@ h2 {
 
 #view-profile-btn {
     margin-left: auto;
+    background-color: #8f3c3c;
 }
 
 #chat-title {
@@ -121,6 +115,8 @@ h2 {
     max-width: 80%;
     position: relative;
     line-height: 1.4;
+    word-wrap: break-word;       
+    overflow-wrap: break-word;   
 }
 
 .message.own { 
@@ -186,7 +182,7 @@ button {
 }
 
 button:hover {
-    background: #2980b9;
+    background: #cd6161;
     transform: translateY(-1px);
 }
 
@@ -224,12 +220,12 @@ button:active {
 
 /* Responsive Design */
 @media (max-width: 768px) {
-    .container {
+    .chat-container {
         flex-direction: column;
         height: auto;
     }
     
-    .sidebar {
+    .chat-sidebar {
         width: 100%;
     }
     
@@ -292,4 +288,17 @@ button:active {
     cursor: pointer;
 
     font-size: 28px;
+}
+
+.sender {
+    font-size: 15px;
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.time {
+    font-size: 11px;
+    opacity: 0.7;
+    text-align: right;
+    margin-top: 4px;
 }

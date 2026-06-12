@@ -866,7 +866,6 @@ def create_app():
                     msg = Message( subject="You have a new private message", recipients=[receiver.email])
                     msg.body = f"""
                 Hello {receiver.username},
-
                 You have received a new private message from {username}.
 
                 Message:
