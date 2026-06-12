@@ -1,5 +1,6 @@
-<!DOCTYPE html>
-<html>
+{% extends "base.html" %}
+{% block content %}
+
 <head>
     <title>
         chat
@@ -8,12 +9,14 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styleChat.css') }}">
 </head>
 
-<body>
 
-<h2>Welcome, <span id="username">{{username}}</span></h2>
-<div class="container">
+<script>
+    const username = "{{username}}";
+</script>
 
-    <div class="sidebar">
+<div class="chat-container">
+
+    <div class="chat-sidebar">
         <div class="room-list">
 
     <h3>Rooms</h3>
@@ -121,11 +124,6 @@ function showRoomForm() {
         </p>
 
         <p>
-            <strong>Phone:</strong>
-            <span id="popup-phone"></span>
-        </p>
-
-        <p>
             <strong>About Me:</strong>
             <span id="popup-about"></span>
         </p>
@@ -134,8 +132,10 @@ function showRoomForm() {
 
 </div>
 
-</body>
-</html>
+
+{% endblock %}
+
+
 
 
 

@@ -974,6 +974,30 @@ def create_app():
                 db.session.add(new_message)
                 db.session.commit()
 
+               
+                receiver = User.query.filter_by(username=target_user).first()
+
+                is_online = any(user_data["username"] == target_user for user_data in active_users.values())
+
+                if receiver and not is_online:
+                    msg = Message( subject="You have a new private message", recipients=[receiver.email])
+                    msg.body = f"""
+                Hello {receiver.username},
+                You have received a new private message from {username}.
+
+                Message:
+                "{message}"
+
+                Log in to CareerTrack to reply.
+
+                Regards,
+                CareerTrack
+                """
+                    try:
+                        mail.send(msg)
+                    except Exception as e:
+                        print("Email failed:", e)
+
                 emit('message', {'msg': message,'username': username,'room': private_room,'timestamp': timestamp,'private': True}, room=private_room)
 
             else:
