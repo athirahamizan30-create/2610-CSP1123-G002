@@ -250,7 +250,7 @@ def send_reminders(app):
             if already_sent:
                 continue
 
-            user = User.query.get(reminder.user_id)
+            user = db.session.get(User, reminder.user_id)
 
             msg = Message(
                 subject='Reminder Notification',
@@ -651,24 +651,24 @@ def create_app():
                     job_id=id,
                     user_id=current_user.id,
                     date_type=t,
-                    date_value=datetime.fromisoformat(v)
+                    date_value=parsed_date
                 )
                 db.session.add(new_date)
 
                 reminder_2days = Reminder(
                     user_id=current_user.id,
                     job_id=job.id,
-                    reminder_date=event_time - timedelta(days=2),
+                    reminder_date=parsed_date - timedelta(days=2),
                     reminder_type="2_days_before",
-                    message=f"{dtype.title()} - {job.job_position} at {job.company_name}"
+                    message=f"{t.title()} - {job.job_position} at {job.company_name}"
                 )
 
                 reminder_1hour = Reminder(
                     user_id=current_user.id,
                     job_id=job.id,
-                    reminder_date=event_time - timedelta(hours=1),
+                    reminder_date=parsed_date - timedelta(hours=1),
                     reminder_type="1_hour_before",
-                    message=f"{dtype.title()} - {job.job_position} at {job.company_name}"
+                    message=f"{t.title()} - {job.job_position} at {job.company_name}"
                 )
 
                 db.session.add(reminder_2days)
