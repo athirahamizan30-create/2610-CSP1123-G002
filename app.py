@@ -115,7 +115,6 @@ class JobDate(db.Model):
     job_id = db.Column(db.Integer, db.ForeignKey('new_job.id'))
     date_type = db.Column(db.String(50))
     date_value = db.Column(db.DateTime)
-
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Reminder(db.Model):
@@ -222,9 +221,9 @@ def send_reminders(app):
 
         print("NOW:", now)
 
-        reminders = Reminder.query.filter(
-            Reminder.reminder_date <= now
-        ).all()
+        job_date = JobDate.query.filter_by(job_id=reminder.job_id).first()
+
+        reminders = Reminder.query.filter(Reminder.reminder_date <= now).all()
         
         all_reminders = Reminder.query.all()
         for r in all_reminders:
@@ -257,7 +256,7 @@ Reminder:
 {reminder.message}
 
 Date: 
-{reminder.reminder_date.strftime('%d %b %Y %I:%M %p')}
+{job_date.date_value.strftime('%d %b %Y %I:%M %p')}
 """
             print("TRY SEND TO:", user.email)
 
@@ -364,10 +363,10 @@ def create_app():
         part_time = [job for job in jobs if job.job_type == "Part-Time"]
         intern = [job for job in jobs if job.job_type == "Intern/Trainee"]
 
-        job_dates = {}
+        job_date = {}
 
         for job in jobs:
-            job_dates[job.id] = [
+            job_date[job.id] = [
                 {
                     "date_type": d.date_type,
                     "date_value": d.date_value.strftime("%Y-%m-%dT%H:%M")
@@ -381,7 +380,7 @@ def create_app():
             full_time=full_time,
             part_time=part_time,
             intern=intern,
-            job_dates=job_dates
+            job_dates=job_date
         )
     
     @app.route('/register', methods=["GET", "POST"])
