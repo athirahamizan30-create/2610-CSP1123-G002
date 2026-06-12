@@ -1,9 +1,5 @@
 from flask import Flask, render_template, url_for, request, redirect, flash, session, jsonify
-import re
-import uuid
-import os
-import secrets
-import logging
+import re, uuid, os, secrets, logging
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -385,13 +381,16 @@ def create_app():
                 for d in job.dates
             ]
 
+        profile_image = url_for('static', filename='uploads/profile_pics/' + current_user.image_file)
+
         return render_template(
             "dashboard.html",
             active_page="dashboard",
             full_time=full_time,
             part_time=part_time,
             intern=intern,
-            job_dates=job_date
+            job_dates=job_date,
+            image_file=profile_image,
         )
     
     @app.route('/register', methods=["GET", "POST"])
@@ -728,7 +727,7 @@ def create_app():
 
         for event in events:
 
-            if event.date_value >= now:
+            if event.date_value >= now.date():
                 upcoming_events.append(event)
             else:
                 past_events.append(event)
@@ -792,16 +791,32 @@ def create_app():
 
     @app.route('/statistic')
     def statistic():
-        results = db.session.query(NewJob.job_status, func.count(NewJob.job_status)).filter(NewJob.user_id == current_user.id).group_by(NewJob.job_status).all()
+        selected_status = request.args.get('status', '').strip()
+        date_range = request.args.get('date_range', '').strip()
 
-        stats_dict = {status: count for status, count in results}
-    
+        cards_query = db.session.query(NewJob.job_status, func.count(NewJob.id)).filter(NewJob.user_id == current_user.id)
+        chart_query = db.session.query(NewJob.job_status, func.count(NewJob.id)).filter(NewJob.user_id == current_user.id)
+
+        if date_range in ['7', '30']:
+            days_to_subtract = int(date_range)
+            date_threshold = datetime.now() - timedelta(days=days_to_subtract)
+        
+            cards_query = cards_query.filter(NewJob.created_at >= date_threshold)
+            chart_query = chart_query.filter(NewJob.created_at >= date_threshold)
+
+        all_results = cards_query.group_by(NewJob.job_status).all()
+        stats_dict = {status: count for status, count in all_results}
         total_count = sum(stats_dict.values())
 
+        if selected_status:
+            chart_query = chart_query.filter(NewJob.job_status == selected_status)
+    
+        chart_results = chart_query.group_by(NewJob.job_status).all()
+
         return render_template('statistic.html', 
-                           status_data=results, 
-                           stats=stats_dict, 
-                           total=total_count)
+            status_data=chart_results,
+            stats=stats_dict,          
+            total=total_count)
         
     def save_picture(form_picture):
         random_hex = secrets.token_hex(8)
@@ -1140,6 +1155,40 @@ def create_app():
             "image":
                 image_file
         })
+    
+    @app.route('/enquiry', methods=['GET', 'POST'])
+    def enquiry():
+        if request.method == 'POST':
+            try:
+                # Read data sent from the JavaScript fetch request
+                data = request.get_json()
+                if not data:
+                    return jsonify({"success": False, "message": "No data provided"}), 400
+
+                name = data.get('name')
+                email = data.get('email')
+                message_content = data.get('message')
+
+                if not name or not email or not message_content:
+                    return jsonify({"success": False, "message": "All fields are required."}), 400
+
+                # Build and send the email
+                msg = Message(
+                    subject=f"New Inquiry from {name}",
+                    recipients=[app.config['MAIL_USERNAME']]
+                )
+                msg.body = f"Name: {name}\nEmail: {email}\n\nMessage:\n{message_content}"
+                
+                mail.send(msg)
+                return jsonify({"success": True, "message": "Inquiry sent successfully!"}), 200
+
+            except Exception as e:
+                logger.error(f"Inquiry submission failed: {str(e)}")
+                return jsonify({"success": False, "message": "Server error. Could not send email."}), 500
+
+        # If it's a GET request (user just clicking the link), show the page!
+        return render_template('enquiry.html')
+
 
     with app.app_context():
         db.create_all()
@@ -1150,4 +1199,5 @@ if __name__ == '__main__':
     scheduler = BackgroundScheduler(job_defaults={'coalesce': True, 'misfire_grace_time': 60})
     scheduler.add_job(func=send_reminders,trigger='interval', minutes=1, args=[app])
     scheduler.start()
+
     socketio.run(app, host="0.0.0.0", port=5000, debug=True)
