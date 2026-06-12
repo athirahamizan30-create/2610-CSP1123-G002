@@ -391,7 +391,6 @@ def create_app():
             intern=intern,
             job_dates=job_date,
             image_file=profile_image,
-            job_dates=job_date
         )
     
     @app.route('/register', methods=["GET", "POST"])
