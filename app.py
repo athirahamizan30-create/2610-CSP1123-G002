@@ -1014,6 +1014,51 @@ def create_app():
             "image":
                 image_file
         })
+    
+    @app.route('/api/inquiry', methods=['POST'])
+    @login_required
+    def handle_inquiry():
+        try:
+            data = request.get_json()
+            if not data:
+                return jsonify({"success": False, "message": "No data provided"}), 400
+
+            name = data.get('name')
+            email = data.get('email')
+            message_content = data.get('message')
+
+            # Validate that the user filled out everything
+            if not name or not email or not message_content:
+                return jsonify({"success": False, "message": "All fields are required."}), 400
+
+            # Create the email message using your existing Flask-Mail configuration
+            msg = Message(
+                subject=f"New Inquiry from {name}",
+                recipients=[app.config['MAIL_USERNAME']] # Sends directly to your email inbox
+            )
+            
+            msg.body = f"""
+You have received a new inquiry from your website form.
+
+--------------------------------------------------
+Name:    {name}
+Email:   {email}
+--------------------------------------------------
+
+Message:
+{message_content}
+
+--------------------------------------------------
+"""
+            # Send the email using your global mail instance
+            mail.send(msg)
+            return jsonify({"success": True, "message": "Inquiry sent successfully!"}), 200
+
+        except Exception as e:
+            logger.error(f"Inquiry submission failed: {str(e)}")
+            return jsonify({"success": False, "message": "Server error. Could not send email."}), 500
+        
+
 
     with app.app_context():
         db.create_all()

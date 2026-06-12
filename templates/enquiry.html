@@ -1,0 +1,36 @@
+<{% extends "base.html" %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='styleEnquiry.css') }}">
+{% endblock %}
+
+<title>{% block title %}Enquiry Form{% endblock %}</title>
+
+{% block content %}
+
+<form>
+    <input name="name" placeholder="Enter name"/>
+    <input name="email" placeholder="Enter email"/>
+    <input name="message" placeholder="Enter message"/>
+</form>
+
+<h1>test</h1>
+
+<script>
+fetch('/api/inquiry', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+        name: nameValue,
+        email: emailValue,
+        message: messageValue
+    })
+})
+</script>
+
+
+
+{{% include "job.html" %}}
+{% endblock %}

@@ -1,0 +1,46 @@
+*{
+    margin: 0;
+    box-sizing: border-box;
+    padding: 0;
+    transition-duration: 200ms ;
+}
+
+body{
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 24px;
+    justify-content: center;
+    align-items: center;
+}
+
+form{
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-width: 450px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+input, textarea {
+    width: 100%;
+    background: transparent;
+    padding: 8px;
+    outline: none;
+}
+
+input:focus, textarea:focus {
+    outline:none;
+    border-color: navy;
+}
+
+button{
+    margin-left: auto;
+    padding: 14px 28px;
+}
+
+input, textarea, button{
+    border-radius: 5px;
+    border: 1px solid skyblue
+}
