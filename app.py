@@ -227,15 +227,18 @@ def send_reminders(app):
         for r in all_reminders:
             print("DB:", r.reminder_date)
 
-        if reminder.reminder_type == "2_days_before":
-            timing_text = "This event is coming up in 2 days."
-
-        elif reminder.reminder_type == "1_hour_before":
-            timing_text = "This event starts in 1 hour."
-
         print("FOUND:", reminders)
 
         for reminder in reminders:
+
+            if reminder.reminder_type == "2_days_before":
+                timing_text = "This event is coming up in 2 days."
+
+            elif reminder.reminder_type == "1_hour_before":
+                timing_text = "This event starts in 1 hour."
+
+            else:
+                timing_text = "You have an upcoming event."
 
             job_date = JobDate.query.filter_by(job_id=reminder.job_id).first()
 
