@@ -215,27 +215,52 @@ body {
 }
 
 .popup-content button {
-    background: #4f46e5;
+    width: 100%;
+    padding: 12px;
+    background: #8f3c3c;
     color: white;
     border: none;
-    padding: 10px 14px;
     border-radius: 10px;
+    font-weight: bold;
     cursor: pointer;
-    font-weight: 500;
     transition: 0.2s;
 }
 
 .popup-content button:hover {
-    background: #3730a3;
+    background: #cd6161;
+    transform: translateY(-2px);
 }
 
 .popup-content button[type="button"] {
-    background: #e5e7eb;
-    color: black;
+    background: #8f3c3c;
+    width: 40px !important;
+    height: 40px !important;
+
+    min-width: 40px;
+    max-width: 40px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 !important;
+    flex: none !important;
 }
 
 .popup-content button[type="button"]:hover {
-    background: #d1d5db;
+    background: #cd6161;
+    width: 40px !important;
+    height: 40px !important;
+
+    min-width: 40px;
+    max-width: 40px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 !important;
+    flex: none !important;
 }
 
 .date-row {
