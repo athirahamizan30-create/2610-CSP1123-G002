@@ -684,16 +684,11 @@ def create_app():
         upcoming_events = []
         past_events = []
 
-        now = datetime.now().date()
+        now = datetime.now()
 
         for event in events:
 
-            event_date = event.date_value
-
-            if hasattr(event_date, "date"):
-                event_date = event_date.date()
-
-            if event_date >= now:
+            if event.date_value >= now:
                 upcoming_events.append(event)
             else:
                 past_events.append(event)
