@@ -12,7 +12,7 @@ body {
     height: 100%;
     background: #F1E2D1;
     transition: left 0.3s ease;
-    
+    z-index: 1000;
 }
 
 .sidebar a {
@@ -84,6 +84,7 @@ body {
     height: 100%;
     background: rgba(0,0,0,0.5);
     display: none;
+    z-index: 999;
 }
 
 #overlay.active {
@@ -229,3 +230,4 @@ header{
     transform: translateY(0);
     opacity: 1;
 }
+
