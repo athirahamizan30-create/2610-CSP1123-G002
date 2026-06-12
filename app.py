@@ -324,13 +324,16 @@ def create_app():
                 for d in job.dates
             ]
 
+        profile_image = url_for('static', filename='uploads/profile_pics/' + current_user.image_file)
+
         return render_template(
             "dashboard.html",
             active_page="dashboard",
             full_time=full_time,
             part_time=part_time,
             intern=intern,
-            job_dates=job_dates
+            job_dates=job_dates,
+            image_file=profile_image
         )
     
     @app.route('/register', methods=["GET", "POST"])

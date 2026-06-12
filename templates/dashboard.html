@@ -59,11 +59,40 @@
     </div>
 
     <header>
-    <div class="main">
-        <button class="menu-btn" onclick="toggleSidebar()">
-            <i class="bx bx-menu bx-sm" style="color: #333333;"></i>
-        </button>
-        </header>
+        <div class="main">
+            <button class="menu-btn" onclick="toggleSidebar()">
+                <i class="bx bx-menu bx-sm" style="color: #333333;"></i>
+            </button>
+        
+        <div class="hero">
+        <nav>         
+            <img src="{{ image_file }}" class="user-pic" onclick="toggleMenu()">
+
+            <div class="sub-menu-wrap" id="subMenu">
+                <div class="sub-menu">
+                    <div class="user-info">
+                        <img src="images/profile.JPG">
+                        <h2>Syaira Hani</h2>
+                    </div>
+                    <hr>
+
+                    <a href="#" class="sub-menu-link">
+                        <img src="images/profile.JPG">
+                        <p>Edit Profile</p>
+                        <span>></span>
+                    </a>
+
+                    <a href="#" class="sub-menu-link">
+                        <img src="images/profile.JPG">
+                        <p>Help</p>
+                        <span>></span>
+                    </a>                    
+
+                </div>
+            </div>
+        </nav>
+        </div>
+    </header>
 
         <h1>Job Application Dashboard</h1>
 
@@ -446,6 +475,14 @@
         button.parentElement.remove();
     }
 
+    </script>
+
+    <script>
+    let subMenu = document.getElementById("subMenu")
+
+    function toggleMenu(){
+        subMenu.classList.toggle("open-menu")
+    }
     </script>
 
 </body>
