@@ -1016,7 +1016,6 @@ def create_app():
         })
     
     @app.route('/api/inquiry', methods=['POST'])
-    @login_required
     def handle_inquiry():
         try:
             data = request.get_json()
@@ -1070,4 +1069,3 @@ if __name__ == '__main__':
     scheduler = BackgroundScheduler(job_defaults={'coalesce': True, 'misfire_grace_time': 60})
     scheduler.add_job(func=send_reminders,trigger='interval', minutes=1, args=[app])
     scheduler.start()
-    app.run(host="0.0.0.0", port=5000, debug=True)
