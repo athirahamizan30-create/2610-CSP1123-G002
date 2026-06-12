@@ -264,55 +264,41 @@ def send_reminders(app):
             if reminder.reminder_type == "applied":
 
                 msg.body = f"""
-        Hello {user.username},
+            Hello {user.username},
 
-        {timing_text}
+            {timing_text}
 
-        {reminder.message}
-        """
+            {reminder.message}
+            """
 
-        else:
+            else:
 
-            msg.body = f"""
-        Hello {user.username},
+                msg.body = f"""
+            Hello {user.username},
 
-        {timing_text}
+            {timing_text}
 
-        {reminder.message}
+            {reminder.message}
 
-        Event Date:
-        {job_date.date_value.strftime('%d %b %Y %I:%M %p')}
-        """
+            Event Date:
+            {job_date.date_value.strftime('%d %b %Y %I:%M %p')}
+            """
             print("TRY SEND TO:", user.email)
 
-            try:
-                mail.send(msg)
-                notification = Notification(
-                    reminder_id=reminder.id,
-                    sent_at=datetime.now(),
-                    status="sent",
-                    email=user.email
-                )
+            mail.send(msg)
+            notification = Notification(
+                reminder_id=reminder.id,
+                sent_at=datetime.now(),
+                status="sent",
+                email=user.email
+            )
 
-                db.session.add(notification)
-                db.session.commit()
+            db.session.add(notification)
 
-                print(f"EMAIL SENT -> {user.email}")
+            if reminder.reminder_type == "applied":
+                db.session.delete(reminder)
 
-            except Exception as e:
-                db.session.rollback()
-
-                notification = Notification(
-                    reminder_id=reminder.id,
-                    sent_at=datetime.now(),
-                    status="failed",
-                    email=user.email,
-                    error_message=str(e)
-                )
-
-                db.session.add(notification)
-                db.session.commit()
-                print("EMAIL FAILED:", e)
+            db.session.commit()
 
 def create_app():
 
