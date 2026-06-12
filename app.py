@@ -221,17 +221,23 @@ def send_reminders(app):
 
         print("NOW:", now)
 
-        job_date = JobDate.query.filter_by(job_id=reminder.job_id).first()
-
         reminders = Reminder.query.filter(Reminder.reminder_date <= now).all()
         
         all_reminders = Reminder.query.all()
         for r in all_reminders:
             print("DB:", r.reminder_date)
 
+        if reminder.reminder_type == "2_days_before":
+            timing_text = "This event is coming up in 2 days."
+
+        elif reminder.reminder_type == "1_hour_before":
+            timing_text = "This event starts in 1 hour."
+
         print("FOUND:", reminders)
 
         for reminder in reminders:
+
+            job_date = JobDate.query.filter_by(job_id=reminder.job_id).first()
 
             already_sent = Notification.query.filter_by(
                 reminder_id=reminder.id,
@@ -252,10 +258,11 @@ def send_reminders(app):
             msg.body = f"""
 Hello {user.username},
 
-Reminder:
+{timing_text}
+
 {reminder.message}
 
-Date: 
+Event Date:
 {job_date.date_value.strftime('%d %b %Y %I:%M %p')}
 """
             print("TRY SEND TO:", user.email)
