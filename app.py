@@ -126,7 +126,7 @@ class Reminder(db.Model):
 
     reminder_date = db.Column(db.DateTime, nullable=False)
 
-    reminder_type = db.Column(db.String(20))
+    reminder_type = db.Column(db.String(50))
     message = db.Column(db.String(255))
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -231,7 +231,10 @@ def send_reminders(app):
 
         for reminder in reminders:
 
-            if reminder.reminder_type == "2_days_before":
+            if reminder.reminder_type == "applied":
+                timing_text = "Your application has been submitted successfully."
+
+            elif reminder.reminder_type == "2_days_before":
                 timing_text = "This event is coming up in 2 days."
 
             elif reminder.reminder_type == "1_hour_before":
@@ -258,16 +261,28 @@ def send_reminders(app):
                 recipients=[user.email]
             )
 
+            if reminder.reminder_type == "applied":
+
+                msg.body = f"""
+        Hello {user.username},
+
+        {timing_text}
+
+        {reminder.message}
+        """
+
+        else:
+
             msg.body = f"""
-Hello {user.username},
+        Hello {user.username},
 
-{timing_text}
+        {timing_text}
 
-{reminder.message}
+        {reminder.message}
 
-Event Date:
-{job_date.date_value.strftime('%d %b %Y %I:%M %p')}
-"""
+        Event Date:
+        {job_date.date_value.strftime('%d %b %Y %I:%M %p')}
+        """
             print("TRY SEND TO:", user.email)
 
             try:
@@ -503,27 +518,38 @@ def create_app():
                 )
                 db.session.add(job_date)
 
-                reminder_2days = Reminder(
-                    user_id=current_user.id,
-                    job_id=job.id,
-                    reminder_date=event_time - timedelta(days=2),
-                    reminder_type="2_days_before",
-                    message=f"{dtype.title()} - {job.job_position} at {job.company_name}"
-                )
+                if dtype.lower() == "applied":
 
-                reminder_1hour = Reminder(
-                    user_id=current_user.id,
-                    job_id=job.id,
-                    reminder_date=event_time - timedelta(hours=1),
-                    reminder_type="1_hour_before",
-                    message=f"{dtype.title()} - {job.job_position} at {job.company_name}"
-                )
-                
-                print("2 DAYS TYPE:", reminder_2days.reminder_type)
-                print("1 HOUR TYPE:", reminder_1hour.reminder_type)
+                    reminder = Reminder(
+                        user_id=current_user.id,
+                        job_id=job.id,
+                        reminder_date=datetime.now(),
+                        reminder_type="applied",
+                        message=f"You have applied for {job.job_position} at {job.company_name}"
+                    )
 
-                db.session.add(reminder_2days)
-                db.session.add(reminder_1hour)
+                    db.session.add(reminder)
+
+                else:
+
+                    reminder_2days = Reminder(
+                        user_id=current_user.id,
+                        job_id=job.id,
+                        reminder_date=event_time - timedelta(days=2),
+                        reminder_type="2_days_before",
+                        message=f"{dtype.title()} - {job.job_position} at {job.company_name}"
+                    )
+
+                    reminder_1hour = Reminder(
+                        user_id=current_user.id,
+                        job_id=job.id,
+                        reminder_date=event_time - timedelta(hours=1),
+                        reminder_type="1_hour_before",
+                        message=f"{dtype.title()} - {job.job_position} at {job.company_name}"
+                    )
+
+                    db.session.add(reminder_2days)
+                    db.session.add(reminder_1hour)
 
         db.session.commit()
 
@@ -655,24 +681,38 @@ def create_app():
                 )
                 db.session.add(new_date)
 
-                reminder_2days = Reminder(
-                    user_id=current_user.id,
-                    job_id=job.id,
-                    reminder_date=parsed_date - timedelta(days=2),
-                    reminder_type="2_days_before",
-                    message=f"{t.title()} - {job.job_position} at {job.company_name}"
-                )
+                if t.lower() == "applied":
 
-                reminder_1hour = Reminder(
-                    user_id=current_user.id,
-                    job_id=job.id,
-                    reminder_date=parsed_date - timedelta(hours=1),
-                    reminder_type="1_hour_before",
-                    message=f"{t.title()} - {job.job_position} at {job.company_name}"
-                )
+                    reminder = Reminder(
+                        user_id=current_user.id,
+                        job_id=job.id,
+                        reminder_date=datetime.now(),
+                        reminder_type="applied",
+                        message=f"You have applied for {job.job_position} at {job.company_name}"
+                    )
 
-                db.session.add(reminder_2days)
-                db.session.add(reminder_1hour)
+                    db.session.add(reminder)
+
+                else:
+
+                    reminder_2days = Reminder(
+                        user_id=current_user.id,
+                        job_id=job.id,
+                        reminder_date=parsed_date - timedelta(days=2),
+                        reminder_type="2_days_before",
+                        message=f"{t.title()} - {job.job_position} at {job.company_name}"
+                    )
+
+                    reminder_1hour = Reminder(
+                        user_id=current_user.id,
+                        job_id=job.id,
+                        reminder_date=parsed_date - timedelta(hours=1),
+                        reminder_type="1_hour_before",
+                        message=f"{t.title()} - {job.job_position} at {job.company_name}"
+                    )
+
+                    db.session.add(reminder_2days)
+                    db.session.add(reminder_1hour)
 
         db.session.commit()
 
