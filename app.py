@@ -455,7 +455,6 @@ def create_app():
             else:
 
                 remember_me = request.form.get("remember") == "1"
-
                 login_user(user, remember=remember_me)
                 return redirect(url_for("dashboard"))
             
