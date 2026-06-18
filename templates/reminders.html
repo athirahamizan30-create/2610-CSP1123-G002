@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 <html>
+{% extends "base.html" %}
+{% block content %}
 <head>
     <title>Reminders</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='reminders.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='job.css') }}">
     <link href="https://cdn.boxicons.com/transformations.min.css" rel="stylesheet">
@@ -10,61 +13,6 @@
 </head>
 
 <body>
-    <div id="overlay" onclick="toggleSidebar()"></div>
-
-    <div class="sidebar" id="sidebar">
-        <h2>Menu</h2>
-
-        <a href="/dashboard" class="{% if active_page == 'dashboard' %}active{% endif %}">
-            <i class="bxf bx-home-circle"></i>
-            Dashboard
-        </a>
-
-        <a href="javascript:void(0);" onclick="openPopup()">
-            <i class="bxf bx-plus-square"></i>
-            New Application
-        </a>
-
-        <a href="/document">
-            <i class="bxf bx-folder"></i>
-            Documents
-        </a>
-
-        <a href="/reminders" class="{% if active_page == 'reminders' %}active{% endif %}">
-            <i class='bxf bx-bell'></i>
-            Reminders
-        </a>
-
-        <a href="/statistic" class="{% if active_page == 'statistic' %} active {% endif %}">
-            <i class='bxf bx-chart-bar-big-columns'></i>
-            Statistic
-        </a>
-
-        <a href="/account" class="{% if active_page == 'reminders' %}active{% endif %}">
-            <i class='bxf bx-user'></i>
-            Account profile
-        </a>
-        <a href="/chat">
-            <i class="bxf bx-discussion"></i>
-            chat
-        </a>
-
-        
-        <a href="/">
-            <i class="bxf bx-arrow-out-right-square-half"></i>
-            Log Out
-        </a>
-
-        
-    </div>
-
-    <div class="main">
-        <header>
-        <button class="menu-btn" onclick="toggleSidebar()">
-            <i class="bx bx-menu bx-sm"></i>
-        </button>
-        </header>
-
         <h1>Reminders</h1>
 
        <h2>Upcoming</h2>
@@ -100,65 +48,7 @@
         {% endfor %}
     </div>
 
-    {% include 'job.html' %}
-
-    <div id="ai-chatbot-wrapper">
-        <script type="module">
-            import Chatbot from "https://cdn.jsdelivr.net/npm/@denserai/embed-chat@1/dist/web.min.js";
-            Chatbot.init({
-            chatbotId: "chatbot_gcntvcndfh5ldda4vt4y4",
-            theme: {
-                button: {
-                    size: 'large',   
-                    bottom: 40,      
-                    right: 40,       
-                    color: '#abc17c' 
-                    },
-                }, 
-            });
-        </script>  
-    </div>
-
-    <script>
-    function toggleSidebar() {
-        document.getElementById("sidebar").classList.toggle("active");
-        document.getElementById("overlay").classList.toggle("active");
-    }
-    </script>
-
-    <script>
-    document.addEventListener("DOMContentLoaded", function () {
-
-        const popup = document.getElementById("popupForm");
-        const sidebar = document.getElementById("sidebar");
-        const overlay = document.getElementById("overlay");
-
-        window.openPopup = function () {
-            popup.classList.add("show");
-
-            if (sidebar) sidebar.classList.remove("active");
-            if (overlay) overlay.classList.remove("active");
-        }
-
-        window.closePopup = function () {
-            popup.classList.remove("show");
-            sidebar.classList.remove("active");
-            overlay.classList.remove("active");
-        }
-
-        popup.addEventListener("click", function (event) {
-            if (event.target === popup) {
-                closePopup();
-            }
-        });
-
-        window.toggleSidebar = function () {
-            sidebar.classList.toggle("active");
-            overlay.classList.toggle("active");
-        }
-
-    });
-    </script>
-
+{% include 'job.html' %}
+{% endblock %} 
 </body>
 </html>

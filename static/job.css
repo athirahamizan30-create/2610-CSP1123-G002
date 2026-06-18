@@ -27,8 +27,15 @@
     max-height: 80vh;
     overflow-y: auto;
     padding: 25px;
+    position: relative;
     border-radius: 16px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.popup-content h2 {
+    margin-bottom: 20px;
+    font-size: 22px;
+    text-align: center;
 }
 
 @keyframes popIn {
@@ -61,7 +68,6 @@
 }
 
 .popup-content button {
-    width: 100%;
     padding: 12px;
     background: #8f3c3c;
     color: white;
@@ -70,6 +76,13 @@
     font-weight: bold;
     cursor: pointer;
     transition: 0.2s;
+}
+
+.popup-content button[type="submit"] {
+    width: 100%;
+    height: 48px;
+    border-radius: 10px;
+    font-size: 14px;
 }
 
 .popup-content button:hover {
@@ -142,4 +155,17 @@
 .popup.show .popup-content {
     transform: translateY(0);
     opacity: 1;
+}
+
+.close {
+    position: absolute;
+    right: 15px;
+    top: 10px;
+    font-size: 22px;
+    cursor: pointer;
+    color: #666;
+}
+
+.close:hover {
+    color: black;
 }

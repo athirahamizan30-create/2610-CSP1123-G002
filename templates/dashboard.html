@@ -1,104 +1,18 @@
 <!DOCTYPE html>
 <html>
+{% extends "base.html" %}
+{% block content %}
 <head>
     <title>Job Application Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='edit_job.css')}}">
     <link href="https://cdn.boxicons.com/transformations.min.css" rel="stylesheet">
-    <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
     <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
+    <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
 </head>
 
 <body>
-    <div id="overlay" onclick="toggleSidebar()"></div>
-
-    <div class="sidebar" id="sidebar">
-        <h2>Menu</h2>
-
-        <a href="/dashboard" class="{% if active_page == 'dashboard' %}active{% endif %}">
-            <i class="bxf bx-home-circle"></i>
-            Dashboard
-        </a>
-
-        <a href="javascript:void(0);" onclick="openPopup()">
-            <i class="bxf bx-plus-square"></i>
-            New Application
-        </a>
-
-        <a href="/document">
-            <i class="bxf bx-folder"></i>
-            Documents
-        </a>
-
-        <a href="/reminders" class="{% if active_page == 'reminders' %}active{% endif %}">
-            <i class='bxf bx-bell'></i>
-            Reminders
-        </a>
-
-        <a href="/statistic" class="{% if active_page == 'statistic' %} active {% endif %}">
-            <i class='bxf bx-chart-bar-big-columns'></i>
-            Statistic
-        </a>
-
-        <a href="/account" class="{% if active_page == 'reminders' %}active{% endif %}">
-            <i class='bxf bx-user'></i>
-            Account profile
-        </a>
-
-        <a href="/chat">
-            <i class="bxf bx-discussion"></i>
-            Chatroom
-        </a>
-        
-        <a href="/">
-            <i class="bxf bx-arrow-out-right-square-half"></i>
-            Log Out
-        </a>
-    </div>
-
-    <header>
-        <div class="main">
-            <button class="menu-btn" onclick="toggleSidebar()">
-                <i class="bx bx-menu bx-sm" style="color: #333333;"></i>
-            </button>
-        
-        <div class="hero">
-        <nav>         
-            <img src="{{ image_file }}" class="user-pic" id="profile-icon" onclick="toggleMenu()">
-
-            <div class="sub-menu-wrap" id="subMenu">
-                <div class="sub-menu">
-                    <div class="user-info">
-                        <img src="{{ image_file }}">
-                        <h2>{{ current_user.full_name }}</h2>
-                    </div>
-                    <hr>
-
-                    <a href="/account" class="sub-menu-link">
-                        <i class='bxf bx-user'></i>
-                        <p>Edit Profile</p>
-                        <span>></span>
-                    </a>
-
-                    <a href="/enquiry" class="sub-menu-link">
-                        <i class='bxf bx-message-bubble-question-mark'></i>
-                        <p>Enquiry</p>
-                        <span>&gt;</span>
-                    </a>
-
-                    <a href="/" class="sub-menu-link">
-                        <i class="bxf bx-arrow-out-right-square-half"></i>
-                        <p>Logout</p>
-                        <span>></span>
-                    </a>                    
-
-                </div>
-            </div>
-        </nav>
-        </div>
-    </header>
-
         <h1>Job Application Dashboard</h1>
 
         <form method="GET" action="{{ url_for('dashboard') }}" class="filters">
@@ -328,24 +242,7 @@
     </div>
     </div>
 
-    {% include 'job.html' %}
-
-    <div id="ai-chatbot-wrapper">
-        <script type="module">
-            import Chatbot from "https://cdn.jsdelivr.net/npm/@denserai/embed-chat@1/dist/web.min.js";
-            Chatbot.init({
-            chatbotId: "chatbot_gcntvcndfh5ldda4vt4y4",
-            theme: {
-                button: {
-                    size: 'large',   
-                    bottom: 40,      
-                    right: 40,       
-                    color: '#abc17c' 
-                    },
-                }, 
-            });
-        </script>  
-    </div>
-
+{% include 'job.html' %}
+{% endblock %}
 </body>
 </html>

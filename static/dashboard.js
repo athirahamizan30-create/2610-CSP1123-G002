@@ -1,8 +1,3 @@
-function toggleSidebar() {
-    document.getElementById("sidebar").classList.toggle("active");
-    document.getElementById("overlay").classList.toggle("active");
-}
-
 function openTab(evt, tabName) {
     let contents = document.getElementsByClassName("tab-content");
     let buttons = document.getElementsByClassName("tab-btn");
@@ -44,12 +39,6 @@ document.addEventListener("DOMContentLoaded", function () {
             closePopup();
         }
     });
-
-    window.toggleSidebar = function () {
-        sidebar.classList.toggle("active");
-        overlay.classList.toggle("active");
-    }
-
 });
 
 
