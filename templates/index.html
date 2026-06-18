@@ -12,19 +12,30 @@
         <div class="form-container sign-up">
             <form action="{{ url_for('login') }}" method="post">
                 <h1>Login</h1>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="flash-message {{ category }}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
                 <div class="error">
                 {% if errors %}
-                <div>
-                    <ul>
-                        {% for e in errors %}
-                        <li>
-                            {{ e }} 
-                        </li>
-                        {% endfor %}           
-                    </ul>
-                </div>
+                    <div>
+                        <ul>
+                            {% for e in errors %}
+                            <li>{{ e }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
                 {% endif %}
                 </div>
+
+
                 <div class="form-group">
                 <label for="email">Email</label>
                 <input type="email" class="form-control" id="email" name="email" required>
@@ -34,6 +45,12 @@
                 <label for="password">Password</label>
                 <input type="password" class="form-control" id="password" name="password" required>
                 </div>
+
+                <div class="form-group remember-me">
+                <input type="checkbox" id="remember" name="remember" value="1">
+                <label for="remember">Remember Me</label>
+                </div>
+
                 <a href="/forgot_password">Forget Your Password?</a>
 
                 <button type="submit">Sign In</button>
