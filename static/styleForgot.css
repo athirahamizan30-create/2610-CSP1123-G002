@@ -6,6 +6,15 @@
     z-index: 2;
 }
 
+.forgot-password form > p {
+    margin-bottom: 20px;
+}
+
+.forgot-password label {
+    display: block;
+    margin-bottom: 8px;
+}
+
 /* Put toggle on LEFT side */
 .forgot-toggle {
     left: 0;

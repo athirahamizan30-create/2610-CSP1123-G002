@@ -1,27 +1,15 @@
 .main {
   background-color: #F1E2D1;
-  min-height: 100vh;
-  width: 100%;
-  padding: 40px 0;
 }
 
 body{
   background-color: rgb(227, 217, 207);
+  margin: 0;
+  margin-left: 0;
+  padding: 0;
 }
 
-.top-header 
-.main h1{
-  font-family:Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
-  color: rgb(0, 0, 0);
-  margin-left: 40px;
-  font-size: 45px
-}
 
-header{
-    width: 100%;
-    height: 80px;
-    background-color: #810B38;
-}
 
 .card-container {
   background-color: #DCC3AA;
@@ -107,6 +95,13 @@ legend {
 .form-control:focus {
   border-color: #007bff;
   box-shadow: 0 0 4px rgba(0,123,255,0.3);
+}
+
+.form-control-label {
+  font-weight: 600;
+  color: #810B38;
+  display: block;   /* ensures label is on its own line */
+  margin-bottom: 5px;
 }
 
 .btn-primary {
