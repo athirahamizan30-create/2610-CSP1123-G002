@@ -630,8 +630,9 @@ def create_app():
     @app.route('/document')
     @login_required
     def document():
-        docs = Document.query.order_by(Document.filename.asc()).all()
-        return render_template("document.html", docs=docs)  
+        docs = Document.query.filter_by(user_id=current_user.id).order_by(Document.filename.asc()).all()
+    
+        return render_template("document.html", docs=docs)
 
     @app.route('/edit_job/<int:id>', methods=['POST'])
     @login_required
