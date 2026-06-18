@@ -1,3 +1,9 @@
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
 body {
     margin: 0;
     font-family: Arial;
@@ -261,12 +267,14 @@ body {
    font-weight: 500;
    max-width: fit-content;
 }
-.user-info img{
-   width: 120px;
-   height: 120px;
-   border-radius:45%;
-   margin-right: 15px;
+.user-info img {
+    width: 65px;        
+    height: 65px;      
+    border-radius: 50%;  
+    object-fit: cover;  
+    display: block;     
 }
+
 .sub-menu hr{
    border: 0;
    height: 1px;
@@ -339,12 +347,13 @@ body {
 }
 
 .user-pic {
-    width: 50px;
-    height: 50px;
-    object-fit: cover;
-    border-radius: 50%;
+    width: 45px;          /* Clean, uniform size */
+    height: 45px;         /* Keeps it a 1:1 square ratio */
+    object-fit: cover;    /* Prevents the image from stretching/squishing */
+    border-radius: 50%;   /* Enforces a perfect circle shape */
     border: 2px solid #fff;
     cursor: pointer;
+
 }
 
 
@@ -380,13 +389,6 @@ body {
     font-size: 18px;
     font-weight: 600;
     color: #1c1717;
-}
-
-.user-info img {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    object-fit: cover;
 }
 
 .sub-menu hr {
