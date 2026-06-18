@@ -1,17 +1,14 @@
-/* Page Background */
 body {
     background-color: #f3e3d0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* Master Dual-Pane Card Setup */
 .main-card {
     border-radius: 30px;
     overflow: hidden; /* Ensures child backgrounds don't bleed past corners */
     background: #ffffff;
 }
 
-/* Form Customizations */
 .form-side {
     background-color: #ffffff;
 }
@@ -21,7 +18,6 @@ body {
     color: #333333;
 }
 
-/* Rounded, light-gray inputs matching image_95401f.png */
 .custom-input {
     background-color: #f0f0f0 !important;
     border: none !important;
@@ -34,7 +30,6 @@ body {
     background-color: #e8e8e8 !important;
 }
 
-/* Deep Burgundy/Wine Red Accents */
 .btn-custom {
     background-color: #8f3c3c;
     border: none;
@@ -59,14 +54,12 @@ body {
     text-decoration: none;
 }
 
-/* The elegant right side panel styling */
 .toggle-side {
     background-color: #8f3c3c;
     border-top-right-radius: 30px;
     border-bottom-right-radius: 30px;
 }
 
-/* Refined Errors styling inside the card container */
 .alert-danger {
     background-color: #fce4e4;
     border: none;
