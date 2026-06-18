@@ -182,15 +182,33 @@ h1 {
   background-color: #41be41;
 }
 
-.filter-section {
-  margin-bottom: 20px;
-  padding: 10px;
+.filters {
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+    align-items: center;
+    background-color: transparent;
+    padding: 12px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    margin-left: 20px; 
 }
 
-#time-range {
-  font-weight: bolder;
-  margin-right: 10px;
-  margin-left: 60px;
-  padding: 5px 10px; 
-  border-radius: 5px;
+.filter-group{
+  display: inline-block;
+}
+
+.filter-group input,
+.filter-group select {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    outline: none;
+    min-width: 180px;
+    background-color: white;
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+    border-color: #4a90e2;
 }
