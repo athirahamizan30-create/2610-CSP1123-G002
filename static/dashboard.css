@@ -233,6 +233,7 @@ body {
 
 .popup-content button[type="button"] {
     background: #8f3c3c;
+    color: white;
     width: 40px !important;
     height: 40px !important;
 
@@ -295,19 +296,6 @@ body {
 .popup.show .popup-content {
     transform: translateY(0);
     opacity: 1;
-}
-
-.reminder-card {
-    background: white;
-    width: 250px;
-    padding: 15px;
-    border-radius: 15px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    transition: 0.3s;
-}
-
-.reminder-card:hover {
-    transform: scale(1.05);
 }
 
 .filters {

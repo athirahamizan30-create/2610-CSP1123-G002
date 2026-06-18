@@ -155,14 +155,11 @@ select {
 .add-date-btn {
     width: 40px !important;
     height: 40px !important;
-
     min-width: 40px;
     max-width: 40px;
-
     display: flex;
     align-items: center;
     justify-content: center;
-
     padding: 0 !important;
     flex: none !important;
 }

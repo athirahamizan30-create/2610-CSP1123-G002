@@ -6,6 +6,123 @@ header{
     margin-top: -20px;
 }
 
+body {
+    margin: 0;
+    font-family: Arial;
+    background-color: #F1E2D1;
+}
+
+*{
+   margin: 0;
+   padding: 0;
+   font-family: 'Poppins', sans-serif;
+   box-sizing: border-box;
+}
+
+h1{
+    font-family:Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+    font-size: 50px;
+    margin-left: 40px;    
+}
+
+h2{
+    font-family:Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+    font-size: 30px;
+    margin-left: 40px;    
+}
+
+.sidebar {
+    position: fixed;
+    left: -250px;
+    top: 0;
+    width: 250px;
+    height: 100%;
+    background: #F1E2D1;
+    transition: left 0.3s ease;
+}
+
+.sidebar a {
+    display: block;
+    color: rgb(0, 0, 0);
+    margin: 10px 0;
+    text-decoration: none;
+    padding: 10px;
+    transition: 0.3s;
+}
+
+.sidebar h2,
+.sidebar a {
+    padding-left: 15px;
+    font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    font-weight: bolder;
+}
+
+.sidebar a i {
+    font-size: 20px;
+}
+
+.sidebar.active {
+    left: 0;
+}
+
+.sidebar a:hover{
+    background-color: #DCC3AA;
+}
+
+.sidebar a.active{
+    background-color: #F1E2D1;
+    font-weight: bold;
+}
+
+.main {
+    padding: 20px;margin-left: 40px;
+}
+
+.menu-btn {
+    font-size: 20px;
+    padding: 10px;
+    cursor: pointer;
+    background-color: #F1E2D1;
+    margin-left: -30px;
+    border-radius: 18px;
+}
+
+.main {
+    transition: margin-left 0.3s;
+}
+
+.sidebar.active ~ .main {
+    margin-left: 250px;
+}
+
+#overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: none;
+}
+
+#overlay.active {
+    display: block;
+}
+
+.reminder-card {
+    background: white;
+    width: 250px;
+    padding: 15px;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    transition: 0.3s;
+    margin-left: 40px; 
+}
+
+.reminder-card:hover {
+    transform: scale(1.05);
+}
+
 html, body {
     overflow-x: hidden;
 }

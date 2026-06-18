@@ -170,7 +170,7 @@ body {
 }
 
 .popup-content button {
-    background: #4f46e5;
+    background: #8f3c3c;
     color: white;
     border: none;
     padding: 10px 14px;
@@ -181,16 +181,16 @@ body {
 }
 
 .popup-content button:hover {
-    background: #3730a3;
+    background: #cd6161;
 }
 
 .popup-content button[type="button"] {
-    background: #e5e7eb;
-    color: black;
+    background: #8f3c3c;
+    color: white;
 }
 
 .popup-content button[type="button"]:hover {
-    background: #d1d5db;
+    background: #cd6161;
 }
 
 .date-row {

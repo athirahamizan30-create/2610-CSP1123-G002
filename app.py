@@ -726,7 +726,7 @@ def create_app():
 
         for event in events:
 
-            if event.date_value >= now.date():
+            if event.date_value >= now:
                 upcoming_events.append(event)
             else:
                 past_events.append(event)
