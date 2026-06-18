@@ -44,33 +44,66 @@
             <i class='bxf bx-user'></i>
             Account profile
         </a>
+
         <a href="/chat">
             <i class="bxf bx-discussion"></i>
-            chat
+            Chatroom
         </a>
-
         
         <a href="/">
             <i class="bxf bx-arrow-out-right-square-half"></i>
             Log Out
         </a>
-
-        
     </div>
 
     <header>
-    <div class="main">
-        <button class="menu-btn" onclick="toggleSidebar()">
-            <i class="bx bx-menu bx-sm" style="color: #333333;"></i>
-        </button>
-        </header>
+        <div class="main">
+            <button class="menu-btn" onclick="toggleSidebar()">
+                <i class="bx bx-menu bx-sm" style="color: #333333;"></i>
+            </button>
+        
+        <div class="hero">
+        <nav>         
+            <img src="{{ image_file }}" class="user-pic" id="profile-icon" onclick="toggleMenu()">
+
+            <div class="sub-menu-wrap" id="subMenu">
+                <div class="sub-menu">
+                    <div class="user-info">
+                        <img src="{{ image_file }}">
+                        <h2>{{ current_user.full_name }}</h2>
+                    </div>
+                    <hr>
+
+                    <a href="/account" class="sub-menu-link">
+                        <i class='bxf bx-user'></i>
+                        <p>Edit Profile</p>
+                        <span>></span>
+                    </a>
+
+                    <a href="/enquiry" class="sub-menu-link">
+                        <i class='bxf bx-message-bubble-question-mark'></i>
+                        <p>Enquiry</p>
+                        <span>&gt;</span>
+                    </a>
+
+                    <a href="/" class="sub-menu-link">
+                        <i class="bxf bx-arrow-out-right-square-half"></i>
+                        <p>Logout</p>
+                        <span>></span>
+                    </a>                    
+
+                </div>
+            </div>
+        </nav>
+        </div>
+    </header>
 
         <h1>Job Application Dashboard</h1>
 
         <form method="GET" action="{{ url_for('dashboard') }}" class="filters">
 
             <div class="filter-group">
-                <input type="text" name="search" placeholder="Search jobs..."
+                <input type="text" name="search" placeholder="Search job applications..."
                     value="{{ request.args.get('search', '') }}">
             </div>
 
@@ -296,6 +329,23 @@
 
     {% include 'job.html' %}
 
+    <div id="ai-chatbot-wrapper">
+        <script type="module">
+            import Chatbot from "https://cdn.jsdelivr.net/npm/@denserai/embed-chat@1/dist/web.min.js";
+            Chatbot.init({
+            chatbotId: "chatbot_gcntvcndfh5ldda4vt4y4",
+            theme: {
+                button: {
+                    size: 'large',   
+                    bottom: 40,      
+                    right: 40,       
+                    color: '#abc17c' 
+                    },
+                }, 
+            });
+        </script>  
+    </div>
+
     <script>
     function toggleSidebar() {
         document.getElementById("sidebar").classList.toggle("active");
@@ -392,7 +442,7 @@
         }
 
         dates.forEach(date => {
-            addEditDate(date.date_type, date.date_value);
+            addEditDate(date.date_type, date.date_value?.slice(0, 16));
         });
     }
 
@@ -432,7 +482,7 @@
 
             </select>
 
-            <input type="datetime-local" name="date_value[]" value="${value ? value.replace(' ', 'T') : ''}">
+            <input type="datetime-local" name="date_value[]" value="${value || ''}">
 
             <button type="button" onclick="removeDate(this)" class="remove-date-btn">
                 <i class="bxf bx-x-square bx-sm"></i>
@@ -446,6 +496,22 @@
         button.parentElement.remove();
     }
 
+    </script>
+
+    <script>
+    let subMenu = document.getElementById("subMenu")
+    let menuBtn = document.getElementById("profile-icon");
+
+    function toggleMenu(){
+        subMenu.classList.toggle("open-menu")
+    }
+    document.addEventListener("click", function(event) {
+        if (subMenu.classList.contains("open-menu")) {
+            if (!subMenu.contains(event.target) && !menuBtn.contains(event.target)) {
+            subMenu.classList.remove("open-menu");
+        }
+        }
+    });
     </script>
 
 </body>
