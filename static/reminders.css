@@ -1,16 +1,31 @@
-header{
-    width: 200%;
-    height: 80px;
-    background-color: #810B38;
-    margin-left: -70px;
-    margin-top: -20px;
-}
 
-html, body {
+
+.html, body {
     overflow-x: hidden;
 }
 
-.menu-btn{
-    margin-left: 50px;
-    margin-top: 20px;
+.reminder-page{
+    padding-left: 40px;
 }
+
+.reminder-page h1{
+    margin-bottom: 20px;
+    font-family:Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+    font-size: 50px;
+    margin-left: 0;    
+    font-weight: bold;
+}
+
+.reminder-page h2{
+    margin-top: 30px;
+    margin-bottom: 15px;
+    font-family:Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+    font-weight: bold;
+    margin-left: 0;  
+}
+
+.reminder-card{
+    margin-bottom: 15px;
+    margin-left: 0;
+}
+
