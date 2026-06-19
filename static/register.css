@@ -1,12 +1,177 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Poppins', sans-serif;
+}
+
 body{
-  background-color: #f3e3d0;
+    background:#F1E2D1;
+    min-height:100vh;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
 }
 
-.card{
-    background-color: #f4ede5;
+.container{
+    width:900px;
+    min-height:550px;
+
+    background:white;
+
+    border-radius:30px;
+    overflow:hidden;
+
+    display:flex;
+
+    box-shadow:0 10px 25px rgba(0,0,0,0.15);
 }
 
-.btn{
-    background-color: #8f3c3c;
-    border-color: #8f3c3c;
+.left-panel{
+    width:45%;
+
+    background:linear-gradient(
+        135deg,
+        #6b0f1a,
+        #8f0f3f
+    );
+
+    color:white;
+
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+
+    text-align:center;
+
+    padding:40px;
+
+    border-radius:0 180px 180px 0;
+}
+
+.left-panel h1{
+    font-size:50px;
+    margin-bottom:20px;
+}
+
+.left-panel p{
+    font-size:18px;
+    margin-bottom:30px;
+}
+
+.switch-btn{
+    text-decoration:none;
+    color:white;
+
+    border:1px solid white;
+
+    padding:12px 25px;
+
+    border-radius:8px;
+
+    font-weight:bold;
+
+    transition:0.3s;
+}
+
+.switch-btn:hover{
+    background:white;
+    color:#8f0f3f;
+}
+
+.right-panel{
+    width:55%;
+
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+
+    padding:50px;
+}
+
+.right-panel h1{
+    text-align:center;
+    margin-bottom:25px;
+
+    font-size:50px;
+}
+
+form{
+    display:flex;
+    flex-direction:column;
+}
+
+input{
+    padding:12px;
+
+    margin-bottom:15px;
+
+    border:none;
+
+    border-radius:8px;
+
+    background:#efefef;
+
+    font-size:15px;
+}
+
+input:focus{
+    outline:none;
+}
+
+button{
+    background:#8f0f3f;
+    color:white;
+
+    border:none;
+
+    padding:12px;
+
+    border-radius:8px;
+
+    cursor:pointer;
+
+    font-weight:bold;
+
+    transition:0.3s;
+}
+
+button:hover{
+    background:#6b0f1a;
+}
+
+.alert-danger{
+    background:#f8d7da;
+
+    color:#842029;
+
+    padding:12px;
+
+    border-radius:8px;
+
+    margin-bottom:20px;
+}
+
+.alert-danger ul{
+    margin-left:20px;
+}
+
+@media(max-width:900px){
+
+    .container{
+        flex-direction:column;
+        width:95%;
+    }
+
+    .left-panel,
+    .right-panel{
+        width:100%;
+    }
+
+    .left-panel{
+        border-radius:0;
+        padding:30px;
+    }
 }
