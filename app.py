@@ -639,7 +639,7 @@ def create_app():
     def document():
         docs = Document.query.filter_by(user_id=current_user.id).order_by(Document.filename.asc()).all()
     
-        return render_template("document.html", docs=docs)
+        return render_template("document.html",active_page="document", docs=docs)
 
     @app.route('/edit_job/<int:id>', methods=['POST'])
     @login_required
@@ -752,6 +752,7 @@ def create_app():
 
         return render_template(
             "reminders.html",
+            active_page="reminders",
             upcoming_events=upcoming_events,
             past_events=past_events
         )
@@ -820,7 +821,9 @@ def create_app():
     
         chart_results = chart_query.group_by(NewJob.job_status).all()
 
-        return render_template('statistic.html', 
+        return render_template(
+            'statistic.html', 
+            active_page="statistic",
             status_data=chart_results,
             stats=stats_dict,          
             total=total_count)
@@ -877,7 +880,7 @@ def create_app():
             form.about_me.data = current_user.about_me 
 
         image_file = url_for('static',filename='uploads/profile_pics/' +current_user.image_file)
-        return render_template('account.html', title='Account', image_file=image_file, form=form)
+        return render_template('account.html',active_page="account", title='Account', image_file=image_file, form=form)
 
     @app.route("/chat")
     @login_required
@@ -888,6 +891,7 @@ def create_app():
 
         return render_template(
             'chat.html',
+            active_page="chat",
             username=current_user.username,
             rooms=rooms
         )

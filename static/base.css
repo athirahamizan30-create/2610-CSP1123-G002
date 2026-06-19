@@ -46,8 +46,7 @@ body {
 }
 
 .sidebar a.active{
-    background-color: #F1E2D1;
-    font-weight: bold;
+    background-color: #ddc9b3;
 }
 
 .main {
