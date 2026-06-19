@@ -1,70 +1,18 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Reminders</title>
+{% extends "base.html" %}
+
+{% block content %}
+
     <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='edit_job.css')}}">
     <link rel="stylesheet" href="{{ url_for('static', filename='reminders.css') }}">
     <link href="https://cdn.boxicons.com/transformations.min.css" rel="stylesheet">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
-</head>
 
-<body>
-    <div id="overlay" onclick="toggleSidebar()"></div>
 
-    <div class="sidebar" id="sidebar">
-        <h2>Menu</h2>
 
-        <a href="/dashboard" class="{% if active_page == 'dashboard' %}active{% endif %}">
-            <i class="bxf bx-home-circle"></i>
-            Dashboard
-        </a>
-
-        <a href="javascript:void(0);" onclick="openPopup()">
-            <i class="bxf bx-plus-square"></i>
-            New Application
-        </a>
-
-        <a href="/document">
-            <i class="bxf bx-folder"></i>
-            Documents
-        </a>
-
-        <a href="/reminders" class="{% if active_page == 'reminders' %}active{% endif %}">
-            <i class='bxf bx-bell'></i>
-            Reminders
-        </a>
-
-        <a href="/statistic" class="{% if active_page == 'statistic' %} active {% endif %}">
-            <i class='bxf bx-chart-bar-big-columns'></i>
-            Statistic
-        </a>
-
-        <a href="/account" class="{% if active_page == 'reminders' %}active{% endif %}">
-            <i class='bxf bx-user'></i>
-            Account profile
-        </a>
-        <a href="/chat">
-            <i class="bxf bx-discussion"></i>
-            chat
-        </a>
-
+    <div class="reminder-page">
         
-        <a href="/">
-            <i class="bxf bx-arrow-out-right-square-half"></i>
-            Log Out
-        </a>
-
-        
-    </div>
-
-    <div class="main">
-        <header>
-        <button class="menu-btn" onclick="toggleSidebar()">
-            <i class="bx bx-menu bx-sm"></i>
-        </button>
-        </header>
 
         <h1>Reminders</h1>
 
@@ -161,5 +109,4 @@
     });
     </script>
 
-</body>
-</html>
+{% endblock %}

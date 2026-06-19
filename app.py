@@ -40,6 +40,13 @@ app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=15)
 
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
+profile_pics_folder = os.path.join(
+    app.config['UPLOAD_FOLDER'],
+    'profile_pics'
+)
+
+os.makedirs(profile_pics_folder, exist_ok=True)
+
 logger = logging.getLogger(__name__)
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
@@ -50,7 +57,7 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
-    image_file= db.Column(db.String(20), nullable=False, default='default.jpg')
+    image_file= db.Column(db.String(100), nullable=False, default='default.jpg')
     full_name = db.Column(db.String(100), nullable=True)
     phone_number = db.Column(db.String(20), nullable=True)
     about_me = db.Column(db.Text, nullable=True)
@@ -630,8 +637,9 @@ def create_app():
     @app.route('/document')
     @login_required
     def document():
-        docs = Document.query.order_by(Document.filename.asc()).all()
-        return render_template("document.html", docs=docs)  
+        docs = Document.query.filter_by(user_id=current_user.id).order_by(Document.filename.asc()).all()
+    
+        return render_template("document.html", docs=docs)
 
     @app.route('/edit_job/<int:id>', methods=['POST'])
     @login_required
@@ -820,8 +828,17 @@ def create_app():
     def save_picture(form_picture):
         random_hex = secrets.token_hex(8)
         _, f_ext = os.path.splitext(form_picture.filename)
+
         picture_fn = random_hex + f_ext
-        picture_path = os.path.join(app.root_path, 'static/uploads/profile_pics', picture_fn)
+
+        upload_dir = os.path.join(
+        app.root_path,
+        'static',
+        'uploads',
+        'profile_pics'
+        )
+
+        picture_path = os.path.join(upload_dir, picture_fn)
         form_picture.save(picture_path)
 
         return picture_fn
@@ -831,19 +848,27 @@ def create_app():
     def account():
         form = UpdateAccountForm()
         if form.validate_on_submit():
-            if form.picture.data:
-                picture_file = save_picture(form.picture.data)
-                current_user.image_file = picture_file
 
-            current_user.username = form.username.data
-            current_user.email = form.email.data
-            current_user.full_name = form.full_name.data
-            current_user.phone_number = form.phone_number.data
-            current_user.about_me = form.about_me.data
+            try:    
+                if form.picture.data:
+                    picture_file = save_picture(form.picture.data)
+                    current_user.image_file = picture_file
 
-            db.session.commit()
-            flash("your account has been updated!", 'success')
-            return redirect(url_for('account'))
+                current_user.username = form.username.data
+                current_user.email = form.email.data
+                current_user.full_name = form.full_name.data
+                current_user.phone_number = form.phone_number.data
+                current_user.about_me = form.about_me.data
+
+                db.session.commit()
+                flash("your account has been updated!", 'success')
+                return redirect(url_for('account'))
+
+            except Exception as e:
+                print("ACCOUNT UPDATE ERROR:", e)
+                db.session.rollback()
+                raise
+
         elif request.method == 'GET':
             form.username.data = current_user.username
             form.email.data = current_user.email
