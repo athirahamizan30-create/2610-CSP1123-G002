@@ -395,7 +395,7 @@ header{
    position:absolute;
    top: 100%;
    right: 2%;
-   width: 390px;
+   width: 300px;
    max-height: 0;
    overflow: hidden;
    transition: max-height 0.5s;
