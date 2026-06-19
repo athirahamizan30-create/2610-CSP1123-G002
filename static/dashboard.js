@@ -34,11 +34,13 @@ document.addEventListener("DOMContentLoaded", function () {
         overlay.classList.remove("active");
     }
 
-    popup.addEventListener("click", function (event) {
-        if (event.target === popup) {
-            closePopup();
-        }
-    });
+    if (popup) {
+        popup.addEventListener("click", function (event) {
+            if (event.target === popup) {
+                closePopup();
+            }
+        });
+    }
 });
 
 
@@ -126,17 +128,3 @@ function addEditDate(type = "", value = "") {
 function removeDate(button) {
     button.parentElement.remove();
 }
-
-let subMenu = document.getElementById("subMenu")
-let menuBtn = document.getElementById("profile-icon");
-
-function toggleMenu(){
-    subMenu.classList.toggle("open-menu")
-}
-document.addEventListener("click", function(event) {
-    if (subMenu.classList.contains("open-menu")) {
-        if (!subMenu.contains(event.target) && !menuBtn.contains(event.target)) {
-        subMenu.classList.remove("open-menu");
-    }
-    }
-});
