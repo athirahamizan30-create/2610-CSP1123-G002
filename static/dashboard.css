@@ -147,11 +147,12 @@ h1{
 .edit-btn {
     background-color: #8f3c3c;
     color: white;
+    width: 30%;
     padding: 6px 14px;
     border: none;
     border-radius: 6px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    margin-top: 10px;
 }
 
 .edit-btn:hover{
