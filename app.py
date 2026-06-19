@@ -848,19 +848,27 @@ def create_app():
     def account():
         form = UpdateAccountForm()
         if form.validate_on_submit():
-            if form.picture.data:
-                picture_file = save_picture(form.picture.data)
-                current_user.image_file = picture_file
 
-            current_user.username = form.username.data
-            current_user.email = form.email.data
-            current_user.full_name = form.full_name.data
-            current_user.phone_number = form.phone_number.data
-            current_user.about_me = form.about_me.data
+            try:    
+                if form.picture.data:
+                    picture_file = save_picture(form.picture.data)
+                    current_user.image_file = picture_file
 
-            db.session.commit()
-            flash("your account has been updated!", 'success')
-            return redirect(url_for('account'))
+                current_user.username = form.username.data
+                current_user.email = form.email.data
+                current_user.full_name = form.full_name.data
+                current_user.phone_number = form.phone_number.data
+                current_user.about_me = form.about_me.data
+
+                db.session.commit()
+                flash("your account has been updated!", 'success')
+                return redirect(url_for('account'))
+
+            except Exception as e:
+                print("ACCOUNT UPDATE ERROR:", e)
+                db.session.rollback()
+                raise
+
         elif request.method == 'GET':
             form.username.data = current_user.username
             form.email.data = current_user.email
