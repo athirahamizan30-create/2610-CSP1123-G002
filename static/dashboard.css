@@ -460,7 +460,7 @@ h1{
 }
 .sub-menu-link p{
    width: 100%;
-   font-size: 20px;
+   font-size: 10px;
 }
 .sub-menu-link img{
    width: 90px;
@@ -479,5 +479,5 @@ h1{
    font-weight: 700;
 }
 .sub-menu-link i{
-    font-size: 40px;
+    font-size: 20px;
 }
