@@ -8,74 +8,65 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='register.css') }}">
 </head>
 <body>
+  <div class="container">
 
-<div class="container">
+      <div class="left-panel">
+          <h1>Welcome!</h1>
 
-    <div class="left-panel">
-        <h1>Welcome!</h1>
+          <p>
+              Create your account and start tracking your job applications.
+          </p>
 
-        <p>
-            Create your account and start tracking your job applications.
-        </p>
+          <a href="{{ url_for('index') }}" class="switch-btn">
+              I ALREADY HAVE AN ACCOUNT
+          </a>
+      </div>
 
-        <a href="{{ url_for('index') }}" class="switch-btn">
-            I ALREADY HAVE AN ACCOUNT
-        </a>
-    </div>
+      <div class="right-panel">
 
-    <div class="right-panel">
+          <h1>Register</h1>
 
-        <h1>Register</h1>
+          {% if errors %}
+          <div class="alert-danger">
+              <ul>
+                  {% for e in errors %}
+                  <li>{{ e }}</li>
+                  {% endfor %}
+              </ul>
+          </div>
+          {% endif %}
 
-        {% if errors %}
-        <div class="alert-danger">
-            <ul>
-                {% for e in errors %}
-                <li>{{ e }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-        {% endif %}
+          <form action="{{ url_for('register') }}" method="post">
 
-        <form action="{{ url_for('register') }}" method="post">
+              <input type="text"
+                    name="username"
+                    placeholder="Username"
+                    required>
 
-            <input
-                type="text"
-                name="username"
-                placeholder="Username"
-                required
-            >
+              <input type="email"
+                    name="email"
+                    placeholder="Email"
+                    required>
 
-            <input
-                type="email"
-                name="email"
-                placeholder="Email"
-                required
-            >
+              <input type="password"
+                    name="password"
+                    placeholder="Password"
+                    required>
 
-            <input
-                type="password"
-                name="password"
-                placeholder="Password"
-                required
-            >
+              <input type="password"
+                    name="confirm_password"
+                    placeholder="Confirm Password"
+                    required>
 
-            <input
-                type="password"
-                name="confirm_password"
-                placeholder="Confirm Password"
-                required
-            >
+              <button type="submit">
+                  Create Account
+              </button>
 
-            <button type="submit">
-                CREATE ACCOUNT
-            </button>
+          </form>
 
-        </form>
+      </div>
 
-    </div>
-
-</div>
+  </div>
 
 </body>
 </html>
