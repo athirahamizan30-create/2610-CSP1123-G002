@@ -24,7 +24,7 @@
             New Application
         </a>
 
-        <a href="/document">
+        <a href="/document" class="{% if active_page == 'document' %}active{% endif %}">
             <i class="bxf bx-folder"></i>
             Documents
         </a>
@@ -39,13 +39,13 @@
             Statistic
         </a>
 
-        <a href="/account" class="{% if active_page == 'reminders' %}active{% endif %}">
+        <a href="/account" class="{% if active_page == 'account' %}active{% endif %}">
             <i class='bxf bx-user'></i>
             Account profile
         </a>
-        <a href="/chat">
+        <a href="/chat" class="{% if active_page == 'chat' %}active{% endif %}">
             <i class="bxf bx-discussion"></i>
-            chat
+            Chat
         </a>
 
         <a href="/">
