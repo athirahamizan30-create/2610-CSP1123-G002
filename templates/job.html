@@ -5,7 +5,6 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='job.css')}}">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
-    <script src="{{ url_for('static', filename='job.js') }}"></script>
     <title>New Application</title>
 </head>
 
@@ -36,6 +35,8 @@
                     <div class="date-row">
                         <select name="date_type[]">
                             <option value="Applied">Applied</option>
+                            <option value="stage1">Stage 1</option>
+                            <option value="stage2">Stage 2</option>
                             <option value="Interview">Interview</option>
                             <option value="Deadline">Deadline</option>
                             <option value="Offer">Offer</option>
@@ -74,6 +75,8 @@
 
         </div>
     </div>
+
+    <script src="{{ url_for('static', filename='job.js') }}"></script>
 
 </body>
 </html>
