@@ -19,6 +19,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
 from zoneinfo import ZoneInfo
+import threading
 
 app = Flask(__name__, template_folder="templates", static_folder="static/uploads")
 db= SQLAlchemy()
@@ -545,6 +546,14 @@ def create_app():
 
         return redirect(url_for('dashboard'))
 
+    def send_email(app, msg):
+        with app.app_context():
+            try:
+                mail.send(msg)
+            except Exception as e:
+                print("Email error:", e)
+
+
     @app.route('/forgot_password', methods=['POST', 'GET'])
     def forgot_password():
 
@@ -559,7 +568,7 @@ def create_app():
                 flash("No user with that email found", "error")
                 return redirect(url_for("forgot_password"))
             
-            user.password_reset_ids.clear()
+            PasswordResetId.query.filter_by(user_id=user.id).delete()
 
             new_password_reset_id = PasswordResetId(user_id=user.id)
             db.session.add(new_password_reset_id)
@@ -575,7 +584,10 @@ def create_app():
                 body = f"Reset your password using the link below\n\n{password_reset_link}"
             )
             try:
-                mail.send(msg)
+                threading.Thread(
+                target=send_email,
+                args=(app, msg)
+            ).start()
 
                 context = {
                     "reset_sent": True,
