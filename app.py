@@ -1,4 +1,4 @@
-from flask import Flask, render_template, url_for, request, redirect, flash, session, jsonify
+from flask import Flask, render_template, url_for, request, redirect, flash, session, jsonify, make_response
 import re, uuid, os, secrets, logging
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -19,6 +19,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
 from zoneinfo import ZoneInfo
+import threading
 
 app = Flask(__name__, template_folder="templates", static_folder="static/uploads")
 db= SQLAlchemy()
@@ -26,13 +27,11 @@ mail = Mail()
 login_manager = LoginManager()
 bcrypt = Bcrypt()
 socketio = SocketIO()
-
-app.config['SECRET_KEY'] = 'secretkey'
 load_dotenv()
 
 app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
-app.config['SECRET_KEY'] = 'user_registration_athirah'
+app.config['SECRET_KEY'] = 'secretley'
 app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://athirah:Tiya071!@localhost/CareerTrack_Database"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
@@ -48,8 +47,6 @@ profile_pics_folder = os.path.join(
 os.makedirs(profile_pics_folder, exist_ok=True)
 
 logger = logging.getLogger(__name__)
-db = SQLAlchemy(app)
-login_manager = LoginManager(app)
 login_manager.login_view = "login"
 
 class User(UserMixin, db.Model):
@@ -306,7 +303,6 @@ def send_reminders(app):
 def create_app():
 
     app = Flask(__name__)
-    app.config.from_object(Config)
     bcrypt.init_app(app)
     app.config.from_object(Config)
     db.init_app(app)
@@ -326,10 +322,6 @@ def create_app():
     app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=15)
     app.config['UPLOAD_FOLDER'] = 'static/uploads'
     app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
-    print("SECRET_KEY:", app.config.get("SECRET_KEY"))
-    print("DATABASE_URL:", app.config.get("SQLALCHEMY_DATABASE_URI"))
-    print("MAIL_USERNAME:", app.config.get("MAIL_USERNAME"))
-    print("MAIL_PASSWORD:", app.config.get("MAIL_PASSWORD"))
 
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
@@ -453,6 +445,8 @@ def create_app():
             if not password:
                 errors.append("Password is required")
 
+            user = None
+
             if not errors:
                 user = User.query.filter_by(email=email).first()
 
@@ -462,6 +456,10 @@ def create_app():
             else:
 
                 remember_me = request.form.get("remember") == "1"
+
+                print("Remember value:", request.form.get("remember"))
+                print("Remember me:", remember_me)
+
                 login_user(user, remember=remember_me)
                 return redirect(url_for("dashboard"))
             
@@ -475,7 +473,9 @@ def create_app():
     @app.route('/logout')
     def logout():
         logout_user()
-        return redirect(url_for('index'))
+        response = make_response(redirect(url_for("index")))
+        response.delete_cookie("remember_token")
+        return response
  
     @app.route('/add_job', methods=['POST'])
     @login_required
@@ -546,6 +546,14 @@ def create_app():
 
         return redirect(url_for('dashboard'))
 
+    def send_email(app, msg):
+        with app.app_context():
+            try:
+                mail.send(msg)
+            except Exception as e:
+                print("Email error:", e)
+
+
     @app.route('/forgot_password', methods=['POST', 'GET'])
     def forgot_password():
 
@@ -560,13 +568,11 @@ def create_app():
                 flash("No user with that email found", "error")
                 return redirect(url_for("forgot_password"))
             
-            user.password_reset_ids.clear()
+            PasswordResetId.query.filter_by(user_id=user.id).delete()
 
             new_password_reset_id = PasswordResetId(user_id=user.id)
             db.session.add(new_password_reset_id)
             db.session.flush()
-
-            print("DEBUG reset_id:", new_password_reset_id.reset_id)
 
             password_reset_link = url_for("reset_password", reset_id=new_password_reset_id.reset_id , _external=True)
             db.session.commit()
@@ -578,7 +584,10 @@ def create_app():
                 body = f"Reset your password using the link below\n\n{password_reset_link}"
             )
             try:
-                mail.send(msg)
+                threading.Thread(
+                target=send_email,
+                args=(app, msg)
+            ).start()
 
                 context = {
                     "reset_sent": True,
@@ -1229,3 +1238,6 @@ if __name__ == '__main__':
     scheduler.start()
 
     socketio.run(app, host="0.0.0.0", port=5000, debug=True)
+
+
+#test bug kat dashboard, kat rememebr me login user, jgn lupe delete, logout pon ada 
