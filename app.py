@@ -19,7 +19,6 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
 from zoneinfo import ZoneInfo
-import threading
 
 app = Flask(__name__, template_folder="templates", static_folder="static/uploads")
 db= SQLAlchemy()
@@ -308,6 +307,8 @@ def create_app():
     db.init_app(app)
     login_manager.init_app(app)
     login_manager.login_view = "login"
+    scheduler = BackgroundScheduler()
+    scheduler.start()
 
     app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
     app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT'))
@@ -316,12 +317,11 @@ def create_app():
     app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
     app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
     app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_USERNAME')
-
-
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=15)
     app.config['UPLOAD_FOLDER'] = 'static/uploads'
     app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
+
 
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
@@ -546,12 +546,14 @@ def create_app():
 
         return redirect(url_for('dashboard'))
 
-    def send_email(app, msg):
+    def send_email_job(app, msg):
         with app.app_context():
             try:
                 mail.send(msg)
+                print("Email sent successfully to:", msg.recipients)
             except Exception as e:
                 print("Email error:", e)
+
 
 
     @app.route('/forgot_password', methods=['POST', 'GET'])
@@ -583,11 +585,10 @@ def create_app():
                 recipients = [email],
                 body = f"Reset your password using the link below\n\n{password_reset_link}"
             )
+
+            msg.sender = app.config['MAIL_USERNAME']
             try:
-                threading.Thread(
-                target=send_email,
-                args=(app, msg)
-            ).start()
+                scheduler.add_job(send_email_job, args=[app, msg])
 
                 context = {
                     "reset_sent": True,
