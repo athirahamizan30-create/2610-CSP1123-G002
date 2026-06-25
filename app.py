@@ -321,10 +321,6 @@ def create_app():
     app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=15)
     app.config['UPLOAD_FOLDER'] = 'static/uploads'
     app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
-    print("SECRET_KEY:", app.config.get("SECRET_KEY"))
-    print("DATABASE_URL:", app.config.get("SQLALCHEMY_DATABASE_URI"))
-    print("MAIL_USERNAME:", app.config.get("MAIL_USERNAME"))
-    print("MAIL_PASSWORD:", app.config.get("MAIL_PASSWORD"))
 
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
@@ -347,8 +343,6 @@ def create_app():
     @app.route('/dashboard')
     @login_required
     def dashboard():
-        print("Authenticated:", current_user.is_authenticated)
-        print("Current user:", current_user)
 
         search = request.args.get('search', '').strip()
         status = request.args.get('status', '').strip()
@@ -473,21 +467,13 @@ def create_app():
     
     @login_manager.user_loader
     def load_user(user_id):
-        print("Loading user:", user_id)
         return db.session.get(User, int(user_id))
 
     @app.route('/logout')
     def logout():
-        print("Before logout:", current_user.is_authenticated)
-
         logout_user()
-
-        print("After logout:", current_user.is_authenticated)
-
         response = make_response(redirect(url_for("index")))
-
         response.delete_cookie("remember_token")
-
         return response
  
     @app.route('/add_job', methods=['POST'])
@@ -578,8 +564,6 @@ def create_app():
             new_password_reset_id = PasswordResetId(user_id=user.id)
             db.session.add(new_password_reset_id)
             db.session.flush()
-
-            print("DEBUG reset_id:", new_password_reset_id.reset_id)
 
             password_reset_link = url_for("reset_password", reset_id=new_password_reset_id.reset_id , _external=True)
             db.session.commit()
