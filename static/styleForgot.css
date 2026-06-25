@@ -50,6 +50,6 @@
     font-size: small;
 }
 
-.form-group input, .form-group submit{
-    width: 150px;        
+.form-group input{
+    width: 250px;    
 }
