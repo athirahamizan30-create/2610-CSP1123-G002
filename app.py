@@ -476,11 +476,50 @@ def create_app():
     def logout():
         logout_user()
         return redirect(url_for('index'))
+    
+    @app.route("/run-reminders")
+    def run_reminders():
+        send_reminders(app)
+        return "Reminders checked and sent", 200
  
     @app.route('/add_job', methods=['POST'])
     @login_required
     def add_job():
-        application_date = request.form.get("application_date")
+
+        date_types = request.form.getlist('date_type[]')
+        date_values = request.form.getlist('date_value[]')
+
+        date_dict = {}
+
+        for dtype, dvalue in zip(date_types, date_values):
+            if dvalue:
+                date_dict[dtype] = datetime.strptime(dvalue, "%Y-%m-%dT%H:%M")
+
+        applied = date_dict.get("applied")
+        stage1 = date_dict.get("stage1")
+        stage2 = date_dict.get("stage2")
+        interview = date_dict.get("interview")
+        offer = date_dict.get("offer")
+
+        if applied and stage1 and stage1 < applied:
+            flash("Stage 1 date cannot be earlier than Applied date.")
+            return redirect(url_for('dashboard'))
+
+        if stage1 and stage2 and stage2 < stage1:
+            flash("Stage 2 date cannot be earlier than Stage 1 date.")
+            return redirect(url_for('dashboard'))
+
+        if stage2 and interview and interview < stage2:
+            flash("Interview date cannot be earlier than Stage 2 date.")
+            return redirect(url_for('dashboard'))
+
+        if interview and offer and offer < interview:
+            flash("Offer date cannot be earlier than Interview date.")
+            return redirect(url_for('dashboard'))
+
+        if applied and offer and offer < applied:
+            flash("Offer date cannot be earlier than Applied date.")
+            return redirect(url_for('dashboard'))
 
         job = NewJob(
             user_id=current_user.id,
@@ -494,10 +533,8 @@ def create_app():
         db.session.add(job)
         db.session.commit()
 
-        date_types = request.form.getlist('date_type[]')
-        date_values = request.form.getlist('date_value[]')
-
         for dtype, dvalue in zip(date_types, date_values):
+
             if dvalue:
                 event_time = datetime.strptime(dvalue, "%Y-%m-%dT%H:%M")
 
@@ -507,6 +544,7 @@ def create_app():
                     date_type=dtype,
                     date_value=event_time
                 )
+
                 db.session.add(job_date)
 
                 if dtype.lower() == "applied":
@@ -544,6 +582,7 @@ def create_app():
 
         db.session.commit()
 
+        flash("Job application added successfully!", "success")
         return redirect(url_for('dashboard'))
 
     @app.route('/forgot_password', methods=['POST', 'GET'])
