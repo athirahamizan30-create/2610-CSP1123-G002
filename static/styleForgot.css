@@ -45,3 +45,11 @@
     text-align: center;
     margin-top: 15px;
 }
+
+.instruction{
+    font-size: small;
+}
+
+.form-group input, .form-group submit{
+    width: 70px;          
+}
