@@ -1,4 +1,4 @@
-from flask import Flask, render_template, url_for, request, redirect, flash, session, jsonify
+from flask import Flask, render_template, url_for, request, redirect, flash, session, jsonify, make_response
 import re, uuid, os, secrets, logging
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -26,13 +26,11 @@ mail = Mail()
 login_manager = LoginManager()
 bcrypt = Bcrypt()
 socketio = SocketIO()
-
-app.config['SECRET_KEY'] = 'secretkey'
 load_dotenv()
 
 app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
-app.config['SECRET_KEY'] = 'user_registration_athirah'
+app.config['SECRET_KEY'] = 'secretley'
 app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://athirah:Tiya071!@localhost/CareerTrack_Database"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
@@ -48,8 +46,6 @@ profile_pics_folder = os.path.join(
 os.makedirs(profile_pics_folder, exist_ok=True)
 
 logger = logging.getLogger(__name__)
-db = SQLAlchemy(app)
-login_manager = LoginManager(app)
 login_manager.login_view = "login"
 
 class User(UserMixin, db.Model):
@@ -306,7 +302,6 @@ def send_reminders(app):
 def create_app():
 
     app = Flask(__name__)
-    app.config.from_object(Config)
     bcrypt.init_app(app)
     app.config.from_object(Config)
     db.init_app(app)
@@ -352,6 +347,8 @@ def create_app():
     @app.route('/dashboard')
     @login_required
     def dashboard():
+        print("Authenticated:", current_user.is_authenticated)
+        print("Current user:", current_user)
 
         search = request.args.get('search', '').strip()
         status = request.args.get('status', '').strip()
@@ -453,6 +450,8 @@ def create_app():
             if not password:
                 errors.append("Password is required")
 
+            user = None
+
             if not errors:
                 user = User.query.filter_by(email=email).first()
 
@@ -462,6 +461,10 @@ def create_app():
             else:
 
                 remember_me = request.form.get("remember") == "1"
+
+                print("Remember value:", request.form.get("remember"))
+                print("Remember me:", remember_me)
+
                 login_user(user, remember=remember_me)
                 return redirect(url_for("dashboard"))
             
@@ -470,12 +473,22 @@ def create_app():
     
     @login_manager.user_loader
     def load_user(user_id):
+        print("Loading user:", user_id)
         return db.session.get(User, int(user_id))
 
     @app.route('/logout')
     def logout():
+        print("Before logout:", current_user.is_authenticated)
+
         logout_user()
-        return redirect(url_for('index'))
+
+        print("After logout:", current_user.is_authenticated)
+
+        response = make_response(redirect(url_for("index")))
+
+        response.delete_cookie("remember_token")
+
+        return response
  
     @app.route('/add_job', methods=['POST'])
     @login_required
@@ -1229,3 +1242,6 @@ if __name__ == '__main__':
     scheduler.start()
 
     socketio.run(app, host="0.0.0.0", port=5000, debug=True)
+
+
+#test bug kat dashboard, kat rememebr me login user, jgn lupe delete, logout pon ada 
