@@ -171,7 +171,7 @@ body {
     box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
 }
 
-button { 
+.chat-container button { 
     padding: 12px 25px;
     border: none;
     border-radius: 25px;
@@ -182,12 +182,12 @@ button {
     transition: all 0.3s ease;
 }
 
-button:hover {
+.chat-container button:hover {
     background: #cd6161;
     transform: translateY(-1px);
 }
 
-button:active {
+.chat-container button:active {
     transform: translateY(1px);
 }
 

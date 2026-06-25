@@ -60,9 +60,18 @@ body{
     cursor: pointer;
 }
 
+.container button[type="submit"]:hover {
+    background:#6b0f1a;
+}
+
 .container button.hidden{
     background-color: transparent;
     border-color: #fff;
+}
+
+.container button.hidden:hover{
+    background:white;
+    color:#8f0f3f;
 }
 
 .container form{

@@ -16,7 +16,7 @@
 
         <a href="/dashboard" class="{% if active_page == 'dashboard' %}active{% endif %}">
             <i class="bxf bx-home-circle"></i>
-            Dashboard
+            Job Applications
         </a>
 
         <a href="javascript:void(0);" onclick="openPopup()">
@@ -24,7 +24,7 @@
             New Application
         </a>
 
-        <a href="/document">
+        <a href="/document" class="{% if active_page == 'document' %}active{% endif %}">
             <i class="bxf bx-folder"></i>
             Documents
         </a>
@@ -39,16 +39,16 @@
             Statistic
         </a>
 
-        <a href="/account" class="{% if active_page == 'reminders' %}active{% endif %}">
+        <a href="/account" class="{% if active_page == 'account' %}active{% endif %}">
             <i class='bxf bx-user'></i>
             Account profile
         </a>
-        <a href="/chat">
+        <a href="/chat" class="{% if active_page == 'chat' %}active{% endif %}">
             <i class="bxf bx-discussion"></i>
-            chat
+            Chat
         </a>
 
-        <a href="/">
+        <a href="/logout">
             <i class="bxf bx-arrow-out-right-square-half"></i>
             Log Out
         </a>
@@ -187,6 +187,6 @@
             });
         </script>  
     </div>
-    
+ 
 </body>
 </html>
