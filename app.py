@@ -122,7 +122,7 @@ class Reminder(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    job_id = db.Column(db.Integer, db.ForeignKey('new_job.id'))
+    job_id = db.Column(db.Integer, db.ForeignKey('new_job.id', ondelete='CASCADE'), nullable=False)
 
     reminder_date = db.Column(db.DateTime, nullable=False)
 
@@ -724,8 +724,12 @@ def create_app():
     def delete_job(id):
         job = NewJob.query.get_or_404(id)
 
+        Reminder.query.filter_by(job_id=job.id).delete()
+
         db.session.delete(job)
         db.session.commit()
+
+        flash('Job deleted successfully!')
         return redirect(url_for('dashboard'))
 
     @app.route('/reminders')

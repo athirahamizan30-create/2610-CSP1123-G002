@@ -65,7 +65,8 @@
                             <p>No dates added</p>
                         {% endif %}
                     </div>
-                    <button class="edit-btn"
+                    <div class="action-buttons">
+                        <button class="edit-btn"
                             data-id="{{ job.id }}"
                             data-company="{{ job.company_name }}"
                             data-position="{{ job.job_position }}"
@@ -74,13 +75,17 @@
                             data-type="{{ job.job_type }}"
                             data-dates='{{ job_dates[job.id] | tojson | safe }}'
                             onclick="openEditFromButton(this)">
-                    Edit
-                    </button>
-                     <form method="POST" action="/delete_job/{{ job.id }}">
-                        <button type="submit" class="delete-btn" onclick="return confirm('Delete this job?')">
-                            Delete
+                            Edit
                         </button>
-                    </form>
+
+                        <form method="POST" action="/delete_job/{{ job.id }}">
+                            <button type="submit"
+                                    class="delete-btn"
+                                    onclick="return confirm('Delete this job?')">
+                                Delete
+                            </button>
+                        </form>
+                    </div>
                 </div>
             {% endfor %}
         </div>
@@ -108,7 +113,8 @@
                             <p>No dates added</p>
                         {% endif %}
                     </div>
-                    <button class="edit-btn"
+                    <div class="action-buttons">
+                        <button class="edit-btn"
                             data-id="{{ job.id }}"
                             data-company="{{ job.company_name }}"
                             data-position="{{ job.job_position }}"
@@ -117,13 +123,17 @@
                             data-type="{{ job.job_type }}"
                             data-dates='{{ job_dates[job.id] | tojson | safe }}'
                             onclick="openEditFromButton(this)">
-                    Edit
-                    </button>
-                    <form method="POST" action="/delete_job/{{ job.id }}">
-                        <button type="submit" class="delete-btn" onclick="return confirm('Delete this job?')">
-                            Delete
+                            Edit
                         </button>
-                    </form>
+
+                        <form method="POST" action="/delete_job/{{ job.id }}">
+                            <button type="submit"
+                                    class="delete-btn"
+                                    onclick="return confirm('Delete this job?')">
+                                Delete
+                            </button>
+                        </form>
+                    </div>
                 </div>
             {% endfor %}
         </div>
@@ -151,7 +161,8 @@
                             <p>No dates added</p>
                         {% endif %}
                     </div>
-                    <button class="edit-btn"
+                    <div class="action-buttons">
+                        <button class="edit-btn"
                             data-id="{{ job.id }}"
                             data-company="{{ job.company_name }}"
                             data-position="{{ job.job_position }}"
@@ -160,13 +171,17 @@
                             data-type="{{ job.job_type }}"
                             data-dates='{{ job_dates[job.id] | tojson | safe }}'
                             onclick="openEditFromButton(this)">
-                    Edit
-                    </button>
-                    <form method="POST" action="/delete_job/{{ job.id }}">
-                        <button type="submit" class="delete-btn" onclick="return confirm('Delete this job?')">
-                            Delete
+                            Edit
                         </button>
-                    </form>
+
+                        <form method="POST" action="/delete_job/{{ job.id }}">
+                            <button type="submit"
+                                    class="delete-btn"
+                                    onclick="return confirm('Delete this job?')">
+                                Delete
+                            </button>
+                        </form>
+                    </div>
                 </div>
             {% endfor %}
         </div>
