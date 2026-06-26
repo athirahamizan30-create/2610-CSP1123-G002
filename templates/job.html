@@ -18,7 +18,9 @@
 
             <h2>New Application</h2>
 
-            <form action="/add_job" method="POST">
+            <div id="date-error" class="error-message" style="color: red; margin-bottom: 10px;"></div>
+
+            <form id="jobForm" action="/add_job" method="POST">
 
                 <i class="bx-pull-left bxf bx-buildings bx-sm"></i><label for="cname">Company Name</label>
                 <input type="text" id="cname" name="company_name" placeholder="Company Name">

@@ -19,6 +19,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
 from zoneinfo import ZoneInfo
+from collections import defaultdict
 
 app = Flask(__name__, template_folder="templates", static_folder="static/uploads")
 db= SQLAlchemy()
@@ -492,8 +493,11 @@ def create_app():
         date_dict = {}
 
         for dtype, dvalue in zip(date_types, date_values):
-            if dvalue:
-                date_dict[dtype] = datetime.strptime(dvalue, "%Y-%m-%dT%H:%M")
+            if dtype and dvalue:
+                dt = datetime.strptime(dvalue, "%Y-%m-%dT%H:%M")
+
+                if dtype not in date_dict:
+                    date_dict[dtype] = dt
 
         print(date_dict)
 
@@ -513,24 +517,25 @@ def create_app():
         offer = date_dict.get("offer")
         deadline = date_dict.get("deadline")
 
-        if applied and stage1 and stage1 < applied:
-            flash("Stage 1 date cannot be earlier than Applied date.")
-            return redirect(url_for('dashboard'))
+        errors = []
 
-        if stage1 and stage2 and stage2 < stage1:
-            flash("Stage 2 date cannot be earlier than Stage 1 date.")
-            return redirect(url_for('dashboard'))
+        if stage1 and applied and stage1 < applied:
+            errors.append("Stage 1 cannot be earlier than Applied")
 
-        if stage2 and interview and interview < stage2:
-            flash("Interview date cannot be earlier than Stage 2 date.")
-            return redirect(url_for('dashboard'))
+        if stage2 and stage1 and stage2 < stage1:
+            errors.append("Stage 2 cannot be earlier than Stage 1")
 
-        if interview and offer and offer < interview:
-            flash("Offer date cannot be earlier than Interview date.")
-            return redirect(url_for('dashboard'))
+        if interview and stage2 and interview < stage2:
+            errors.append("Interview cannot be earlier than Stage 2")
 
-        if applied and offer and offer < applied:
-            flash("Offer date cannot be earlier than Applied date.")
+        if offer and interview and offer < interview:
+            errors.append("Offer cannot be earlier than Interview")
+
+        if offer and applied and offer < applied:
+            errors.append("Offer cannot be earlier than Applied")
+
+        if errors:
+            flash(" | ".join(errors))
             return redirect(url_for('dashboard'))
 
         job = NewJob(
@@ -594,7 +599,6 @@ def create_app():
 
         db.session.commit()
 
-        flash("Job application added successfully!", "success")
         return redirect(url_for('dashboard'))
 
     @app.route('/forgot_password', methods=['POST', 'GET'])
@@ -774,7 +778,6 @@ def create_app():
         db.session.delete(job)
         db.session.commit()
 
-        flash('Job deleted successfully!')
         return redirect(url_for('dashboard'))
 
     @app.route('/reminders')
