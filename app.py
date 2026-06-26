@@ -495,11 +495,23 @@ def create_app():
             if dvalue:
                 date_dict[dtype] = datetime.strptime(dvalue, "%Y-%m-%dT%H:%M")
 
+        print(date_dict)
+
+        applied = date_dict.get("applied")
+        offer = date_dict.get("offer")
+
+        print("Applied =", applied)
+        print("Offer =", offer)
+
+        if applied and offer:
+            print("Comparison:", offer < applied)
+
         applied = date_dict.get("applied")
         stage1 = date_dict.get("stage1")
         stage2 = date_dict.get("stage2")
         interview = date_dict.get("interview")
         offer = date_dict.get("offer")
+        deadline = date_dict.get("deadline")
 
         if applied and stage1 and stage1 < applied:
             flash("Stage 1 date cannot be earlier than Applied date.")
@@ -694,6 +706,9 @@ def create_app():
 
         date_types = request.form.getlist("date_type[]")
         date_values = request.form.getlist("date_value[]")
+
+        print(date_types)
+        print(date_values)
 
         JobDate.query.filter_by(job_id=id).delete()
 

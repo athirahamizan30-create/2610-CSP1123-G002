@@ -39,10 +39,12 @@ function addDate() {
 
     div.innerHTML = `
         <select name="date_type[]">
-            <option value="Applied">Applied</option>
-            <option value="Interview">Interview</option>
-            <option value="Deadline">Deadline</option>
-            <option value="Offer">Offer</option>
+            <option value="applied">Applied</option>
+            <option value="stage1">Stage 1</option>
+            <option value="stage2">Stage 2</option>
+            <option value="interview">Interview</option>
+            <option value="deadline">Deadline</option>
+            <option value="offer">Offer</option>
         </select>
 
         <input type="datetime-local" name="date_value[]">
@@ -58,3 +60,17 @@ function addDate() {
 function removeDate(button) {
     button.parentElement.remove();
 }
+
+setTimeout(function(){
+
+    document.querySelectorAll(".flash-message").forEach(function(msg){
+
+        msg.classList.add("hide");
+
+        setTimeout(function(){
+            msg.remove();
+        },500);
+
+    });
+
+},3000);

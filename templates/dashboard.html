@@ -13,6 +13,24 @@
 </head>
 
 <body>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-container">
+                {% for category, message in messages %}
+                    <div class="flash-message {{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+            <script>
+                window.onload = function () {
+                    openPopup();
+                }
+            </script>
+        {% endif %}
+    {% endwith %}
+
         <h1>Job Application Dashboard</h1>
 
         <form method="GET" action="{{ url_for('dashboard') }}" class="filters">
