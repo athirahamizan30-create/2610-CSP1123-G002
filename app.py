@@ -700,6 +700,46 @@ def create_app():
     @login_required
     def edit_job(id):
 
+        date_types = request.form.getlist('date_type[]')
+        date_values = request.form.getlist('date_value[]')
+
+        date_dict = {}
+
+        for dtype, dvalue in zip(date_types, date_values):
+            if dtype and dvalue:
+                dt = datetime.strptime(dvalue, "%Y-%m-%dT%H:%M")
+
+                if dtype not in date_dict:
+                    date_dict[dtype] = dt
+
+        applied = date_dict.get("applied")
+        stage1 = date_dict.get("stage1")
+        stage2 = date_dict.get("stage2")
+        interview = date_dict.get("interview")
+        offer = date_dict.get("offer")
+        deadline = date_dict.get("deadline")
+
+        errors = []
+
+        if stage1 and applied and stage1 < applied:
+            errors.append("Stage 1 cannot be earlier than Applied")
+
+        if stage2 and stage1 and stage2 < stage1:
+            errors.append("Stage 2 cannot be earlier than Stage 1")
+
+        if interview and stage2 and interview < stage2:
+            errors.append("Interview cannot be earlier than Stage 2")
+
+        if offer and interview and offer < interview:
+            errors.append("Offer cannot be earlier than Interview")
+
+        if offer and applied and offer < applied:
+            errors.append("Offer cannot be earlier than Applied")
+
+        if errors:
+            flash(" | ".join(errors))
+            return redirect(url_for('dashboard'))
+
         job = NewJob.query.get_or_404(id)
 
         job.company_name = request.form.get("company_name")
