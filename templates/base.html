@@ -16,7 +16,7 @@
 
         <a href="/dashboard" class="{% if active_page == 'dashboard' %}active{% endif %}">
             <i class="bxf bx-home-circle"></i>
-            Job Applications
+            Dashboard
         </a>
 
         <a href="javascript:void(0);" onclick="openPopup()">
@@ -24,7 +24,7 @@
             New Application
         </a>
 
-        <a href="/document" class="{% if active_page == 'document' %}active{% endif %}">
+        <a href="/document">
             <i class="bxf bx-folder"></i>
             Documents
         </a>
@@ -39,13 +39,13 @@
             Statistic
         </a>
 
-        <a href="/account" class="{% if active_page == 'account' %}active{% endif %}">
+        <a href="/account" class="{% if active_page == 'reminders' %}active{% endif %}">
             <i class='bxf bx-user'></i>
             Account profile
         </a>
-        <a href="/chat" class="{% if active_page == 'chat' %}active{% endif %}">
+        <a href="/chat">
             <i class="bxf bx-discussion"></i>
-            Chat
+            chat
         </a>
 
         <a href="/">
@@ -174,19 +174,19 @@
     <div id="ai-chatbot-wrapper">
         <script type="module">
             import Chatbot from "https://cdn.jsdelivr.net/npm/@denserai/embed-chat@1/dist/web.min.js";
+        
             Chatbot.init({
-            chatbotId: "chatbot_gcntvcndfh5ldda4vt4y4",
-            theme: {
-                button: {
-                    size: 'large',   
-                    bottom: 40,      
-                    right: 40,       
-                    color: '#abc17c' 
-                    },
-                }, 
-            });
+                chatbotId: "chatbot_zlv5lac9zx7hchh89dabx",
+                theme: {
+                    button: {
+                        size: 'large',   
+                        bottom: 40,      
+                        right: 40,       
+                        color: '#abc17c' 
+                        },
+                    }, 
+                });
         </script>  
     </div>
-    
 </body>
 </html>
