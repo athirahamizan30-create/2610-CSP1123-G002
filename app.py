@@ -19,32 +19,19 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
 from zoneinfo import ZoneInfo
+import threading
+import resend
 from collections import defaultdict
 
-app = Flask(__name__, template_folder="templates", static_folder="static/uploads")
+
 db= SQLAlchemy()
 mail = Mail()
 login_manager = LoginManager()
 bcrypt = Bcrypt()
 socketio = SocketIO()
+resend.api_key = os.getenv("RESEND_API_KEY")
 load_dotenv()
 
-app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
-app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
-app.config['SECRET_KEY'] = 'secretley'
-app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://athirah:Tiya071!@localhost/CareerTrack_Database"
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['UPLOAD_FOLDER'] = 'static/uploads'
-app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=15)
-
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-
-profile_pics_folder = os.path.join(
-    app.config['UPLOAD_FOLDER'],
-    'profile_pics'
-)
-
-os.makedirs(profile_pics_folder, exist_ok=True)
 
 logger = logging.getLogger(__name__)
 login_manager.login_view = "login"
@@ -303,29 +290,34 @@ def send_reminders(app):
 def create_app():
 
     app = Flask(__name__)
+    load_dotenv()
+
     bcrypt.init_app(app)
     app.config.from_object(Config)
     db.init_app(app)
     login_manager.init_app(app)
-    login_manager.login_view = "login"
-    scheduler = BackgroundScheduler()
-    scheduler.start()
 
     app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
-    app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT'))
+    app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
     app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS') == 'True'
     app.config['MAIL_USE_SSL'] = os.getenv('MAIL_USE_SSL') == 'True'
     app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
     app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
     app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_USERNAME')
+
+    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'secretley')
+    app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://athirah:Tiya071!@localhost/CareerTrack_Database"
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=15)
     app.config['UPLOAD_FOLDER'] = 'static/uploads'
     app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
 
-
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
+    
+    profile_pics_folder = os.path.join(app.config['UPLOAD_FOLDER'],'profile_pics')
+    os.makedirs(profile_pics_folder, exist_ok=True)
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     
     mail.init_app(app)
 
@@ -596,16 +588,6 @@ def create_app():
 
         return redirect(url_for('dashboard'))
 
-    def send_email_job(app, msg):
-        with app.app_context():
-            try:
-                mail.send(msg)
-                print("Email sent successfully to:", msg.recipients)
-            except Exception as e:
-                print("Email error:", e)
-
-
-
     @app.route('/forgot_password', methods=['POST', 'GET'])
     def forgot_password():
 
@@ -620,7 +602,7 @@ def create_app():
                 flash("No user with that email found", "error")
                 return redirect(url_for("forgot_password"))
             
-            PasswordResetId.query.filter_by(user_id=user.id).delete()
+            user.password_reset_ids.clear()
 
             new_password_reset_id = PasswordResetId(user_id=user.id)
             db.session.add(new_password_reset_id)
@@ -635,10 +617,8 @@ def create_app():
                 recipients = [email],
                 body = f"Reset your password using the link below\n\n{password_reset_link}"
             )
-
-            msg.sender = app.config['MAIL_USERNAME']
             try:
-                scheduler.add_job(send_email_job, args=[app, msg])
+                mail.send(msg)
 
                 context = {
                     "reset_sent": True,
@@ -1306,14 +1286,21 @@ def create_app():
                 if not name or not email or not message_content:
                     return jsonify({"success": False, "message": "All fields are required."}), 400
 
-                # Build and send the email
-                msg = Message(
-                    subject=f"New Inquiry from {name}",
-                    recipients=[app.config['MAIL_USERNAME']]
-                )
-                msg.body = f"Name: {name}\nEmail: {email}\n\nMessage:\n{message_content}"
+                # Send the inquiry using the Resend API instead of mail.send(msg)
+                resend.Emails.send({
+                    "from": "onboarding@resend.dev",  # Keep this default for Resend Free Tier
+                    "to": app.config['MAIL_USERNAME'], # Sends the user's inquiry to your email address
+                    "subject": f"New Inquiry from {name}",
+                    "html": f"""
+                    <h3>New Inquiry Form Submission</h3>
+                    <p><strong>Name:</strong> {name}</p>
+                    <p><strong>User Email:</strong> {email}</p>
+                    <br>
+                    <p><strong>Message:</strong></p>
+                    <p>{message_content}</p>
+                    """
+                })
                 
-                mail.send(msg)
                 return jsonify({"success": True, "message": "Inquiry sent successfully!"}), 200
 
             except Exception as e:
@@ -1323,7 +1310,6 @@ def create_app():
         # If it's a GET request (user just clicking the link), show the page!
         return render_template('enquiry.html')
 
-
     with app.app_context():
         db.create_all()
         return app
@@ -1331,10 +1317,11 @@ def create_app():
 if __name__ == '__main__':
     app = create_app()
     scheduler = BackgroundScheduler(job_defaults={'coalesce': True, 'misfire_grace_time': 60})
-    scheduler.add_job(func=send_reminders,trigger='interval', minutes=1, args=[app])
+    scheduler.add_job(func=send_reminders, trigger='interval', minutes=1, args=[app])
     scheduler.start()
 
-    socketio.run(app, host="0.0.0.0", port=5000, debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    socketio.run(app, host="0.0.0.0", port=port, debug=False)
 
 
 #test bug kat dashboard, kat rememebr me login user, jgn lupe delete, logout pon ada 
