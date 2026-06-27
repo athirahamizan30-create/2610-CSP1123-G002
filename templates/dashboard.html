@@ -13,6 +13,24 @@
 </head>
 
 <body>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-container">
+                {% for category, message in messages %}
+                    <div class="flash-message {{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+            <script>
+                window.onload = function () {
+                    openPopup();
+                }
+            </script>
+        {% endif %}
+    {% endwith %}
+
         <h1>Job Application Dashboard</h1>
 
         <form method="GET" action="{{ url_for('dashboard') }}" class="filters">
@@ -52,20 +70,41 @@
 
                     <p><strong>Job Position:</strong> {{ job.job_position }}</p>
                     <p><strong>Location:</strong> {{ job.location }}</p>
-                    <p><strong>Application Status:</strong> {{ job.job_status.capitalize() }}</p>
+                    <p>
+                        <strong>Application Status:</strong>
+                        {% if job.job_status|lower == "stage1" %}
+                            Stage 1
+                        {% elif job.job_status|lower == "stage2" %}
+                            Stage 2
+                        {% else %}
+                            {{ job.job_status.capitalize() }}
+                        {% endif %}
+                    </p>
 
                     <div class="dates">
                         <h4>Application Dates</h4>
 
                         {% if job.dates %}
                             {% for d in job.dates %}
-                                <p><strong>{{ d.date_type }}:</strong> {{ d.date_value }}</p>
+                                <p>
+                                    <strong>
+                                        {% if d.date_type|lower == "stage1" %}
+                                            Stage 1
+                                        {% elif d.date_type|lower == "stage2" %}
+                                            Stage 2
+                                        {% else %}
+                                            {{ d.date_type|capitalize }}
+                                        {% endif %}:
+                                    </strong>
+                                    {{ d.date_value }}
+                                </p>
                             {% endfor %}
                         {% else %}
                             <p>No dates added</p>
                         {% endif %}
                     </div>
-                    <button class="edit-btn"
+                    <div class="action-buttons">
+                        <button class="edit-btn"
                             data-id="{{ job.id }}"
                             data-company="{{ job.company_name }}"
                             data-position="{{ job.job_position }}"
@@ -74,13 +113,17 @@
                             data-type="{{ job.job_type }}"
                             data-dates='{{ job_dates[job.id] | tojson | safe }}'
                             onclick="openEditFromButton(this)">
-                    Edit
-                    </button>
-                     <form method="POST" action="/delete_job/{{ job.id }}">
-                        <button type="submit" class="delete-btn" onclick="return confirm('Delete this job?')">
-                            Delete
+                            Edit
                         </button>
-                    </form>
+
+                        <form method="POST" action="/delete_job/{{ job.id }}">
+                            <button type="submit"
+                                    class="delete-btn"
+                                    onclick="return confirm('Delete this job?')">
+                                Delete
+                            </button>
+                        </form>
+                    </div>
                 </div>
             {% endfor %}
         </div>
@@ -102,13 +145,14 @@
 
                         {% if job.dates %}
                             {% for d in job.dates %}
-                                <p><strong>{{ d.date_type }}:</strong> {{ d.date_value }}</p>
+                                <p><strong>{{ d.date_type|capitalize }}:</strong> {{ d.date_value }}</p>
                             {% endfor %}
                         {% else %}
                             <p>No dates added</p>
                         {% endif %}
                     </div>
-                    <button class="edit-btn"
+                    <div class="action-buttons">
+                        <button class="edit-btn"
                             data-id="{{ job.id }}"
                             data-company="{{ job.company_name }}"
                             data-position="{{ job.job_position }}"
@@ -117,13 +161,17 @@
                             data-type="{{ job.job_type }}"
                             data-dates='{{ job_dates[job.id] | tojson | safe }}'
                             onclick="openEditFromButton(this)">
-                    Edit
-                    </button>
-                    <form method="POST" action="/delete_job/{{ job.id }}">
-                        <button type="submit" class="delete-btn" onclick="return confirm('Delete this job?')">
-                            Delete
+                            Edit
                         </button>
-                    </form>
+
+                        <form method="POST" action="/delete_job/{{ job.id }}">
+                            <button type="submit"
+                                    class="delete-btn"
+                                    onclick="return confirm('Delete this job?')">
+                                Delete
+                            </button>
+                        </form>
+                    </div>
                 </div>
             {% endfor %}
         </div>
@@ -145,13 +193,14 @@
 
                         {% if job.dates %}
                             {% for d in job.dates %}
-                                <p><strong>{{ d.date_type }}:</strong> {{ d.date_value }}</p>
+                                <p><strong>{{ d.date_type|capitalize }}:</strong> {{ d.date_value }}</p>
                             {% endfor %}
                         {% else %}
                             <p>No dates added</p>
                         {% endif %}
                     </div>
-                    <button class="edit-btn"
+                    <div class="action-buttons">
+                        <button class="edit-btn"
                             data-id="{{ job.id }}"
                             data-company="{{ job.company_name }}"
                             data-position="{{ job.job_position }}"
@@ -160,13 +209,17 @@
                             data-type="{{ job.job_type }}"
                             data-dates='{{ job_dates[job.id] | tojson | safe }}'
                             onclick="openEditFromButton(this)">
-                    Edit
-                    </button>
-                    <form method="POST" action="/delete_job/{{ job.id }}">
-                        <button type="submit" class="delete-btn" onclick="return confirm('Delete this job?')">
-                            Delete
+                            Edit
                         </button>
-                    </form>
+
+                        <form method="POST" action="/delete_job/{{ job.id }}">
+                            <button type="submit"
+                                    class="delete-btn"
+                                    onclick="return confirm('Delete this job?')">
+                                Delete
+                            </button>
+                        </form>
+                    </div>
                 </div>
             {% endfor %}
         </div>
@@ -177,6 +230,7 @@
         <span class="close-btn" onclick="closeEditModal()">&times;</span>
 
         <h2>Edit Application</h2>
+        <div id="edit-error" class="error-message" style="color: red; margin-bottom: 10px;"></div>
 
         <input type="hidden" id="edit_id">
 
@@ -200,7 +254,6 @@
             <div class="form-group">
 
                 <label>Application Dates</label>
-
                 <div id="edit-dates-container"></div>
 
                 <div class="add-date-container">

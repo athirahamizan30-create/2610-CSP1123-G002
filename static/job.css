@@ -93,34 +93,28 @@
 .popup-content button[type="button"] {
     background: #8f3c3c;
     color: white;
-    width: 40px !important;
-    height: 40px !important;
-
+    width: 40px;
+    height: 40px;
     min-width: 40px;
     max-width: 40px;
-
     display: flex;
     align-items: center;
     justify-content: center;
-
-    padding: 0 !important;
-    flex: none !important;
+    padding: 0;
+    flex: none;
 }
 
 .popup-content button[type="button"]:hover {
     background: #cd6161;
-    width: 40px !important;
-    height: 40px !important;
-
+    width: 40px;
+    height: 40px;
     min-width: 40px;
     max-width: 40px;
-
     display: flex;
     align-items: center;
     justify-content: center;
-
-    padding: 0 !important;
-    flex: none !important;
+    padding: 0;
+    flex: none;
 }
 
 .date-row {
@@ -130,9 +124,19 @@
     align-items: center;
 }
 
-.date-row select,
 .date-row input {
     flex: 1;
+}
+
+.date-row select{
+    width: 95px;
+    padding: 10px 12px;
+    margin: 8px 0;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    outline: none;
+    transition: 0.2s;
+    font-size: 14px;
 }
 
 .popup-content h2 {
@@ -168,4 +172,33 @@
 
 .close:hover {
     color: black;
+}
+
+.flash-container{
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+}
+
+.flash-message{
+    padding:12px 18px;
+    margin-bottom:10px;
+    border-radius:8px;
+    color:white;
+    font-weight:bold;
+    opacity:1;
+    transition: opacity .5s ease;
+}
+
+.flash-message.success{
+    background:#28a745;
+}
+
+.flash-message.error{
+    background:#dc3545;
+}
+
+.flash-message.hide{
+    opacity:0;
 }
