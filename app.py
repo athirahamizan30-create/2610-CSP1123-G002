@@ -220,10 +220,13 @@ def send_reminders(app):
 
             if reminder.reminder_type == "applied":
                 timing_text = "Your application has been submitted successfully."
+
             elif reminder.reminder_type == "2_days_before":
                 timing_text = "This event is coming up in 2 days."
+
             elif reminder.reminder_type == "1_hour_before":
                 timing_text = "This event starts in 1 hour."
+
             else:
                 timing_text = "You have an upcoming event."
 
@@ -239,49 +242,50 @@ def send_reminders(app):
 
             user = db.session.get(User, reminder.user_id)
 
-            # Build the clean HTML body format for Resend
+            msg = Message(
+                subject='Reminder Notification',
+                sender=app.config['MAIL_USERNAME'],
+                recipients=[user.email]
+            )
+
             if reminder.reminder_type == "applied":
-                html_body = f"""
-                <p>Hello {user.username},</p>
-                <p>{timing_text}</p>
-                <p>{reminder.message}</p>
-                """
+
+                msg.body = f"""
+            Hello {user.username},
+
+            {timing_text}
+
+            {reminder.message}
+            """
+
             else:
-                formatted_time = job_date.date_value.strftime('%d %b %Y %I:%M %p') if job_date else "N/A"
-                html_body = f"""
-                <p>Hello {user.username},</p>
-                <p>{timing_text}</p>
-                <p><strong>{reminder.message}</strong></p>
-                <br>
-                <p><strong>Event Date:</strong> {formatted_time}</p>
-                """
 
-            print("TRY SEND REMINDER TO:", user.email)
+                msg.body = f"""
+            Hello {user.username},
 
-            try:
-                # Routed through Resend API safely over HTTPS Port 443
-                resend.Emails.send({
-                    "from": "onboarding@resend.dev",
-                    "to": user.email,  # Note: Must be your Resend login email on the Free Tier
-                    "subject": "Reminder Notification",
-                    "html": html_body
-                })
+            {timing_text}
 
-                notification = Notification(
-                    reminder_id=reminder.id,
-                    sent_at=datetime.now(),
-                    status="sent",
-                    email=user.email
-                )
-                db.session.add(notification)
+            {reminder.message}
 
-                if reminder.reminder_type == "applied":
-                    db.session.delete(reminder)
+            Event Date:
+            {job_date.date_value.strftime('%d %b %Y %I:%M %p')}
+            """
+            print("TRY SEND TO:", user.email)
 
-                db.session.commit()
+            mail.send(msg)
+            notification = Notification(
+                reminder_id=reminder.id,
+                sent_at=datetime.now(),
+                status="sent",
+                email=user.email
+            )
 
-            except Exception as e:
-                print("Scheduler Email failed via Resend:", e)
+            db.session.add(notification)
+
+            if reminder.reminder_type == "applied":
+                db.session.delete(reminder)
+
+            db.session.commit()
 
 def create_app():
 
@@ -453,7 +457,7 @@ def create_app():
                 return redirect(url_for("dashboard"))
             
 
-        return render_template('index.html', errors=errors)
+        return render_template('login.html', errors=errors)
     
     @login_manager.user_loader
     def load_user(user_id):
@@ -1094,56 +1098,55 @@ def create_app():
                     target_user
                 )
 
-                new_message = ChatMessage(sender=username, room=private_room, message=message, is_private=True)
+                new_message = ChatMessage(sender=username,room=private_room,message=message,is_private=True)
 
                 db.session.add(new_message)
                 db.session.commit()
 
+               
                 receiver = User.query.filter_by(username=target_user).first()
+
                 is_online = any(user_data["username"] == target_user for user_data in active_users.values())
 
                 if receiver and not is_online:
-                    print("TRY SEND OFFLINE DM NOTIFICATION TO:", receiver.email)
-                    try:
-                        # Routed through Resend API safely over HTTPS Port 443
-                        resend.Emails.send({
-                            "from": "onboarding@resend.dev",
-                            "to": receiver.email,  # Note: Must be your Resend login email on the Free Tier
-                            "subject": "You have a new private message",
-                            "html": f"""
-                            <p>Hello <strong>{receiver.username}</strong>,</p>
-                            <p>You have received a new private message from <strong>{username}</strong>.</p>
-                            <br>
-                            <p><strong>Message content:</strong></p>
-                            <blockquote>"{message}"</blockquote>
-                            <p>Log in to CareerTrack to reply.</p>
-                            <br>
-                            <p>Regards,<br>CareerTrack</p>
-                            """
-                        })
-                    except Exception as e:
-                        print("Offline DM Email failed via Resend:", e)
+                    msg = Message( subject="You have a new private message", recipients=[receiver.email])
+                    msg.body = f"""
+                Hello {receiver.username},
+                You have received a new private message from {username}.
 
-                emit('message', {'msg': message, 'username': username, 'room': private_room, 'timestamp': timestamp, 'private': True}, room=private_room)
+                Message:
+                "{message}"
+
+                Log in to CareerTrack to reply.
+
+                Regards,
+                CareerTrack
+                """
+                    try:
+                        mail.send(msg)
+                    except Exception as e:
+                        print("Email failed:", e)
+
+                emit('message', {'msg': message,'username': username,'room': private_room,'timestamp': timestamp,'private': True}, room=private_room)
 
             else:
                 room_exists = (ChatRoom.query.filter_by(name=room).first())
                 if not room_exists:
                     return
                 
-                new_message = ChatMessage(sender=username, room=room, message=message, is_private=False)
+                new_message = ChatMessage(sender=username,room=room,message=message,is_private=False)
 
                 db.session.add(new_message)
                 db.session.commit()
 
                 emit('message', {
-                    'msg': message,
-                    'username': username,
-                    'room': room,
-                    'timestamp': timestamp,
-                }, room=room)
+                            'msg': message,
+                            'username':username,
+                            'room':room,
+                            'timestamp':timestamp,
+                        }, room=room)
         except Exception as e:
-            logger.error(str(e))
+            logger.error(str(e))       
 
     def create_private_room(user1, user2):
         users = sorted([user1, user2])
