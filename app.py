@@ -1238,10 +1238,11 @@ def create_app():
 if __name__ == '__main__':
     app = create_app()
     scheduler = BackgroundScheduler(job_defaults={'coalesce': True, 'misfire_grace_time': 60})
-    scheduler.add_job(func=send_reminders,trigger='interval', minutes=1, args=[app])
+    scheduler.add_job(func=send_reminders, trigger='interval', minutes=1, args=[app])
     scheduler.start()
 
-    socketio.run(app, host="0.0.0.0", port=5000, debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    socketio.run(app, host="0.0.0.0", port=port, debug=False)
 
 
 #test bug kat dashboard, kat rememebr me login user, jgn lupe delete, logout pon ada 
