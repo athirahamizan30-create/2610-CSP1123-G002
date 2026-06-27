@@ -19,6 +19,8 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
 from zoneinfo import ZoneInfo
+import threading
+import resend
 from collections import defaultdict
 
 
@@ -27,6 +29,7 @@ mail = Mail()
 login_manager = LoginManager()
 bcrypt = Bcrypt()
 socketio = SocketIO()
+resend.api_key = os.getenv("RESEND_API_KEY")
 load_dotenv()
 
 
@@ -1283,14 +1286,21 @@ def create_app():
                 if not name or not email or not message_content:
                     return jsonify({"success": False, "message": "All fields are required."}), 400
 
-                # Build and send the email
-                msg = Message(
-                    subject=f"New Inquiry from {name}",
-                    recipients=[app.config['MAIL_USERNAME']]
-                )
-                msg.body = f"Name: {name}\nEmail: {email}\n\nMessage:\n{message_content}"
+                # Send the inquiry using the Resend API instead of mail.send(msg)
+                resend.Emails.send({
+                    "from": "onboarding@resend.dev",  # Keep this default for Resend Free Tier
+                    "to": app.config['MAIL_USERNAME'], # Sends the user's inquiry to your email address
+                    "subject": f"New Inquiry from {name}",
+                    "html": f"""
+                    <h3>New Inquiry Form Submission</h3>
+                    <p><strong>Name:</strong> {name}</p>
+                    <p><strong>User Email:</strong> {email}</p>
+                    <br>
+                    <p><strong>Message:</strong></p>
+                    <p>{message_content}</p>
+                    """
+                })
                 
-                mail.send(msg)
                 return jsonify({"success": True, "message": "Inquiry sent successfully!"}), 200
 
             except Exception as e:
@@ -1300,7 +1310,6 @@ def create_app():
         # If it's a GET request (user just clicking the link), show the page!
         return render_template('enquiry.html')
 
-
     with app.app_context():
         db.create_all()
         return app
@@ -1308,10 +1317,11 @@ def create_app():
 if __name__ == '__main__':
     app = create_app()
     scheduler = BackgroundScheduler(job_defaults={'coalesce': True, 'misfire_grace_time': 60})
-    scheduler.add_job(func=send_reminders,trigger='interval', minutes=1, args=[app])
+    scheduler.add_job(func=send_reminders, trigger='interval', minutes=1, args=[app])
     scheduler.start()
 
-    socketio.run(app, host="0.0.0.0", port=5000, debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    socketio.run(app, host="0.0.0.0", port=port, debug=False)
 
 
 #test bug kat dashboard, kat rememebr me login user, jgn lupe delete, logout pon ada 

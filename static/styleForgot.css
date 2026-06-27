@@ -47,9 +47,17 @@
 }
 
 .instruction{
-    font-size: small;
+    white-space: nowrap;
 }
 
 .form-group input{
-    width: 250px;    
+    width: 230px;    
+}
+
+.form-group{
+    margin-right: 70px;
+}
+
+.signup_link p{
+    margin-right: 10px;
 }
