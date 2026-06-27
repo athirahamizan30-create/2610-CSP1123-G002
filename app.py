@@ -1279,22 +1279,23 @@ def create_app():
                 if not data:
                     return jsonify({"success": False, "message": "No data provided"}), 400
 
-                name = data.get('name')
-                email = data.get('email')
+                # Renamed variables to avoid any library conflict names
+                visitor_name = data.get('name')
+                visitor_email = data.get('email')
                 message_content = data.get('message')
 
-                if not name or not email or not message_content:
+                if not visitor_name or not visitor_email or not message_content:
                     return jsonify({"success": False, "message": "All fields are required."}), 400
 
-                # Send the inquiry using the Resend API instead of mail.send(msg)
+                # Ensure 'Emails' has a Capital 'E' and 'resend' is lowercase
                 resend.Emails.send({
-                    "from": "onboarding@resend.dev",  # Keep this default for Resend Free Tier
-                    "to": app.config['MAIL_USERNAME'], # Sends the user's inquiry to your email address
-                    "subject": f"New Inquiry from {name}",
+                    "from": "onboarding@resend.dev",
+                    "to": app.config.get('MAIL_USERNAME', 'your_backup_email@gmail.com'),
+                    "subject": f"New Inquiry from {visitor_name}",
                     "html": f"""
                     <h3>New Inquiry Form Submission</h3>
-                    <p><strong>Name:</strong> {name}</p>
-                    <p><strong>User Email:</strong> {email}</p>
+                    <p><strong>Name:</strong> {visitor_name}</p>
+                    <p><strong>User Email:</strong> {visitor_email}</p>
                     <br>
                     <p><strong>Message:</strong></p>
                     <p>{message_content}</p>
