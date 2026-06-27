@@ -19,10 +19,14 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
 from zoneinfo import ZoneInfo
+<<<<<<< HEAD
 import threading
 import resend
+=======
+from collections import defaultdict
 
-app = Flask(__name__, template_folder="templates", static_folder="static/uploads")
+>>>>>>> main
+
 db= SQLAlchemy()
 mail = Mail()
 login_manager = LoginManager()
@@ -31,22 +35,6 @@ socketio = SocketIO()
 resend.api_key = os.getenv("RESEND_API_KEY")
 load_dotenv()
 
-app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
-app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
-app.config['SECRET_KEY'] = 'secretley'
-app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://athirah:Tiya071!@localhost/CareerTrack_Database"
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['UPLOAD_FOLDER'] = 'static/uploads'
-app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=15)
-
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-
-profile_pics_folder = os.path.join(
-    app.config['UPLOAD_FOLDER'],
-    'profile_pics'
-)
-
-os.makedirs(profile_pics_folder, exist_ok=True)
 
 logger = logging.getLogger(__name__)
 login_manager.login_view = "login"
@@ -305,21 +293,23 @@ def send_reminders(app):
 def create_app():
 
     app = Flask(__name__)
+    load_dotenv()
+
     bcrypt.init_app(app)
     app.config.from_object(Config)
     db.init_app(app)
     login_manager.init_app(app)
-    login_manager.login_view = "login"
 
     app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
-    app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT'))
+    app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
     app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS') == 'True'
     app.config['MAIL_USE_SSL'] = os.getenv('MAIL_USE_SSL') == 'True'
     app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
     app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
     app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_USERNAME')
 
-
+    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'secretley')
+    app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://athirah:Tiya071!@localhost/CareerTrack_Database"
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=15)
     app.config['UPLOAD_FOLDER'] = 'static/uploads'
@@ -327,6 +317,10 @@ def create_app():
 
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
+    
+    profile_pics_folder = os.path.join(app.config['UPLOAD_FOLDER'],'profile_pics')
+    os.makedirs(profile_pics_folder, exist_ok=True)
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     
     mail.init_app(app)
 
@@ -482,7 +476,57 @@ def create_app():
     @app.route('/add_job', methods=['POST'])
     @login_required
     def add_job():
-        application_date = request.form.get("application_date")
+
+        date_types = request.form.getlist('date_type[]')
+        date_values = request.form.getlist('date_value[]')
+
+        date_dict = {}
+
+        for dtype, dvalue in zip(date_types, date_values):
+            if dtype and dvalue:
+                dt = datetime.strptime(dvalue, "%Y-%m-%dT%H:%M")
+
+                if dtype not in date_dict:
+                    date_dict[dtype] = dt
+
+        print(date_dict)
+
+        applied = date_dict.get("applied")
+        offer = date_dict.get("offer")
+
+        print("Applied =", applied)
+        print("Offer =", offer)
+
+        if applied and offer:
+            print("Comparison:", offer < applied)
+
+        applied = date_dict.get("applied")
+        stage1 = date_dict.get("stage1")
+        stage2 = date_dict.get("stage2")
+        interview = date_dict.get("interview")
+        offer = date_dict.get("offer")
+        deadline = date_dict.get("deadline")
+
+        errors = []
+
+        if stage1 and applied and stage1 < applied:
+            errors.append("Stage 1 cannot be earlier than Applied")
+
+        if stage2 and stage1 and stage2 < stage1:
+            errors.append("Stage 2 cannot be earlier than Stage 1")
+
+        if interview and stage2 and interview < stage2:
+            errors.append("Interview cannot be earlier than Stage 2")
+
+        if offer and interview and offer < interview:
+            errors.append("Offer cannot be earlier than Interview")
+
+        if offer and applied and offer < applied:
+            errors.append("Offer cannot be earlier than Applied")
+
+        if errors:
+            flash(" | ".join(errors))
+            return redirect(url_for('dashboard'))
 
         job = NewJob(
             user_id=current_user.id,
@@ -496,10 +540,8 @@ def create_app():
         db.session.add(job)
         db.session.commit()
 
-        date_types = request.form.getlist('date_type[]')
-        date_values = request.form.getlist('date_value[]')
-
         for dtype, dvalue in zip(date_types, date_values):
+
             if dvalue:
                 event_time = datetime.strptime(dvalue, "%Y-%m-%dT%H:%M")
 
@@ -509,6 +551,7 @@ def create_app():
                     date_type=dtype,
                     date_value=event_time
                 )
+
                 db.session.add(job_date)
 
                 if dtype.lower() == "applied":
@@ -548,14 +591,6 @@ def create_app():
 
         return redirect(url_for('dashboard'))
 
-    def send_email(app, msg):
-        with app.app_context():
-            try:
-                mail.send(msg)
-            except Exception as e:
-                print("Email error:", e)
-
-
     @app.route('/forgot_password', methods=['POST', 'GET'])
     def forgot_password():
 
@@ -570,7 +605,7 @@ def create_app():
                 flash("No user with that email found", "error")
                 return redirect(url_for("forgot_password"))
             
-            PasswordResetId.query.filter_by(user_id=user.id).delete()
+            user.password_reset_ids.clear()
 
             new_password_reset_id = PasswordResetId(user_id=user.id)
             db.session.add(new_password_reset_id)
@@ -586,10 +621,7 @@ def create_app():
                 body = f"Reset your password using the link below\n\n{password_reset_link}"
             )
             try:
-                threading.Thread(
-                target=send_email,
-                args=(app, msg)
-            ).start()
+                mail.send(msg)
 
                 context = {
                     "reset_sent": True,
@@ -656,6 +688,46 @@ def create_app():
     @login_required
     def edit_job(id):
 
+        date_types = request.form.getlist('date_type[]')
+        date_values = request.form.getlist('date_value[]')
+
+        date_dict = {}
+
+        for dtype, dvalue in zip(date_types, date_values):
+            if dtype and dvalue:
+                dt = datetime.strptime(dvalue, "%Y-%m-%dT%H:%M")
+
+                if dtype not in date_dict:
+                    date_dict[dtype] = dt
+
+        applied = date_dict.get("applied")
+        stage1 = date_dict.get("stage1")
+        stage2 = date_dict.get("stage2")
+        interview = date_dict.get("interview")
+        offer = date_dict.get("offer")
+        deadline = date_dict.get("deadline")
+
+        errors = []
+
+        if stage1 and applied and stage1 < applied:
+            errors.append("Stage 1 cannot be earlier than Applied")
+
+        if stage2 and stage1 and stage2 < stage1:
+            errors.append("Stage 2 cannot be earlier than Stage 1")
+
+        if interview and stage2 and interview < stage2:
+            errors.append("Interview cannot be earlier than Stage 2")
+
+        if offer and interview and offer < interview:
+            errors.append("Offer cannot be earlier than Interview")
+
+        if offer and applied and offer < applied:
+            errors.append("Offer cannot be earlier than Applied")
+
+        if errors:
+            flash(" | ".join(errors))
+            return redirect(url_for('dashboard'))
+
         job = NewJob.query.get_or_404(id)
 
         job.company_name = request.form.get("company_name")
@@ -666,6 +738,9 @@ def create_app():
 
         date_types = request.form.getlist("date_type[]")
         date_values = request.form.getlist("date_value[]")
+
+        print(date_types)
+        print(date_values)
 
         JobDate.query.filter_by(job_id=id).delete()
 
@@ -731,7 +806,6 @@ def create_app():
         db.session.delete(job)
         db.session.commit()
 
-        flash('Job deleted successfully!')
         return redirect(url_for('dashboard'))
 
     @app.route('/reminders')
