@@ -49,7 +49,6 @@
 
 .modal-content input:focus,
 .modal-content select:focus {
-    border-color: #4CAF50;
     outline: none;
     box-shadow: 0 0 0 3px rgba(76,175,80,0.15);
 }
@@ -104,13 +103,13 @@ select {
     top: 15px;
     right: 20px;
     font-size: 22px;
-    color: #aaa;
+    color: #666;
     cursor: pointer;
     transition: 0.2s;
 }
 
 .close-btn:hover {
-    color: #da0707f1;
+    color: black;
 }
 
 .date-row {
