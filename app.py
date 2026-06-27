@@ -20,6 +20,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
 from zoneinfo import ZoneInfo
 import threading
+import resend
 
 app = Flask(__name__, template_folder="templates", static_folder="static/uploads")
 db= SQLAlchemy()
@@ -27,6 +28,7 @@ mail = Mail()
 login_manager = LoginManager()
 bcrypt = Bcrypt()
 socketio = SocketIO()
+resend.api_key = os.getenv("RESEND_API_KEY")
 load_dotenv()
 
 app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
@@ -1213,14 +1215,21 @@ def create_app():
                 if not name or not email or not message_content:
                     return jsonify({"success": False, "message": "All fields are required."}), 400
 
-                # Build and send the email
-                msg = Message(
-                    subject=f"New Inquiry from {name}",
-                    recipients=[app.config['MAIL_USERNAME']]
-                )
-                msg.body = f"Name: {name}\nEmail: {email}\n\nMessage:\n{message_content}"
+                # Send the inquiry using the Resend API instead of mail.send(msg)
+                resend.Emails.send({
+                    "from": "onboarding@resend.dev",  # Keep this default for Resend Free Tier
+                    "to": app.config['MAIL_USERNAME'], # Sends the user's inquiry to your email address
+                    "subject": f"New Inquiry from {name}",
+                    "html": f"""
+                    <h3>New Inquiry Form Submission</h3>
+                    <p><strong>Name:</strong> {name}</p>
+                    <p><strong>User Email:</strong> {email}</p>
+                    <br>
+                    <p><strong>Message:</strong></p>
+                    <p>{message_content}</p>
+                    """
+                })
                 
-                mail.send(msg)
                 return jsonify({"success": True, "message": "Inquiry sent successfully!"}), 200
 
             except Exception as e:
@@ -1229,7 +1238,6 @@ def create_app():
 
         # If it's a GET request (user just clicking the link), show the page!
         return render_template('enquiry.html')
-
 
     with app.app_context():
         db.create_all()
