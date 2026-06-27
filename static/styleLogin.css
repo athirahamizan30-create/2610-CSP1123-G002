@@ -1,0 +1,110 @@
+/* Login Layout */
+.login-container {
+    width: 768px;
+    min-height: 500px;
+}
+
+/* Form on the right */
+.login {
+    left: 50%;
+    width: 50%;
+    opacity: 1;
+    z-index: 2;
+}
+
+/* Toggle on the left */
+.login-container .toggle-container {
+    left: 0;
+    width: 50%;
+    border-radius: 0 150px 100px 0;
+}
+
+.login-container .toggle {
+    left: 0;
+    width: 100%;
+    transform: none;
+}
+
+.login-container .toggle-panel {
+    width: 100%;
+    transform: none;
+    padding: 40px;
+    text-align: center;
+}
+
+/* Disable all animation */
+.login-container * {
+    transition: none !important;
+}
+
+/* Form styling */
+.login h1 {
+    font-size: 36px;
+    margin-bottom: 15px;
+}
+
+.login .form-group {
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+.login label {
+    display: block;
+    text-align: left;
+    margin-bottom: 6px;
+}
+
+.login input {
+    width: 100%;
+}
+
+.login .remember-me {
+    width: 100%;
+}
+
+.login .remember-me input {
+    width: auto;
+}
+
+.login .remember-me label {
+    margin-bottom: 0;
+}
+
+.login-form {
+    left: 50%;
+    width: 50%;
+}
+
+.login-toggle {
+    left: 0;
+    width: 50%;
+    border-radius: 0 150px 100px 0;
+}
+
+.login-panel {
+    width: 100%;
+    padding: 40px;
+    text-align: center;
+}
+
+.error {
+    width: 100%;
+    margin: 10px 0;
+}
+
+.error ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.error li {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c2c7;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 8px;
+    text-align: center;
+    font-size: 13px;
+}
