@@ -19,13 +19,10 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
 from zoneinfo import ZoneInfo
-<<<<<<< HEAD
 import threading
 import resend
-=======
 from collections import defaultdict
 
->>>>>>> main
 
 db= SQLAlchemy()
 mail = Mail()
