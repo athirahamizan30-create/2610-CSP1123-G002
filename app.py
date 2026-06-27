@@ -19,8 +19,9 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
 from zoneinfo import ZoneInfo
-import resend
+import threading
 from collections import defaultdict
+import resend
 
 
 db= SQLAlchemy()
@@ -28,8 +29,8 @@ mail = Mail()
 login_manager = LoginManager()
 bcrypt = Bcrypt()
 socketio = SocketIO()
-resend.api_key = os.getenv("RESEND_API_KEY")
 load_dotenv()
+resend.api_key = os.getenv("RESEND_API_KEY")
 
 
 logger = logging.getLogger(__name__)
@@ -1278,7 +1279,7 @@ def create_app():
                 if not data:
                     return jsonify({"success": False, "message": "No data provided"}), 400
 
-                # Renamed variables to avoid any library conflict names
+                # Explicitly named variables to avoid overlapping with module namespaces
                 visitor_name = data.get('name')
                 visitor_email = data.get('email')
                 message_content = data.get('message')
@@ -1286,16 +1287,17 @@ def create_app():
                 if not visitor_name or not visitor_email or not message_content:
                     return jsonify({"success": False, "message": "All fields are required."}), 400
 
-                # Ensure 'Emails' has a Capital 'E' and 'resend' is lowercase
+                # Target email address configured in your environment variables
+                recipient_email = app.config.get('MAIL_USERNAME')
+
+                # Send using Resend API over standard HTTP (safe from Render port blocking)
                 resend.Emails.send({
                     "from": "onboarding@resend.dev",
-                    "to": app.config.get('MAIL_USERNAME', 'your_backup_email@gmail.com'),
+                    "to": recipient_email,
                     "subject": f"New Inquiry from {visitor_name}",
                     "html": f"""
-                    <h3>New Inquiry Form Submission</h3>
-                    <p><strong>Name:</strong> {visitor_name}</p>
-                    <p><strong>User Email:</strong> {visitor_email}</p>
-                    <br>
+                    <h3>New Inquiry Received</h3>
+                    <p><strong>From:</strong> {visitor_name} ({visitor_email})</p>
                     <p><strong>Message:</strong></p>
                     <p>{message_content}</p>
                     """
