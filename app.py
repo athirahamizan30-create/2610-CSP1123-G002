@@ -22,6 +22,7 @@ from zoneinfo import ZoneInfo
 import threading
 from collections import defaultdict
 import resend
+from decouple import config
 
 
 db= SQLAlchemy()
@@ -303,7 +304,7 @@ def create_app():
     app.config['MAIL_USE_SSL'] = os.getenv('MAIL_USE_SSL') == 'True'
     app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
     app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
-    app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_USERNAME')
+    app.config['MAIL_DEFAULT_SENDER'] = (os.getenv('MAIL_DEFAULT_SENDER_NAME', 'CareerTrack'), 'noreply@careertrack.com')
 
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'secretley')
     app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://athirah:Tiya071!@localhost/CareerTrack_Database"
@@ -1274,12 +1275,10 @@ def create_app():
     def enquiry():
         if request.method == 'POST':
             try:
-                # Read data sent from the JavaScript fetch request
                 data = request.get_json()
                 if not data:
                     return jsonify({"success": False, "message": "No data provided"}), 400
 
-                # Explicitly named variables to avoid overlapping with module namespaces
                 visitor_name = data.get('name')
                 visitor_email = data.get('email')
                 message_content = data.get('message')
@@ -1287,29 +1286,32 @@ def create_app():
                 if not visitor_name or not visitor_email or not message_content:
                     return jsonify({"success": False, "message": "All fields are required."}), 400
 
-                # Target email address configured in your environment variables
                 recipient_email = app.config.get('MAIL_USERNAME')
 
-                # Send using Resend API over standard HTTP (safe from Render port blocking)
-                resend.Emails.send({
-                    "from": "onboarding@resend.dev",
-                    "to": recipient_email,
-                    "subject": f"New Inquiry from {visitor_name}",
-                    "html": f"""
-                    <h3>New Inquiry Received</h3>
-                    <p><strong>From:</strong> {visitor_name} ({visitor_email})</p>
-                    <p><strong>Message:</strong></p>
-                    <p>{message_content}</p>
-                    """
-                })
-                
+                msg = Message(
+                    subject=f"New Inquiry from {visitor_name}",
+                    recipients=[recipient_email]  # Sends the enquiry to your career track admin email
+                )
+                msg.html = f"""
+                <h3>New Inquiry Received</h3>
+                <p><strong>From:</strong> {visitor_name} ({visitor_email})</p>
+                <p><strong>Message:</strong></p>
+                <p>{message_content}</p>
+                """
+            
+                mail.send(msg)
+            
                 return jsonify({"success": True, "message": "Inquiry sent successfully!"}), 200
 
             except Exception as e:
-                logger.error(f"Inquiry submission failed: {str(e)}")
+                # Safety fallback if logger isn't initialized globally yet
+                if 'logger' in globals():
+                    logger.error(f"Inquiry submission failed: {str(e)}")
+                else:
+                    print(f"Inquiry submission failed: {str(e)}")
+
                 return jsonify({"success": False, "message": "Server error. Could not send email."}), 500
 
-        # If it's a GET request (user just clicking the link), show the page!
         return render_template('enquiry.html')
 
     with app.app_context():
