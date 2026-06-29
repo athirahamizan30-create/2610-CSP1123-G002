@@ -142,17 +142,16 @@
                     </div>
                 </div>
 
-                <div id="box2">
-                    <div class="card" id="box2">
-                        <div class="container">
-                            <b class="rate">Rate of Acceptance</b>
-                            <p>{% if total > 0 %}
-                                {{ ((stats.get('accepted', 0) / total) * 100) | round(2) }}%
-                                {% else %}
-                                    0%
-                                {% endif %}
-                            </p>
-                        </div>
+                <div class="card" id="box2">
+                    <div class="circle-content">
+                        <b class="rate">Rate of Acceptance</b>
+                        <p class="rate-percentage">
+                        {% if total > 0 %}
+                        {{ ((stats.get('accepted', 0) / total) * 100) | round(2) }}%
+                        {% else %}
+                        0%
+                        {% endif %}
+                        </p>
                     </div>
                 </div>
             </div>

@@ -1,15 +1,20 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Job Application Tracker{% endblock %}</title>
+    
     <link rel="stylesheet" href="{{ url_for('static', filename='base.css') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/basic/boxicons.min.css" rel="stylesheet">
     <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">   
+    
     {% block head %}{% endblock %}
 </head>
 <body>
 
-    <div id="overlay" onclick="toggleSidebar()"></div>
+    <div id="overlay"></div>
 
     <div class="sidebar" id="sidebar">
         <h2>Menu</h2>
@@ -39,13 +44,14 @@
             Statistic
         </a>
 
-        <a href="/account" class="{% if active_page == 'reminders' %}active{% endif %}">
+        <a href="/account" class="{% if active_page == 'account' %}active{% endif %}">
             <i class='bxf bx-user'></i>
             Account profile
         </a>
+        
         <a href="/chat">
             <i class="bxf bx-discussion"></i>
-            chat
+            Chat
         </a>
 
         <a href="/logout">
@@ -54,120 +60,110 @@
         </a>
     </div>
 
-    <script>
-    function toggleSidebar() {
-        document.getElementById("sidebar").classList.toggle("active");
-        document.getElementById("overlay").classList.toggle("active");
-    }
-    </script>
-
     <header class="custom-header">
-    <div class="header-container">
-        <button class="menu-btn" onclick="toggleSidebar()">
-            <i class="bx bx-menu bx-sm"></i>
-        </button>
-        
-        <nav class="profile-nav">         
-            {% if current_user.is_authenticated and current_user.image_file %}
-                <img src="{{ url_for('static', filename='uploads/profile_pics/' + current_user.image_file) }}" class="user-pic" id="profile-icon" onclick="toggleMenu()">
-            {% else %}
-                <img src="{{ url_for('static', filename='default_avatar.png') }}" class="user-pic" id="profile-icon" onclick="toggleMenu()">
-            {% endif %}
+        <div class="header-container">
+            <button class="menu-btn" onclick="toggleSidebar()">
+                <i class="bx bx-menu bx-sm"></i>
+            </button>
+            
+            <nav class="profile-nav">         
+                {% if current_user.is_authenticated and current_user.image_file %}
+                    <img src="{{ url_for('static', filename='uploads/profile_pics/' + current_user.image_file) }}" class="user-pic" id="profile-icon" onclick="toggleMenu()">
+                {% else %}
+                    <img src="{{ url_for('static', filename='default_avatar.png') }}" class="user-pic" id="profile-icon" onclick="toggleMenu()">
+                {% endif %}
 
-            <div class="sub-menu-wrap" id="subMenu">
-                <div class="sub-menu">
-                    <div class="user-info">
-                    {% if current_user.is_authenticated and current_user.image_file %}
-                        <img src="{{ url_for('static', filename='uploads/profile_pics/' + current_user.image_file) }}" alt="User Profile">
-                    {% else %}
-                        <img src="{{ url_for('static', filename='default_avatar.png') }}" class="user-pic" id="profile-icon" onclick="toggleMenu()">
-                    {% endif %}
+                <div class="sub-menu-wrap" id="subMenu">
+                    <div class="sub-menu">
+                        <div class="user-info">
+                            {% if current_user.is_authenticated and current_user.image_file %}
+                                <img src="{{ url_for('static', filename='uploads/profile_pics/' + current_user.image_file) }}" alt="User Profile">
+                            {% else %}
+                                <img src="{{ url_for('static', filename='default_avatar.png') }}" alt="Default Avatar">
+                            {% endif %}
+                            <h2>{{ current_user.full_name if current_user.is_authenticated else "Guest User" }}</h2>
+                        </div>
+                        <hr>
 
-                        <h2>{{ current_user.full_name }}</h2>
+                        <a href="/account" class="sub-menu-link">
+                            <i class='bx bx-user'></i>
+                            <p>Edit Profile</p>
+                            <span>&gt;</span>
+                        </a>
+
+                        <a href="/enquiry" class="sub-menu-link">
+                            <i class='bxf bx-message-bubble-question-mark'></i>
+                            <p>Enquiry</p>
+                            <span>&gt;</span>
+                        </a>
+
+                        <a href="/logout" class="sub-menu-link">
+                            <i class="bxf bx-arrow-out-right-square-half"></i>
+                            <p>Logout</p>
+                            <span>&gt;</span>
+                        </a>                    
                     </div>
-                    <hr>
-
-                    <a href="/account" class="sub-menu-link">
-                        <i class='bx bx-user'></i>
-                        <p>Edit Profile</p>
-                        <span>&gt;</span>
-                    </a>
-
-                    <a href="/enquiry" class="sub-menu-link">
-                        <i class='bxf bx-message-bubble-question-mark'></i>
-                        <p>Enquiry</p>
-                        <span>&gt;</span>
-                    </a>
-
-                    <a href="/" class="sub-menu-link">
-                        <i class="bxf bx-arrow-out-right-square-half"></i>
-                        <p>Logout</p>
-                        <span>&gt;</span>
-                    </a>                    
                 </div>
-            </div>
-        </nav>
-    </div>
+            </nav>
+        </div>
     </header>
-
-    <script>
-    let subMenu = document.getElementById("subMenu")
-    let menuBtn = document.getElementById("profile-icon");
-
-    function toggleMenu(){
-        subMenu.classList.toggle("open-menu")
-    }
-    document.addEventListener("click", function(event) {
-        if (subMenu.classList.contains("open-menu")) {
-            if (!subMenu.contains(event.target) && !menuBtn.contains(event.target)) {
-            subMenu.classList.remove("open-menu");
-        }
-        }
-    });
-    </script>
 
     <div class="content">
         {% block content %}{% endblock %}
     </div>
 
     <script>
-    function toggleSidebar() {
-        document.getElementById("sidebar").classList.toggle("active");
-        document.getElementById("overlay").classList.toggle("active");
-    }
-    </script>
-
-    <script>
     document.addEventListener("DOMContentLoaded", function () {
-
         const popup = document.getElementById("popupForm");
         const sidebar = document.getElementById("sidebar");
         const overlay = document.getElementById("overlay");
+        const subMenu = document.getElementById("subMenu");
+        const menuBtn = document.getElementById("profile-icon");
 
-        window.openPopup = function () {
-            popup.classList.add("show");
-
-            if (sidebar) sidebar.classList.remove("active");
-            if (overlay) overlay.classList.remove("active");
-        }
-
-        window.closePopup = function () {
-            popup.classList.remove("show");
-            sidebar.classList.remove("active");
-            overlay.classList.remove("active");
-        }
-
-        popup.addEventListener("click", function (event) {
-            if (event.target === popup) {
-                closePopup();
-            }
-        });
-
+        // Global function assignments to keep 'onclick' HTML triggers working
         window.toggleSidebar = function () {
             sidebar.classList.toggle("active");
             overlay.classList.toggle("active");
         }
 
+        window.openPopup = function () {
+            if (popup) popup.classList.add("show");
+            if (sidebar) sidebar.classList.remove("active");
+            if (overlay) overlay.classList.remove("active");
+        }
+
+        window.closePopup = function () {
+            if (popup) popup.classList.remove("show");
+            if (sidebar) sidebar.classList.remove("active");
+            if (overlay) overlay.classList.remove("active");
+        }
+
+        window.toggleMenu = function () {
+            subMenu.classList.toggle("open-menu");
+        }
+
+        // Attach click listener to overlay to close sidebar on click
+        if (overlay) {
+            overlay.addEventListener("click", window.toggleSidebar);
+        }
+
+        // Close Popup when clicking outside the form area
+        if (popup) {
+            popup.addEventListener("click", function (event) {
+                if (event.target === popup) {
+                    closePopup();
+                }
+            });
+        }
+
+        // Close profile sub-menu when clicking anywhere outside it
+        document.addEventListener("click", function(event) {
+            if (subMenu && subMenu.classList.contains("open-menu")) {
+                if (!subMenu.contains(event.target) && !menuBtn.contains(event.target)) {
+                    subMenu.classList.remove("open-menu");
+                }
+            }
+        });
     });
     </script>
     
@@ -185,6 +181,19 @@
                     }, 
                 });
         </script>  
+        
+            Chatbot.init({
+                chatbotId: "chatbot_6vhob9vfhw3ciblj7xwhn",
+                theme: {
+                    button: {
+                        size: 'large',
+                        bottom: 40,
+                        right: 40,
+                        color: '#abc17c'
+                    }
+                }
+            });
+        </script>
     </div>
 </body>
 </html>
