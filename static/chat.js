@@ -52,7 +52,7 @@ function addMessage(sender, message, type, timestamp) {
     messageDiv.className = `message ${type}`;
 
      const time = timestamp
-        ? new Date(timestamp).toLocaleString()
+        ? new Date(timestamp + "Z").toLocaleString()
         : "";
 
     messageDiv.innerHTML = `

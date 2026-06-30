@@ -154,7 +154,7 @@ class ChatMessage(db.Model):
     room = db.Column(db.String(150),nullable=False)
     message = db.Column(db.Text,nullable=False)
     is_private = db.Column(db.Boolean,default=False)
-    timestamp = db.Column(db.DateTime,default=lambda: datetime.now(ZoneInfo("Asia/Kuala_Lumpur")))
+    timestamp = db.Column(db.DateTime,default=lambda: datetime.now(timezone.utc))
 
 class ChatRoom(db.Model):
 
@@ -1046,7 +1046,7 @@ def create_app():
 
             active_users[request.sid] = {
                 'username':session['username'],
-                'connected_at': datetime.now(ZoneInfo("Asia/Kuala_Lumpur")).isoformat()
+                'connected_at': datetime.now(timezone.utc)
             }
 
             unique_users = list(set(
@@ -1102,7 +1102,7 @@ def create_app():
             emit('status', {
                 'msg' : f"{username} has joined the room",
                 'type' : 'join',
-                'timestamp': datetime.now(ZoneInfo("Asia/Kuala_Lumpur")).isoformat()
+                'timestamp': datetime.now(timezone.utc)
             }, room=room)
 
             logger.info(f"User {username} has joined {room}")
@@ -1123,7 +1123,7 @@ def create_app():
             emit('status', {
                     'msg' : f"{username} has left the room",
                     'type' : 'leave',
-                    'timestamp': datetime.now(ZoneInfo("Asia/Kuala_Lumpur")).isoformat()
+                    'timestamp': datetime.now(timezone.utc)
                 }, room=room)
 
             logger.info(f"User {username} has left the room")
@@ -1141,7 +1141,7 @@ def create_app():
 
             if not message:
                 return
-            timestamp = datetime.now(ZoneInfo("Asia/Kuala_Lumpur")).isoformat()
+            timestamp = datetime.now(timezone.utc).isoformat()
         
             if msg_type == 'private':
                 target_user = data.get('target')
