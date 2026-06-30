@@ -20,7 +20,6 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
 from zoneinfo import ZoneInfo
-import threading
 from collections import defaultdict
 import resend
 import json
@@ -1443,4 +1442,3 @@ if __name__ == '__main__':
     socketio.run(app, host="0.0.0.0", port=port, debug=False)
 
 
-#test bug kat dashboard, kat rememebr me login user, jgn lupe delete, logout pon ada 
