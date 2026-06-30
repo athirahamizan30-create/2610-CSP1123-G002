@@ -22,7 +22,6 @@ from zoneinfo import ZoneInfo
 import threading
 from collections import defaultdict
 import resend
-from decouple import config
 
 
 db= SQLAlchemy()
