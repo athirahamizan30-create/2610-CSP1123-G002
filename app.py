@@ -1,4 +1,4 @@
-from flask import Flask, render_template, url_for, request, redirect, flash, session, jsonify, make_response
+from flask import Flask, render_template, url_for, request, requests,  redirect, flash, session, jsonify, make_response
 import re, uuid, os, secrets, logging
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -288,22 +288,13 @@ def send_reminders(app):
             db.session.commit()
 
 def create_app():
-
     app = Flask(__name__)
     load_dotenv()
 
-    bcrypt.init_app(app)
     app.config.from_object(Config)
+    bcrypt.init_app(app)
     db.init_app(app)
     login_manager.init_app(app)
-
-    app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
-    app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
-    app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS') == 'True'
-    app.config['MAIL_USE_SSL'] = os.getenv('MAIL_USE_SSL') == 'True'
-    app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
-    app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
-    app.config['MAIL_DEFAULT_SENDER'] = (os.getenv('MAIL_DEFAULT_SENDER_NAME', 'CareerTrack'), 'noreply@careertrack.com')
 
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'secretley')
     app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://athirah:Tiya071!@localhost/CareerTrack_Database"
@@ -1287,23 +1278,34 @@ def create_app():
 
                 recipient_email = app.config.get('MAIL_USERNAME')
 
-                msg = Message(
-                    subject=f"New Inquiry from {visitor_name}",
-                    recipients=[recipient_email]  # Sends the enquiry to your career track admin email
-                )
-                msg.html = f"""
-                <h3>New Inquiry Received</h3>
-                <p><strong>From:</strong> {visitor_name} ({visitor_email})</p>
-                <p><strong>Message:</strong></p>
-                <p>{message_content}</p>
-                """
-            
-                mail.send(msg)
-            
-                return jsonify({"success": True, "message": "Inquiry sent successfully!"}), 200
+                # --- BREVO HTTP API SENDING ---
+                api_url = "https://api.brevo.com/v3/smtp/email"
+                headers = {
+                    "accept": "application/json",
+                    "api-key": os.getenv("BREVO_API_KEY"),
+                    "content-type": "application/json"
+                }
+                payload = {
+                    "sender": {"name": "CareerTrack Inquiry", "email": recipient_email},
+                    "to": [{"email": recipient_email}],
+                    "subject": f"New Inquiry from {visitor_name}",
+                    "htmlContent": f"""
+                    <h3>New Inquiry Received</h3>
+                    <p><strong>From:</strong> {visitor_name} ({visitor_email})</p>
+                    <p><strong>Message:</strong></p>
+                    <p>{message_content}</p>
+                    """
+                }
+
+                response = requests.post(api_url, json=payload, headers=headers)
+                
+                if response.status_code in [200, 201]:
+                    return jsonify({"success": True, "message": "Inquiry sent successfully!"}), 200
+                else:
+                    print(f"Brevo API Error: {response.text}")
+                    return jsonify({"success": False, "message": "Failed to send via API."}), 500
 
             except Exception as e:
-                # Safety fallback if logger isn't initialized globally yet
                 if 'logger' in globals():
                     logger.error(f"Inquiry submission failed: {str(e)}")
                 else:
