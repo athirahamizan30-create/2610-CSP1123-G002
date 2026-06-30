@@ -20,7 +20,6 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
 from zoneinfo import ZoneInfo
-import threading
 from collections import defaultdict
 import resend
 import json
@@ -155,7 +154,7 @@ class ChatMessage(db.Model):
     room = db.Column(db.String(150),nullable=False)
     message = db.Column(db.Text,nullable=False)
     is_private = db.Column(db.Boolean,default=False)
-    timestamp = db.Column(db.DateTime,default=datetime.utcnow)
+    timestamp = db.Column(db.DateTime,default=lambda: datetime.now(timezone.utc))
 
 class ChatRoom(db.Model):
 
@@ -268,6 +267,7 @@ def send_reminders(app):
             print("TRY SEND TO:", user.email)
 
             try:
+                
                 api_key = os.getenv("BREVO_API_KEY")
                 sender_email = app.config["MAIL_USERNAME"]
 
@@ -1068,7 +1068,7 @@ def create_app():
 
             active_users[request.sid] = {
                 'username':session['username'],
-                'connected_at': datetime.now().isoformat()
+                'connected_at': datetime.now(timezone.utc)
             }
 
             unique_users = list(set(
@@ -1124,7 +1124,7 @@ def create_app():
             emit('status', {
                 'msg' : f"{username} has joined the room",
                 'type' : 'join',
-                'timestamp' : datetime.now().isoformat()
+                'timestamp': datetime.now(timezone.utc)
             }, room=room)
 
             logger.info(f"User {username} has joined {room}")
@@ -1145,7 +1145,7 @@ def create_app():
             emit('status', {
                     'msg' : f"{username} has left the room",
                     'type' : 'leave',
-                    'timestamp' : datetime.now().isoformat()
+                    'timestamp': datetime.now(timezone.utc)
                 }, room=room)
 
             logger.info(f"User {username} has left the room")
@@ -1163,7 +1163,7 @@ def create_app():
 
             if not message:
                 return
-            timestamp = datetime.now().isoformat()
+            timestamp = datetime.now(timezone.utc).isoformat()
         
             if msg_type == 'private':
                 target_user = data.get('target')
@@ -1253,7 +1253,7 @@ def create_app():
                         }, room=room)
         except Exception as e:
             logger.error(str(e))
-            
+
     def create_private_room(user1, user2):
         users = sorted([user1, user2])
         return f"dm_{users[0]}_{users[1]}"    
@@ -1464,4 +1464,3 @@ if __name__ == '__main__':
     socketio.run(app, host="0.0.0.0", port=port, debug=False)
 
 
-#test bug kat dashboard, kat rememebr me login user, jgn lupe delete, logout pon ada 
