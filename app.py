@@ -223,13 +223,10 @@ def send_reminders(app):
 
             if reminder.reminder_type == "applied":
                 timing_text = "Your application has been submitted successfully."
-
             elif reminder.reminder_type == "2_days_before":
                 timing_text = "This event is coming up in 2 days."
-
             elif reminder.reminder_type == "1_hour_before":
                 timing_text = "This event starts in 1 hour."
-
             else:
                 timing_text = "You have an upcoming event."
 
@@ -245,50 +242,75 @@ def send_reminders(app):
 
             user = db.session.get(User, reminder.user_id)
 
-            msg = Message(
-                subject='Reminder Notification',
-                sender=app.config['MAIL_USERNAME'],
-                recipients=[user.email]
-            )
-
+            # Build the text content based on the reminder type
             if reminder.reminder_type == "applied":
-
-                msg.body = f"""
-            Hello {user.username},
-
-            {timing_text}
-
-            {reminder.message}
-            """
-
+                email_body_text = f"Hello {user.username},\n\n{timing_text}\n\n{reminder.message}"
             else:
+                formatted_date = job_date.date_value.strftime('%d %b %Y %I:%M %p') if job_date else "N/A"
+                email_body_text = f"Hello {user.username},\n\n{timing_text}\n\n{reminder.message}\n\nEvent Date:\n{formatted_date}"
 
-                msg.body = f"""
-            Hello {user.username},
-
-            {timing_text}
-
-            {reminder.message}
-
-            Event Date:
-            {job_date.date_value.strftime('%d %b %Y %I:%M %p')}
-            """
             print("TRY SEND TO:", user.email)
 
-            mail.send(msg)
-            notification = Notification(
-                reminder_id=reminder.id,
-                sent_at=datetime.now(),
-                status="sent",
-                email=user.email
-            )
+            # --- BREVO HTTP API BACKGROUND EMAIL SENDING ---
+            try:
+                recipient_email = app.config.get('MAIL_USERNAME')
+                api_key = os.getenv("BREVO_API_KEY")
 
-            db.session.add(notification)
+                if not api_key:
+                    print("Background Scheduler Error: BREVO_API_KEY environment variable is missing!")
+                    continue  # Skip this reminder if config is broken
 
-            if reminder.reminder_type == "applied":
-                db.session.delete(reminder)
+                api_url = "https://api.brevo.com/v3/smtp/email"
+                
+                headers = {
+                    "Accept": "application/json",
+                    "api-key": api_key,
+                    "Content-Type": "application/json"
+                }
+                
+                # Convert text message linebreaks securely into safe basic paragraph views for HTML delivery
+                html_body = f"<p>{email_body_text.replace('\n', '<br>')}</p>"
 
-            db.session.commit()
+                payload = {
+                    "sender": {"name": "CareerTrack Reminders", "email": recipient_email},
+                    "to": [{"email": user.email}],
+                    "subject": "Reminder Notification",
+                    "htmlContent": html_body
+                }
+
+                # Encode to bytes and execute the request securely
+                jsondata = json.dumps(payload).encode('utf-8')
+                req = urllib.request.Request(api_url, data=jsondata, headers=headers, method="POST")
+                
+                with urllib.request.urlopen(req) as response:
+                    status_code = response.getcode()
+
+                if status_code in [200, 201]:
+                    print(f"Background email sent successfully to {user.email}")
+                    
+                    # Log the successful notification in the database
+                    notification = Notification(
+                        reminder_id=reminder.id,
+                        sent_at=datetime.now(),
+                        status="sent",
+                        email=user.email
+                    )
+                    db.session.add(notification)
+
+                    if reminder.reminder_type == "applied":
+                        db.session.delete(reminder)
+
+                    db.session.commit()
+                else:
+                    print(f"Brevo API returned unexpected code {status_code} for user {user.email}")
+
+            except Exception as e:
+                if 'logger' in globals():
+                    logger.error(f"Background reminder email failed: {str(e)}")
+                else:
+                    print(f"Background reminder email failed: {str(e)}")
+                # Continue running the loop to let other reminders process if one fails
+                continue
 
 def create_app():
     app = Flask(__name__)
@@ -605,26 +627,65 @@ def create_app():
             password_reset_link = url_for("reset_password", reset_id=new_password_reset_id.reset_id , _external=True)
             db.session.commit()
 
-
-            msg = Message(
-                subject = "Reset your password",
-                recipients = [email],
-                body = f"Reset your password using the link below\n\n{password_reset_link}"
-            )
+            # --- BREVO HTTP API SENDING FOR PASSWORD RESET ---
             try:
-                mail.send(msg)
+                recipient_email = app.config.get('MAIL_USERNAME')
+                api_key = os.getenv("BREVO_API_KEY")
 
-                context = {
-                    "reset_sent": True,
-                    "email": email
+                if not api_key:
+                    print("Error: BREVO_API_KEY environment variable is missing!")
+                    flash("Server configuration error. Please try again later.", "error")
+                    return redirect(url_for("forgot_password"))
+
+                api_url = "https://api.brevo.com/v3/smtp/email"
+                
+                headers = {
+                    "Accept": "application/json",
+                    "api-key": api_key,
+                    "Content-Type": "application/json"
+                }
+                
+                payload = {
+                    "sender": {"name": "CareerTrack", "email": recipient_email},
+                    "to": [{"email": email}], # Sends it directly to the user requesting the reset
+                    "subject": "Reset your password",
+                    "htmlContent": f"""
+                    <h3>Password Reset Request</h3>
+                    <p>You requested a password reset for your CareerTrack account.</p>
+                    <p>Click the link below to securely choose a new password:</p>
+                    <p><a href="{password_reset_link}" style="padding: 10px 15px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a></p>
+                    <br>
+                    <p>If the button doesn't work, copy and paste this link into your browser:</p>
+                    <p>{password_reset_link}</p>
+                    <p>If you did not request this, you can safely ignore this email.</p>
+                    """
                 }
 
-                return render_template("forgot_password.html", **context)
+                # Encode to bytes and execute the request
+                jsondata = json.dumps(payload).encode('utf-8')
+                req = urllib.request.Request(api_url, data=jsondata, headers=headers, method="POST")
+                
+                with urllib.request.urlopen(req) as response:
+                    status_code = response.getcode()
+
+                if status_code in [200, 201]:
+                    context = {
+                        "reset_sent": True,
+                        "email": email
+                    }
+                    return render_template("forgot_password.html", **context)
+                else:
+                    print(f"Brevo API returned unexpected code: {status_code}")
+                    flash("Failed to send password reset email.", "error")
+
             except Exception as e:
-                print(f"Error: {e}")
+                if 'logger' in globals():
+                    logger.error(f"Password reset email failed: {str(e)}")
+                else:
+                    print(f"Password reset email failed: {str(e)}")
+                flash("An error occurred while trying to send the email.", "error")
 
         return render_template("forgot_password.html")
-    
     @app.route('/reset_password/<reset_id>', methods=['POST', 'GET'])
     def reset_password(reset_id):
 
@@ -1071,7 +1132,7 @@ def create_app():
             logger.error(str(e))
 
     @socketio.on('message')
-    def handle_message(data:dict):
+    def handle_message(data: dict):
         try:
             username = current_user.username
             room = data.get('room', "General")
@@ -1081,7 +1142,7 @@ def create_app():
             if not message:
                 return
             timestamp = datetime.now().isoformat()
-            
+        
             if msg_type == 'private':
                 target_user = data.get('target')
                 if not target_user:
@@ -1090,58 +1151,87 @@ def create_app():
                 private_room = create_private_room(
                     username,
                     target_user
-                )
+                )   
 
-                new_message = ChatMessage(sender=username,room=private_room,message=message,is_private=True)
+                new_message = ChatMessage(sender=username, room=private_room, message=message, is_private=True)
 
                 db.session.add(new_message)
                 db.session.commit()
 
-               
                 receiver = User.query.filter_by(username=target_user).first()
-
                 is_online = any(user_data["username"] == target_user for user_data in active_users.values())
 
+            # If the receiver exists and isn't online in the chat, alert them via email
                 if receiver and not is_online:
-                    msg = Message( subject="You have a new private message", recipients=[receiver.email])
-                    msg.body = f"""
-                Hello {receiver.username},
-                You have received a new private message from {username}.
-
-                Message:
-                "{message}"
-
-                Log in to CareerTrack to reply.
-
-                Regards,
-                CareerTrack
-                """
+                
+                # --- BREVO HTTP API SENDING FOR PRIVATE MESSAGES ---
                     try:
-                        mail.send(msg)
-                    except Exception as e:
-                        print("Email failed:", e)
+                        recipient_email = app.config.get('MAIL_USERNAME')
+                        api_key = os.getenv("BREVO_API_KEY")
 
-                emit('message', {'msg': message,'username': username,'room': private_room,'timestamp': timestamp,'private': True}, room=private_room)
+                        if api_key:
+                            api_url = "https://api.brevo.com/v3/smtp/email"
+                        
+                            headers = {
+                                "Accept": "application/json",
+                                "api-key": api_key,
+                                "Content-Type": "application/json"
+                            }
+                        
+                            payload = {
+                                "sender": {"name": "CareerTrack Chat", "email": recipient_email},
+                                "to": [{"email": receiver.email}],
+                                "subject": "You have a new private message",
+                                "htmlContent": f"""
+                                <h3>New Private Message Received</h3>
+                                <p>Hello {receiver.username},</p>
+                                <p>You have received a new private message from <strong>{username}</strong>.</p>
+                                <blockquote style="border-left: 3px solid #ccc; padding-left: 10px; margin: 15px 0; color: #555;">
+                                    "{message}"
+                                </blockquote>
+                                <p>Log in to CareerTrack to reply.</p>
+                                <br>
+                                <p>Regards,<br>CareerTrack</p>
+                                """
+                            }
+
+                            jsondata = json.dumps(payload).encode('utf-8')
+                            req = urllib.request.Request(api_url, data=jsondata, headers=headers, method="POST")
+
+                            with urllib.request.urlopen(req) as response:
+                                status_code = response.getcode()
+                            
+                            if status_code in [200, 201]:
+                                print(f"Chat alert email sent to offline user: {receiver.username}")
+                            else:
+                                print(f"Brevo API error during chat notification: {status_code}")
+                        else:
+                            print("Chat alert failed: BREVO_API_KEY is missing!")
+
+                    except Exception as email_err:
+                        print("Email notification failed:", email_err)
+
+                emit('message', {'msg': message, 'username': username, 'room': private_room, 'timestamp': timestamp, 'private': True}, room=private_room)
 
             else:
                 room_exists = (ChatRoom.query.filter_by(name=room).first())
                 if not room_exists:
                     return
-                
-                new_message = ChatMessage(sender=username,room=room,message=message,is_private=False)
+            
+                new_message = ChatMessage(sender=username, room=room, message=message, is_private=False)
 
                 db.session.add(new_message)
                 db.session.commit()
 
                 emit('message', {
                             'msg': message,
-                            'username':username,
-                            'room':room,
-                            'timestamp':timestamp,
+                            'username': username,
+                            'room': room,
+                            'timestamp': timestamp,
                         }, room=room)
         except Exception as e:
-            logger.error(str(e))       
-
+            logger.error(str(e))
+            
     def create_private_room(user1, user2):
         users = sorted([user1, user2])
         return f"dm_{users[0]}_{users[1]}"    
