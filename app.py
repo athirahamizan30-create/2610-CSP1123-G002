@@ -21,7 +21,6 @@ from dotenv import load_dotenv
 from zoneinfo import ZoneInfo
 from collections import defaultdict
 import resend
-from decouple import config
 
 
 db= SQLAlchemy()
