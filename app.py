@@ -23,6 +23,8 @@ from zoneinfo import ZoneInfo
 import threading
 from collections import defaultdict
 import resend
+import json
+import urllib.request
 
 
 db= SQLAlchemy()
@@ -1277,16 +1279,29 @@ def create_app():
                 if not visitor_name or not visitor_email or not message_content:
                     return jsonify({"success": False, "message": "All fields are required."}), 400
 
+                # Safely get your verified email address from the Flask Config object
                 recipient_email = app.config.get('MAIL_USERNAME')
 
-                # --- BREVO HTTP API SENDING ---
+                # 1. Fetch and verify the API key string exists
+                api_key = os.getenv("BREVO_API_KEY")
+                if not api_key:
+                    if 'logger' in globals():
+                        logger.error("Inquiry failed: BREVO_API_KEY environment variable is missing!")
+                    else:
+                        print("Inquiry failed: BREVO_API_KEY environment variable is missing!")
+                    return jsonify({"success": False, "message": "Server mail configuration error."}), 500
+
+                # --- BREVO HTTP API SENDING VIA BUILT-IN URLLIB ---
                 api_url = "https://api.brevo.com/v3/smtp/email"
+                
                 headers = {
-                    "accept": "application/json",
-                    "api-key": os.getenv("BREVO_API_KEY"),
-                    "content-type": "application/json"
+                    "Accept": "application/json",
+                    "api-key": api_key,
+                    "Content-Type": "application/json"
                 }
+                
                 payload = {
+                    # Ensure email matches your authenticated Brevo sender profile
                     "sender": {"name": "CareerTrack Inquiry", "email": recipient_email},
                     "to": [{"email": recipient_email}],
                     "subject": f"New Inquiry from {visitor_name}",
@@ -1298,12 +1313,19 @@ def create_app():
                     """
                 }
 
-                response = requests.post(api_url, json=payload, headers=headers)
+                # Convert data to bytes safely
+                jsondata = json.dumps(payload).encode('utf-8')
                 
-                if response.status_code in [200, 201]:
+                # Build the network request
+                req = urllib.request.Request(api_url, data=jsondata, headers=headers, method="POST")
+                
+                # Execute the request avoiding gevent/eventlet monkey-patches
+                with urllib.request.urlopen(req) as response:
+                    status_code = response.getcode()
+                    
+                if status_code in [200, 201]:
                     return jsonify({"success": True, "message": "Inquiry sent successfully!"}), 200
                 else:
-                    print(f"Brevo API Error: {response.text}")
                     return jsonify({"success": False, "message": "Failed to send via API."}), 500
 
             except Exception as e:
