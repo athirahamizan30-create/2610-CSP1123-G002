@@ -211,7 +211,7 @@ def send_reminders(app):
         print("NOW:", now)
 
         reminders = Reminder.query.filter(Reminder.reminder_date <= now).all()
-        
+
         all_reminders = Reminder.query.all()
         for r in all_reminders:
             print("DB:", r.reminder_date)
@@ -219,98 +219,106 @@ def send_reminders(app):
         print("FOUND:", reminders)
 
         for reminder in reminders:
-            try:
-                if reminder.reminder_type == "applied":
-                    timing_text = "Your application has been submitted successfully."
-                elif reminder.reminder_type == "2_days_before":
-                    timing_text = "This event is coming up in 2 days."
-                elif reminder.reminder_type == "1_hour_before":
-                    timing_text = "This event starts in 1 hour."
-                else:
-                    timing_text = "You have an upcoming event."
 
-                job_date = JobDate.query.filter_by(job_id=reminder.job_id).first()
+            if reminder.reminder_type == "applied":
+                timing_text = "Your application has been submitted successfully."
 
-                already_sent = Notification.query.filter_by(
-                    reminder_id=reminder.id,
-                    status="sent"
-                ).first()
+            elif reminder.reminder_type == "2_days_before":
+                timing_text = "This event is coming up in 2 days."
 
-                if already_sent:
-                    continue
+            elif reminder.reminder_type == "1_hour_before":
+                timing_text = "This event starts in 1 hour."
 
-                user = db.session.get(User, reminder.user_id)
+            else:
+                timing_text = "You have an upcoming event."
 
-                if reminder.reminder_type == "applied":
-                    email_body_text = f"Hello {user.username},\n\n{timing_text}\n\n{reminder.message}"
-                else:
-                    formatted_date = job_date.date_value.strftime('%d %b %Y %I:%M %p') if job_date else "N/A"
-                    email_body_text = f"Hello {user.username},\n\n{timing_text}\n\n{reminder.message}\n\nEvent Date:\n{formatted_date}"
+            job_date = JobDate.query.filter_by(job_id=reminder.job_id).first()
 
-                print("TRY SEND TO:", user.email)
+            already_sent = Notification.query.filter_by(
+                reminder_id=reminder.id,
+                status="sent"
+            ).first()
 
-                recipient_email = app.config.get('MAIL_USERNAME')
-                api_key = os.getenv("BREVO_API_KEY")
-
-                if not api_key:
-                    print("Background Scheduler Error: BREVO_API_KEY environment variable is missing!")
-                    continue
-
-                api_url = "https://api.brevo.com/v3/smtp/email"
-                
-                headers = {
-                    "Accept": "application/json",
-                    "api-key": api_key,
-                    "Content-Type": "application/json"
-                }
-                
-                html_body = f"<p>{email_body_text.replace('\n', '<br>')}</p>"
-
-                payload = {
-                    "sender": {"name": "CareerTrack Reminders", "email": recipient_email},
-                    "to": [{"email": user.email}],
-                    "subject": "Reminder Notification",
-                    "htmlContent": html_body
-                }
-
-                jsondata = json.dumps(payload).encode('utf-8')
-                req = urllib.request.Request(api_url, data=jsondata, headers=headers, method="POST")
-                
-                with urllib.request.urlopen(req) as response:
-                    status_code = response.getcode()
-
-                if status_code in [200, 201]:
-                    print(f"Background email sent successfully to {user.email}")
-                    
-                    notification = Notification(
-                        reminder_id=reminder.id,
-                        sent_at=datetime.now(),
-                        status="sent",
-                        email=user.email
-                    )
-                    db.session.add(notification)
-
-                    if reminder.reminder_type == "applied":
-                        db.session.delete(reminder)
-
-                    # Stage changes safely without breaking the loop state
-                    db.session.flush() 
-                else:
-                    print(f"Brevo API returned unexpected code {status_code} for user {user.email}")
-
-            except Exception as e:
-                if 'logger' in globals():
-                    logger.error(f"Background reminder error inside loop: {str(e)}")
-                else:
-                    print(f"Background reminder error inside loop: {str(e)}")
+            if already_sent:
                 continue
 
-        # 🚀 COMMIT EVERYTHING TOGETHER OUTSIDE THE LOOP 🚀
-        try:
+            user = db.session.get(User, reminder.user_id)
+
+            if reminder.reminder_type == "applied":
+                email_body_text = f"""
+            Hello {user.username},
+
+            {timing_text}
+
+            {reminder.message}
+            """
+            else:
+                email_body_text = f"""
+            Hello {user.username},
+
+            {timing_text}
+
+            {reminder.message}
+
+            Event Date:
+            {job_date.date_value.strftime('%d %b %Y %I:%M %p')}
+            """
+
+            print("TRY SEND TO:", user.email)
+
+            try:
+                
+                api_key = os.getenv("BREVO_API_KEY")
+                sender_email = app.config["MAIL_USERNAME"]
+
+                headers = {
+                    "accept": "application/json",
+                    "api-key": api_key,
+                    "content-type": "application/json"
+                }
+
+                payload = {
+                    "sender": {
+                        "name": "CareerTrack Reminders",
+                        "email": sender_email
+                    },
+                    "to": [
+                        {
+                            "email": user.email
+                        }
+                    ],
+                    "subject": "Reminder Notification",
+                    "textContent": email_body_text
+                }
+
+                req = urllib.request.Request(
+                    "https://api.brevo.com/v3/smtp/email",
+                    data=json.dumps(payload).encode("utf-8"),
+                    headers=headers,
+                    method="POST"
+                )
+
+                with urllib.request.urlopen(req) as response:
+                    print("Brevo Status:", response.getcode())
+
+            except urllib.error.HTTPError as e:
+                print("Status:", e.code)
+                print(e.read().decode())
+                continue
+
+            notification = Notification(
+                reminder_id=reminder.id,
+                sent_at=datetime.now(),
+                status="sent",
+                email=user.email
+            )
+
+            db.session.add(notification)
+
+            if reminder.reminder_type == "applied":
+                db.session.delete(reminder)
+
             db.session.commit()
-        except Exception as commit_err:
-            db.session.rollback()
-            print(f"Failed to commit background reminders: {commit_err}")
 
 def create_app():
     app = Flask(__name__)
@@ -876,6 +884,15 @@ def create_app():
 
         now = datetime.now()
 
+        status_labels = {
+            "applied": "Applied",
+            "stage1": "Stage 1",
+            "stage2": "Stage 2",
+            "interview": "Interview",
+            "deadline": "Deadline",
+            "offer": "Offer"
+        }
+
         for event in events:
 
             if event.date_value >= now:
@@ -885,14 +902,19 @@ def create_app():
 
             job = db.session.get(NewJob, event.job_id)
 
+            display_type = status_labels.get(
+                event.date_type.strip().lower(),
+                event.date_type
+            )
+
             if job:
                 event.title = (
-                    f"{event.date_type} - "
+                    f"{display_type} - "
                     f"{job.job_position} at "
                     f"{job.company_name}"
                 )
             else:
-                event.title = event.date_type
+                event.title = display_type
 
         return render_template(
             "reminders.html",
