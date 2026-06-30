@@ -1279,18 +1279,29 @@ def create_app():
                 if not visitor_name or not visitor_email or not message_content:
                     return jsonify({"success": False, "message": "All fields are required."}), 400
 
+                # Safely get your verified email address from the Flask Config object
                 recipient_email = app.config.get('MAIL_USERNAME')
+
+                # 1. Fetch and verify the API key string exists
+                api_key = os.getenv("BREVO_API_KEY")
+                if not api_key:
+                    if 'logger' in globals():
+                        logger.error("Inquiry failed: BREVO_API_KEY environment variable is missing!")
+                    else:
+                        print("Inquiry failed: BREVO_API_KEY environment variable is missing!")
+                    return jsonify({"success": False, "message": "Server mail configuration error."}), 500
 
                 # --- BREVO HTTP API SENDING VIA BUILT-IN URLLIB ---
                 api_url = "https://api.brevo.com/v3/smtp/email"
                 
                 headers = {
                     "Accept": "application/json",
-                    "api-key": os.getenv("BREVO_API_KEY"),
+                    "api-key": api_key,
                     "Content-Type": "application/json"
                 }
                 
                 payload = {
+                    # Ensure email matches your authenticated Brevo sender profile
                     "sender": {"name": "CareerTrack Inquiry", "email": recipient_email},
                     "to": [{"email": recipient_email}],
                     "subject": f"New Inquiry from {visitor_name}",
@@ -1302,13 +1313,13 @@ def create_app():
                     """
                 }
 
-                # Convert data to bytes
+                # Convert data to bytes safely
                 jsondata = json.dumps(payload).encode('utf-8')
                 
-                # Build the request
+                # Build the network request
                 req = urllib.request.Request(api_url, data=jsondata, headers=headers, method="POST")
                 
-                # Execute the request safely
+                # Execute the request avoiding gevent/eventlet monkey-patches
                 with urllib.request.urlopen(req) as response:
                     status_code = response.getcode()
                     
