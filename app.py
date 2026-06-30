@@ -1,4 +1,5 @@
-from flask import Flask, render_template, url_for, request, requests,  redirect, flash, session, jsonify, make_response
+from flask import Flask, render_template, url_for, request, redirect, flash, session, jsonify, make_response
+import requests
 import re, uuid, os, secrets, logging
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
