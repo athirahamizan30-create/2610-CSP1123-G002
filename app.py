@@ -482,6 +482,9 @@ def create_app():
     @app.route('/logout')
     def logout():
         logout_user()
+
+        session.pop('_flashes', None)
+
         response = make_response(redirect(url_for("index")))
         response.delete_cookie("remember_token")
         return response
