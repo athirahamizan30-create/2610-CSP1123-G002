@@ -10,4 +10,5 @@ class Config:
     MAIL_USE_SSL = config("MAIL_USE_SSL", cast=bool)
     MAIL_USERNAME = config("MAIL_USERNAME")
     MAIL_PASSWORD = config("MAIL_PASSWORD")
+    
     MAIL_DEFAULT_SENDER = f"{config('MAIL_DEFAULT_SENDER_NAME')} <{config('MAIL_USERNAME')}>"
