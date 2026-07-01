@@ -119,6 +119,7 @@ class Reminder(db.Model):
     message = db.Column(db.String(255))
 
     created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    notifications = db.relationship("Notification", backref="reminder", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Reminder {self.reminder_date}>"
@@ -185,11 +186,7 @@ class Notification(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
 
-    reminder_id = db.Column(
-        db.Integer,
-        db.ForeignKey('reminders.id'),
-        nullable=False
-    )
+    reminder_id = db.Column(db.Integer, db.ForeignKey('reminders.id', ondelete="CASCADE"), nullable=False)
 
     sent_at = db.Column(db.DateTime)
 
@@ -323,6 +320,9 @@ def send_reminders(app):
             db.session.add(notification)
 
             if reminder.reminder_type == "applied":
+
+                Notification.query.filter_by(reminder_id=reminder.id).delete()
+
                 db.session.delete(reminder)
 
             db.session.commit()
