@@ -500,6 +500,7 @@ def create_app():
     @app.route('/add_job', methods=['POST'])
     @login_required
     def add_job():
+        MY = ZoneInfo("Asia/Kuala_Lumpur")
 
         date_types = request.form.getlist('date_type[]')
         date_values = request.form.getlist('date_value[]')
@@ -749,6 +750,8 @@ def create_app():
     @app.route('/edit_job/<int:id>', methods=['POST'])
     @login_required
     def edit_job(id):
+
+        MY = ZoneInfo("Asia/Kuala_Lumpur")
 
         date_types = request.form.getlist('date_type[]')
         date_values = request.form.getlist('date_value[]')
