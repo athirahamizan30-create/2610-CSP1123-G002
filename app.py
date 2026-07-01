@@ -490,6 +490,9 @@ def create_app():
     @app.route('/logout')
     def logout():
         logout_user()
+
+        session.pop('_flashes', None)
+
         response = make_response(redirect(url_for("index")))
         response.delete_cookie("remember_token")
         return response
@@ -497,6 +500,7 @@ def create_app():
     @app.route('/add_job', methods=['POST'])
     @login_required
     def add_job():
+        MY = ZoneInfo("Asia/Kuala_Lumpur")
 
         date_types = request.form.getlist('date_type[]')
         date_values = request.form.getlist('date_value[]')
@@ -514,7 +518,6 @@ def create_app():
 
         applied = date_dict.get("applied")
         offer = date_dict.get("offer")
-
         print("Applied =", applied)
         print("Offer =", offer)
 
@@ -747,6 +750,8 @@ def create_app():
     @app.route('/edit_job/<int:id>', methods=['POST'])
     @login_required
     def edit_job(id):
+
+        MY = ZoneInfo("Asia/Kuala_Lumpur")
 
         date_types = request.form.getlist('date_type[]')
         date_values = request.form.getlist('date_value[]')
