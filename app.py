@@ -293,7 +293,6 @@ def send_reminders(app):
                     if reminder.reminder_type == "applied":
                         db.session.delete(reminder)
 
-                    # Stage changes safely without breaking the loop state
                     db.session.flush() 
                 else:
                     print(f"Brevo API returned unexpected code {status_code} for user {user.email}")
@@ -305,7 +304,6 @@ def send_reminders(app):
                     print(f"Background reminder error inside loop: {str(e)}")
                 continue
 
-        # 🚀 COMMIT EVERYTHING TOGETHER OUTSIDE THE LOOP 🚀
         try:
             db.session.commit()
         except Exception as commit_err:
@@ -627,7 +625,6 @@ def create_app():
             password_reset_link = url_for("reset_password", reset_id=new_password_reset_id.reset_id , _external=True)
             db.session.commit()
 
-            # --- BREVO HTTP API SENDING FOR PASSWORD RESET ---
             try:
                 recipient_email = app.config.get('MAIL_USERNAME')
                 api_key = os.getenv("BREVO_API_KEY")
@@ -647,7 +644,7 @@ def create_app():
                 
                 payload = {
                     "sender": {"name": "CareerTrack", "email": recipient_email},
-                    "to": [{"email": email}], # Sends it directly to the user requesting the reset
+                    "to": [{"email": email}], 
                     "subject": "Reset your password",
                     "htmlContent": f"""
                     <h3>Password Reset Request</h3>
@@ -661,7 +658,6 @@ def create_app():
                     """
                 }
 
-                # Encode to bytes and execute the request
                 jsondata = json.dumps(payload).encode('utf-8')
                 req = urllib.request.Request(api_url, data=jsondata, headers=headers, method="POST")
                 
@@ -932,7 +928,7 @@ def create_app():
             db.session.delete(doc)
             db.session.commit()
         
-            return redirect(url_for('document')) # Redirect back to your files page
+            return redirect(url_for('document'))  
 
         except Exception as e:
             print(f"Error: {e}")
@@ -1064,7 +1060,6 @@ def create_app():
             logger.error(f"Connection error: {str(e)}")
             return False
         
-    #disconnect from session
     @socketio.event
     def disconnect():
         try:
@@ -1161,10 +1156,8 @@ def create_app():
                 receiver = User.query.filter_by(username=target_user).first()
                 is_online = any(user_data["username"] == target_user for user_data in active_users.values())
 
-            # If the receiver exists and isn't online in the chat, alert them via email
                 if receiver and not is_online:
                 
-                # --- BREVO HTTP API SENDING FOR PRIVATE MESSAGES ---
                     try:
                         recipient_email = app.config.get('MAIL_USERNAME')
                         api_key = os.getenv("BREVO_API_KEY")
@@ -1369,10 +1362,8 @@ def create_app():
                 if not visitor_name or not visitor_email or not message_content:
                     return jsonify({"success": False, "message": "All fields are required."}), 400
 
-                # Safely get your verified email address from the Flask Config object
                 recipient_email = app.config.get('MAIL_USERNAME')
 
-                # 1. Fetch and verify the API key string exists
                 api_key = os.getenv("BREVO_API_KEY")
                 if not api_key:
                     if 'logger' in globals():
@@ -1381,7 +1372,6 @@ def create_app():
                         print("Inquiry failed: BREVO_API_KEY environment variable is missing!")
                     return jsonify({"success": False, "message": "Server mail configuration error."}), 500
 
-                # --- BREVO HTTP API SENDING VIA BUILT-IN URLLIB ---
                 api_url = "https://api.brevo.com/v3/smtp/email"
                 
                 headers = {
@@ -1391,7 +1381,6 @@ def create_app():
                 }
                 
                 payload = {
-                    # Ensure email matches your authenticated Brevo sender profile
                     "sender": {"name": "CareerTrack Inquiry", "email": recipient_email},
                     "to": [{"email": recipient_email}],
                     "subject": f"New Inquiry from {visitor_name}",
@@ -1403,13 +1392,10 @@ def create_app():
                     """
                 }
 
-                # Convert data to bytes safely
                 jsondata = json.dumps(payload).encode('utf-8')
                 
-                # Build the network request
                 req = urllib.request.Request(api_url, data=jsondata, headers=headers, method="POST")
                 
-                # Execute the request avoiding gevent/eventlet monkey-patches
                 with urllib.request.urlopen(req) as response:
                     status_code = response.getcode()
                     
