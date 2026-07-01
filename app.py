@@ -104,7 +104,7 @@ class JobDate(db.Model):
     job_id = db.Column(db.Integer, db.ForeignKey('new_job.id'))
     date_type = db.Column(db.String(50))
     date_value = db.Column(db.DateTime(timezone=True), nullable=False)
-    created_at = db.Column(db.DateTime(timezone=True), nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
 class Reminder(db.Model):
     __tablename__ = 'reminders'
@@ -118,7 +118,7 @@ class Reminder(db.Model):
     reminder_type = db.Column(db.String(50))
     message = db.Column(db.String(255))
 
-    created_at = db.Column(db.DateTime(timezone=True), nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
     def __repr__(self):
         return f"<Reminder {self.reminder_date}>"
@@ -261,7 +261,7 @@ def send_reminders(app):
             {reminder.message}
 
             Event Date:
-            {job_date.date_value.strftime('%d %b %Y %I:%M %p')}
+            {job_date.date_value.astimezone(MY).strftime('%d %b %Y %I:%M %p')}
             """
 
             print("TRY SEND TO:", user.email)
@@ -388,11 +388,26 @@ def create_app():
 
         job_date = {}
 
+        MY = ZoneInfo("Asia/Kuala_Lumpur")
+
         for job in jobs:
+
+            for d in job.dates:
+                print("----------------")
+                print("Raw:", d.date_value)
+                print("tzinfo:", d.date_value.tzinfo)
+
+                if d.date_value.tzinfo is None:
+                    malaysia = d.date_value.replace(tzinfo=timezone.utc).astimezone(MY)
+                    print("Converted (naive assumed UTC):", malaysia)
+                else:
+                    malaysia = d.date_value.astimezone(MY)
+                    print("Converted (aware):", malaysia)
+
             job_date[job.id] = [
                 {
                     "date_type": d.date_type,
-                    "date_value": d.date_value.strftime("%Y-%m-%dT%H:%M")
+                    "date_value": d.date_value.astimezone(MY).strftime("%Y-%m-%dT%H:%M")
                 }
                 for d in job.dates
             ]
@@ -567,7 +582,13 @@ def create_app():
         for dtype, dvalue in zip(date_types, date_values):
 
             if dvalue:
-                event_time = datetime.strptime(dvalue, "%Y-%m-%dT%H:%M").replace(tzinfo=MY)
+                local_time = datetime.strptime(dvalue, "%Y-%m-%dT%H:%M").replace(tzinfo=MY)
+
+                event_time = local_time.astimezone(timezone.utc)
+
+                print("Input:", dvalue)
+                print("Before save:", event_time)
+                print("tzinfo:", event_time.tzinfo)
 
                 job_date = JobDate(
                     user_id=current_user.id,
@@ -583,7 +604,7 @@ def create_app():
                     reminder = Reminder(
                         user_id=current_user.id,
                         job_id=job.id,
-                        reminder_date=datetime.now(MY),
+                        reminder_date=datetime.now(timezone.utc),
                         reminder_type="applied",
                         message=f"You have applied for {job.job_position} at {job.company_name}"
                     )
@@ -814,7 +835,10 @@ def create_app():
         for t, v in zip(date_types, date_values):
 
             if v:
-                parsed_date = datetime.fromisoformat(v).replace( tzinfo=MY)
+
+                local_time = datetime.fromisoformat(v).replace(tzinfo=MY)
+
+                parsed_date = local_time.astimezone(timezone.utc)
 
                 new_date = JobDate(
                     job_id=id,
@@ -829,7 +853,7 @@ def create_app():
                     reminder = Reminder(
                         user_id=current_user.id,
                         job_id=job.id,
-                        reminder_date=datetime.now(MY),
+                        reminder_date=datetime.now(timezone.utc),
                         reminder_type="applied",
                         message=f"You have applied for {job.job_position} at {job.company_name}"
                     )
@@ -897,6 +921,9 @@ def create_app():
         }
 
         for event in events:
+
+            print("From DB:", event.date_value)
+            print("DB tzinfo:", event.date_value.tzinfo)
 
             if event.date_value is None:
                 continue
