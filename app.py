@@ -391,26 +391,19 @@ def create_app():
         MY = ZoneInfo("Asia/Kuala_Lumpur")
 
         for job in jobs:
+            job_date[job.id] = []
 
             for d in job.dates:
-                print("----------------")
-                print("Raw:", d.date_value)
-                print("tzinfo:", d.date_value.tzinfo)
-
                 if d.date_value.tzinfo is None:
-                    malaysia = d.date_value.replace(tzinfo=timezone.utc).astimezone(MY)
-                    print("Converted (naive assumed UTC):", malaysia)
+                    dt = d.date_value.replace(tzinfo=timezone.utc).astimezone(MY)
                 else:
-                    malaysia = d.date_value.astimezone(MY)
-                    print("Converted (aware):", malaysia)
+                    dt = d.date_value.astimezone(MY)
 
-            job_date[job.id] = [
-                {
+                job_date[job.id].append({
                     "date_type": d.date_type,
-                    "date_value": d.date_value.astimezone(MY).strftime("%d %b %Y %I:%M %p")
-                }
-                for d in job.dates
-            ]
+                    "display_value": dt.strftime("%d %b %Y %I:%M %p"),
+                    "input_value": dt.strftime("%Y-%m-%dT%H:%M")
+                })
 
         profile_image = url_for('static', filename='uploads/profile_pics/' + current_user.image_file)
 
