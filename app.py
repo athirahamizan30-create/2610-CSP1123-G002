@@ -502,6 +502,9 @@ def create_app():
     def add_job():
         MY = ZoneInfo("Asia/Kuala_Lumpur")
 
+        MY = ZoneInfo("Asia/Kuala_Lumpur")
+        now = datetime.now(MY)
+
         date_types = request.form.getlist('date_type[]')
         date_values = request.form.getlist('date_value[]')
 
@@ -752,6 +755,7 @@ def create_app():
     def edit_job(id):
 
         MY = ZoneInfo("Asia/Kuala_Lumpur")
+        now = datetime.now(MY)
 
         date_types = request.form.getlist('date_type[]')
         date_values = request.form.getlist('date_value[]')
@@ -898,6 +902,9 @@ def create_app():
 
         for event in events:
 
+            if event.date_value is None:
+                continue
+
             if event.date_value >= now:
                 upcoming_events.append(event)
             else:
@@ -906,8 +913,8 @@ def create_app():
             job = db.session.get(NewJob, event.job_id)
 
             display_type = status_labels.get(
-                event.date_type.strip().lower(),
-                event.date_type
+                (event.date_type or "").strip().lower(),
+                event.date_type or "Unknown"
             )
 
             if job:
