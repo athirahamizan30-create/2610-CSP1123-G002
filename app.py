@@ -517,7 +517,6 @@ def create_app():
 
         applied = date_dict.get("applied")
         offer = date_dict.get("offer")
-
         print("Applied =", applied)
         print("Offer =", offer)
 
