@@ -204,11 +204,11 @@ class Notification(db.Model):
 
 def send_reminders(app):
     with app.app_context():
+        MY = ZoneInfo("Asia/Kuala_Lumpur")
 
         print("CRON STARTED")
 
-        MY = ZoneInfo("Asia/Kuala_Lumpur")
-        now = datetime.now(MY)
+        now = datetime.now(timezone.utc)
 
         print("CURRENT TIME:", now)
 
@@ -273,12 +273,15 @@ def send_reminders(app):
             try:
                 
                 api_key = os.getenv("BREVO_API_KEY")
+
+                print("API key exists:", api_key is not None)
+                print("API key starts with:", api_key[:10] if api_key else "None")
                 sender_email = app.config["MAIL_USERNAME"]
 
                 headers = {
-                    "accept": "application/json",
+                    "Accept": "application/json",
                     "api-key": api_key,
-                    "content-type": "application/json"
+                    "Content-Type": "application/json"
                 }
 
                 payload = {
@@ -312,7 +315,7 @@ def send_reminders(app):
 
             notification = Notification(
                 reminder_id=reminder.id,
-                sent_at=datetime.now(MY),
+                sent_at=datetime.now(timezone.utc),
                 status="sent",
                 email=user.email
             )
@@ -896,14 +899,14 @@ def create_app():
     @app.route('/reminders')
     @login_required
     def reminders():
+        MY = ZoneInfo("Asia/Kuala_Lumpur")
 
         events = JobDate.query.filter_by(user_id=current_user.id).order_by(JobDate.date_value).all()
 
         upcoming_events = []
         past_events = []
 
-        MY = ZoneInfo("Asia/Kuala_Lumpur")
-        now = datetime.now(MY)
+        now = datetime.now(timezone.utc)
 
         status_labels = {
             "applied": "Applied",
