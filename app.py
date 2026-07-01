@@ -330,7 +330,6 @@ def create_app():
     login_manager.init_app(app)
 
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'secretley')
-    app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://athirah:Tiya071!@localhost/CareerTrack_Database"
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=15)
     app.config['UPLOAD_FOLDER'] = 'static/uploads'
@@ -1491,11 +1490,6 @@ def create_app():
 
 if __name__ == '__main__':
     app = create_app()
-    scheduler = BackgroundScheduler(job_defaults={'coalesce': True, 'misfire_grace_time': 60})
-    scheduler.add_job(func=send_reminders, trigger='interval', minutes=1, args=[app])
-    scheduler.start()
 
     port = int(os.environ.get("PORT", 5000))
     socketio.run(app, host="0.0.0.0", port=port, debug=False)
-
-
