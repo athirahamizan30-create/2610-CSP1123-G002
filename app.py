@@ -94,7 +94,7 @@ class NewJob(db.Model):
     job_status = db.Column(db.String(50))
     job_type = db.Column(db.String(50))
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False)
     dates = db.relationship('JobDate', backref='job', cascade="all, delete")
     reminders = db.relationship('Reminder', backref='job', cascade="all, delete-orphan", passive_deletes=True)
 
@@ -103,8 +103,8 @@ class JobDate(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     job_id = db.Column(db.Integer, db.ForeignKey('new_job.id'))
     date_type = db.Column(db.String(50))
-    date_value = db.Column(db.DateTime)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    date_value = db.Column(db.DateTime(timezone=True), nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False)
 
 class Reminder(db.Model):
     __tablename__ = 'reminders'
@@ -113,12 +113,12 @@ class Reminder(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     job_id = db.Column(db.Integer, db.ForeignKey('new_job.id', ondelete='CASCADE'), nullable=False)
 
-    reminder_date = db.Column(db.DateTime, nullable=False)
+    reminder_date = db.Column(db.DateTime(timezone=True), nullable=False)
 
     reminder_type = db.Column(db.String(50))
     message = db.Column(db.String(255))
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False)
 
     def __repr__(self):
         return f"<Reminder {self.reminder_date}>"
@@ -308,7 +308,7 @@ def send_reminders(app):
 
             notification = Notification(
                 reminder_id=reminder.id,
-                sent_at=datetime.now(),
+                sent_at=datetime.now(MY),
                 status="sent",
                 email=user.email
             )
@@ -580,7 +580,7 @@ def create_app():
                     reminder = Reminder(
                         user_id=current_user.id,
                         job_id=job.id,
-                        reminder_date=datetime.now(),
+                        reminder_date=datetime.now(MY),
                         reminder_type="applied",
                         message=f"You have applied for {job.job_position} at {job.company_name}"
                     )
@@ -824,7 +824,7 @@ def create_app():
                     reminder = Reminder(
                         user_id=current_user.id,
                         job_id=job.id,
-                        reminder_date=datetime.now(),
+                        reminder_date=datetime.now(MY),
                         reminder_type="applied",
                         message=f"You have applied for {job.job_position} at {job.company_name}"
                     )
@@ -879,7 +879,8 @@ def create_app():
         upcoming_events = []
         past_events = []
 
-        now = datetime.now()
+        MY = ZoneInfo("Asia/Kuala_Lumpur")
+        now = datetime.now(MY)
 
         status_labels = {
             "applied": "Applied",
