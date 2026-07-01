@@ -78,7 +78,7 @@ function openEditModal(id, company, position, location, status, type, dates) {
     }
 
     dates.forEach(date => {
-        addEditDate(date.date_type, date.date_value?.slice(0, 16));
+        addEditDate(date.date_type, date.input_value);
     });
 }
 

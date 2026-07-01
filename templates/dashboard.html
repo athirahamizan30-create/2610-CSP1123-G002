@@ -96,7 +96,7 @@
                                             {{ d.date_type|capitalize }}
                                         {% endif %}:
                                     </strong>
-                                    {{ d.date_value }}
+                                    {{ d.display_value }}
                                 </p>
                             {% endfor %}
                         {% else %}
@@ -145,7 +145,7 @@
 
                         {% if job_dates[job.id] %}
                              {% for d in job_dates[job.id] %}
-                                <p><strong>{{ d.date_type|capitalize }}:</strong> {{ d.date_value }}</p>
+                                <p><strong>{{ d.date_type|capitalize }}:</strong> {{ d.display_value }}</p>
                             {% endfor %}
                         {% else %}
                             <p>No dates added</p>
@@ -193,7 +193,7 @@
 
                         {% if job_dates[job.id] %}
                             {% for d in job_dates[job.id] %}
-                                <p><strong>{{ d.date_type|capitalize }}:</strong> {{ d.date_value }}</p>
+                                <p><strong>{{ d.date_type|capitalize }}:</strong> {{ d.display_value }}</p>
                             {% endfor %}
                         {% else %}
                             <p>No dates added</p>
