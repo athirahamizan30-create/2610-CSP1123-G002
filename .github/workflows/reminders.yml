@@ -42,4 +42,3 @@ jobs:
           MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
           MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
           MAIL_DEFAULT_SENDER_NAME: ${{ secrets.MAIL_DEFAULT_SENDER_NAME }}
-        run: python send_reminders.py
