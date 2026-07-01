@@ -502,9 +502,6 @@ def create_app():
     def add_job():
         MY = ZoneInfo("Asia/Kuala_Lumpur")
 
-        MY = ZoneInfo("Asia/Kuala_Lumpur")
-        now = datetime.now(MY)
-
         date_types = request.form.getlist('date_type[]')
         date_values = request.form.getlist('date_value[]')
 
@@ -570,7 +567,7 @@ def create_app():
         for dtype, dvalue in zip(date_types, date_values):
 
             if dvalue:
-                event_time = datetime.strptime(dvalue, "%Y-%m-%dT%H:%M")
+                event_time = datetime.strptime(dvalue, "%Y-%m-%dT%H:%M").replace(tzinfo=MY)
 
                 job_date = JobDate(
                     user_id=current_user.id,
@@ -755,7 +752,6 @@ def create_app():
     def edit_job(id):
 
         MY = ZoneInfo("Asia/Kuala_Lumpur")
-        now = datetime.now(MY)
 
         date_types = request.form.getlist('date_type[]')
         date_values = request.form.getlist('date_value[]')
@@ -818,7 +814,7 @@ def create_app():
         for t, v in zip(date_types, date_values):
 
             if v:
-                parsed_date = datetime.fromisoformat(v)
+                parsed_date = datetime.fromisoformat(v).replace( tzinfo=MY)
 
                 new_date = JobDate(
                     job_id=id,
@@ -905,7 +901,14 @@ def create_app():
             if event.date_value is None:
                 continue
 
-            if event.date_value >= now:
+            event_time = event.date_value
+
+            if event_time.tzinfo is None:
+                event_time = event_time.replace(
+                    tzinfo=ZoneInfo("Asia/Kuala_Lumpur")
+                )
+
+            if event_time >= now:
                 upcoming_events.append(event)
             else:
                 past_events.append(event)
