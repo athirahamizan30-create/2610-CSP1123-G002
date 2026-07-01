@@ -205,12 +205,16 @@ class Notification(db.Model):
 def send_reminders(app):
     with app.app_context():
 
+        print("CRON STARTED")
+
         MY = ZoneInfo("Asia/Kuala_Lumpur")
         now = datetime.now(MY)
 
-        print("NOW:", now)
+        print("CURRENT TIME:", now)
 
         reminders = Reminder.query.filter(Reminder.reminder_date <= now).all()
+
+        print("REMINDERS FOUND:", len(reminders))
 
         all_reminders = Reminder.query.all()
         for r in all_reminders:
