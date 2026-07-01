@@ -901,9 +901,7 @@ def create_app():
     @login_required
     def reminders():
 
-        events = JobDate.query.filter_by(
-            user_id=current_user.id
-        ).order_by(JobDate.date_value).all()
+        events = JobDate.query.filter_by(user_id=current_user.id).order_by(JobDate.date_value).all()
 
         upcoming_events = []
         past_events = []
@@ -931,9 +929,10 @@ def create_app():
             event_time = event.date_value
 
             if event_time.tzinfo is None:
-                event_time = event_time.replace(
-                    tzinfo=ZoneInfo("Asia/Kuala_Lumpur")
-                )
+                event_time = event_time.replace(tzinfo=timezone.utc)
+
+            display_time = event_time.astimezone(MY)
+            event.display_date = display_time.strftime("%d %b %Y %I:%M %p")
 
             if event_time >= now:
                 upcoming_events.append(event)
