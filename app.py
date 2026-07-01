@@ -407,7 +407,7 @@ def create_app():
             job_date[job.id] = [
                 {
                     "date_type": d.date_type,
-                    "date_value": d.date_value.astimezone(MY).strftime("%Y-%m-%dT%H:%M")
+                    "date_value": d.date_value.astimezone(MY).strftime("%d %b %Y %I:%M %p")
                 }
                 for d in job.dates
             ]
