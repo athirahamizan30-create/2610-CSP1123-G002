@@ -104,7 +104,7 @@ class JobDate(db.Model):
     job_id = db.Column(db.Integer, db.ForeignKey('new_job.id'))
     date_type = db.Column(db.String(50))
     date_value = db.Column(db.DateTime(timezone=True), nullable=False)
-    created_at = db.Column(db.DateTime(timezone=True), nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
 class Reminder(db.Model):
     __tablename__ = 'reminders'
@@ -118,7 +118,8 @@ class Reminder(db.Model):
     reminder_type = db.Column(db.String(50))
     message = db.Column(db.String(255))
 
-    created_at = db.Column(db.DateTime(timezone=True), nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    notifications = db.relationship("Notification", backref="reminder", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Reminder {self.reminder_date}>"
@@ -185,11 +186,7 @@ class Notification(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
 
-    reminder_id = db.Column(
-        db.Integer,
-        db.ForeignKey('reminders.id'),
-        nullable=False
-    )
+    reminder_id = db.Column(db.Integer, db.ForeignKey('reminders.id', ondelete="CASCADE"), nullable=False)
 
     sent_at = db.Column(db.DateTime)
 
@@ -204,13 +201,17 @@ class Notification(db.Model):
 
 def send_reminders(app):
     with app.app_context():
-
         MY = ZoneInfo("Asia/Kuala_Lumpur")
-        now = datetime.now(MY)
 
-        print("NOW:", now)
+        print("CRON STARTED")
+
+        now = datetime.now(timezone.utc)
+
+        print("CURRENT TIME:", now)
 
         reminders = Reminder.query.filter(Reminder.reminder_date <= now).all()
+
+        print("REMINDERS FOUND:", len(reminders))
 
         all_reminders = Reminder.query.all()
         for r in all_reminders:
@@ -246,39 +247,75 @@ def send_reminders(app):
                 print("Background Scheduler Error: BREVO_API_KEY environment variable is missing!")
                 continue
 
-            api_url = "https://api.brevo.com/v3/smtp/email"
-                
-            headers = {
-                "Accept": "application/json",
-                "api-key": api_key,
-                "Content-Type": "application/json"
-            }
-                
-            html_body = f"<p>{email_body_text.replace('\n', '<br>')}</p>"
+            user = db.session.get(User, reminder.user_id)
 
-            payload = {
-                "sender": {"name": "CareerTrack Reminders", "email": recipient_email},
-                "to": [{"email": user.email}],
-                "subject": "Reminder Notification",
-                "htmlContent": html_body
-            }
+            if reminder.reminder_type == "applied":
+                email_body_text = f"""
+            Hello {user.username},
 
-            jsondata = json.dumps(payload).encode('utf-8')
-            req = urllib.request.Request(api_url, data=jsondata, headers=headers, method="POST")
+            {timing_text}
+
+            {reminder.message}
+            """
+            else:
+                email_body_text = f"""
+            Hello {user.username},
+
+            {timing_text}
+
+            {reminder.message}
+
+            Event Date:
+            {job_date.date_value.astimezone(MY).strftime('%d %b %Y %I:%M %p')}
+            """
+
+            print("TRY SEND TO:", user.email)
+
+            try:
                 
-            with urllib.request.urlopen(req) as response:
-                status_code = response.getcode()
+                api_key = os.getenv("BREVO_API_KEY")
 
-            if status_code in [200, 201]:
-                print(f"Background email sent successfully to {user.email}")
+                print("API key exists:", api_key is not None)
+                print("API key starts with:", api_key[:10] if api_key else "None")
+                sender_email = app.config["MAIL_USERNAME"]
+
+                api_url = "https://api.brevo.com/v3/smtp/email"
+
+                headers = {
+                    "Accept": "application/json",
+                    "api-key": api_key,
+                    "Content-Type": "application/json"
+                }
+
+                payload = {
+                    "sender": {"name": "Job Tracker", "email": sender_email},
+                    "to": [{"email": user.email}], 
+                    "subject": "Job Application Reminder",
+                    "htmlContent": f"""
+                    <html>
+                        <body>
+                            <p>{email_body_text.replace('\n', '<br>')}</p>
+                        </body>
+                    </html>
+                    """
+                }
+
+                jsondata = json.dumps(payload).encode('utf-8')
+                req = urllib.request.Request(api_url, data=jsondata, headers=headers, method="POST")
+                
+                with urllib.request.urlopen(req) as response:
+                    status_code = response.getcode()
+
+                if status_code in [200, 201]:
+                    print(f"Background email sent successfully to {user.email}")
                     
-                notification = Notification(
-                    reminder_id=reminder.id,
-                    sent_at=datetime.now(),
-                    status="sent",
-                    email=user.email
-                )
-                db.session.add(notification)
+                    notification = Notification(
+                        reminder_id=reminder.id,
+                        sent_at=datetime.now(),
+                        status="sent",
+                        email=user.email
+                    )
+                    db.session.add(notification)
 
                 if reminder.reminder_type == "applied":
                     db.session.delete(reminder)
@@ -286,15 +323,7 @@ def send_reminders(app):
                     db.session.flush() 
                 else:
                     print(f"Brevo API returned unexpected code {status_code} for user {user.email}")
-                continue
-
-    try:
-        db.session.commit()
-    except Exception as e:
-        if 'logger' in globals():
-            logger.error(f"Background reminder error inside loop: {str(e)}")
-        else:
-            print(f"Background reminder error inside loop: {str(e)}")
+                continue    
 
 def create_app():
     app = Flask(__name__)
@@ -306,7 +335,6 @@ def create_app():
     login_manager.init_app(app)
 
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'secretley')
-    app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://athirah:Tiya071!@localhost/CareerTrack_Database"
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=15)
     app.config['UPLOAD_FOLDER'] = 'static/uploads'
@@ -364,14 +392,22 @@ def create_app():
 
         job_date = {}
 
+        MY = ZoneInfo("Asia/Kuala_Lumpur")
+
         for job in jobs:
-            job_date[job.id] = [
-                {
+            job_date[job.id] = []
+
+            for d in job.dates:
+                if d.date_value.tzinfo is None:
+                    dt = d.date_value.replace(tzinfo=timezone.utc).astimezone(MY)
+                else:
+                    dt = d.date_value.astimezone(MY)
+
+                job_date[job.id].append({
                     "date_type": d.date_type,
-                    "date_value": d.date_value.strftime("%Y-%m-%dT%H:%M")
-                }
-                for d in job.dates
-            ]
+                    "display_value": dt.strftime("%d %b %Y %I:%M %p"),
+                    "input_value": dt.strftime("%Y-%m-%dT%H:%M")
+                })
 
         profile_image = url_for('static', filename='uploads/profile_pics/' + current_user.image_file)
 
@@ -466,6 +502,9 @@ def create_app():
     @app.route('/logout')
     def logout():
         logout_user()
+
+        session.pop('_flashes', None)
+
         response = make_response(redirect(url_for("index")))
         response.delete_cookie("remember_token")
         return response
@@ -473,6 +512,7 @@ def create_app():
     @app.route('/add_job', methods=['POST'])
     @login_required
     def add_job():
+        MY = ZoneInfo("Asia/Kuala_Lumpur")
 
         date_types = request.form.getlist('date_type[]')
         date_values = request.form.getlist('date_value[]')
@@ -490,7 +530,6 @@ def create_app():
 
         applied = date_dict.get("applied")
         offer = date_dict.get("offer")
-
         print("Applied =", applied)
         print("Offer =", offer)
 
@@ -540,7 +579,13 @@ def create_app():
         for dtype, dvalue in zip(date_types, date_values):
 
             if dvalue:
-                event_time = datetime.strptime(dvalue, "%Y-%m-%dT%H:%M")
+                local_time = datetime.strptime(dvalue, "%Y-%m-%dT%H:%M").replace(tzinfo=MY)
+
+                event_time = local_time.astimezone(timezone.utc)
+
+                print("Input:", dvalue)
+                print("Before save:", event_time)
+                print("tzinfo:", event_time.tzinfo)
 
                 job_date = JobDate(
                     user_id=current_user.id,
@@ -556,7 +601,7 @@ def create_app():
                     reminder = Reminder(
                         user_id=current_user.id,
                         job_id=job.id,
-                        reminder_date=datetime.now(MY),
+                        reminder_date=datetime.now(timezone.utc),
                         reminder_type="applied",
                         message=f"You have applied for {job.job_position} at {job.company_name}"
                     )
@@ -722,6 +767,8 @@ def create_app():
     @login_required
     def edit_job(id):
 
+        MY = ZoneInfo("Asia/Kuala_Lumpur")
+
         date_types = request.form.getlist('date_type[]')
         date_values = request.form.getlist('date_value[]')
 
@@ -783,7 +830,10 @@ def create_app():
         for t, v in zip(date_types, date_values):
 
             if v:
-                parsed_date = datetime.fromisoformat(v)
+
+                local_time = datetime.fromisoformat(v).replace(tzinfo=MY)
+
+                parsed_date = local_time.astimezone(timezone.utc)
 
                 new_date = JobDate(
                     job_id=id,
@@ -798,7 +848,7 @@ def create_app():
                     reminder = Reminder(
                         user_id=current_user.id,
                         job_id=job.id,
-                        reminder_date=datetime.now(MY),
+                        reminder_date=datetime.now(timezone.utc),
                         reminder_type="applied",
                         message=f"You have applied for {job.job_position} at {job.company_name}"
                     )
@@ -845,16 +895,14 @@ def create_app():
     @app.route('/reminders')
     @login_required
     def reminders():
+        MY = ZoneInfo("Asia/Kuala_Lumpur")
 
-        events = JobDate.query.filter_by(
-            user_id=current_user.id
-        ).order_by(JobDate.date_value).all()
+        events = JobDate.query.filter_by(user_id=current_user.id).order_by(JobDate.date_value).all()
 
         upcoming_events = []
         past_events = []
 
-        MY = ZoneInfo("Asia/Kuala_Lumpur")
-        now = datetime.now(MY)
+        now = datetime.now(timezone.utc)
 
         status_labels = {
             "applied": "Applied",
@@ -867,7 +915,21 @@ def create_app():
 
         for event in events:
 
-            if event.date_value >= now:
+            print("From DB:", event.date_value)
+            print("DB tzinfo:", event.date_value.tzinfo)
+
+            if event.date_value is None:
+                continue
+
+            event_time = event.date_value
+
+            if event_time.tzinfo is None:
+                event_time = event_time.replace(tzinfo=timezone.utc)
+
+            display_time = event_time.astimezone(MY)
+            event.display_date = display_time.strftime("%d %b %Y %I:%M %p")
+
+            if event_time >= now:
                 upcoming_events.append(event)
             else:
                 past_events.append(event)
@@ -875,8 +937,8 @@ def create_app():
             job = db.session.get(NewJob, event.job_id)
 
             display_type = status_labels.get(
-                event.date_type.strip().lower(),
-                event.date_type
+                (event.date_type or "").strip().lower(),
+                event.date_type or "Unknown"
             )
 
             if job:
@@ -1421,11 +1483,6 @@ def create_app():
 
 if __name__ == '__main__':
     app = create_app()
-    scheduler = BackgroundScheduler(job_defaults={'coalesce': True, 'misfire_grace_time': 60})
-    scheduler.add_job(func=send_reminders, trigger='interval', minutes=1, args=[app])
-    scheduler.start()
 
     port = int(os.environ.get("PORT", 5000))
     socketio.run(app, host="0.0.0.0", port=port, debug=False)
-
-
