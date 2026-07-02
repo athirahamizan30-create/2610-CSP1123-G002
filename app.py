@@ -240,11 +240,7 @@ def send_reminders(app):
                 status="sent"
             ).first()
 
-            recipient_email = app.config.get('MAIL_USERNAME')
-            api_key = os.getenv("BREVO_API_KEY")
-
-            if not api_key:
-                print("Background Scheduler Error: BREVO_API_KEY environment variable is missing!")
+            if already_sent:
                 continue
 
             user = db.session.get(User, reminder.user_id)
@@ -279,8 +275,6 @@ def send_reminders(app):
                 print("API key starts with:", api_key[:10] if api_key else "None")
                 sender_email = app.config["MAIL_USERNAME"]
 
-                api_url = "https://api.brevo.com/v3/smtp/email"
-
                 headers = {
                     "Accept": "application/json",
                     "api-key": api_key,
@@ -288,43 +282,52 @@ def send_reminders(app):
                 }
 
                 payload = {
-                    "sender": {"name": "Job Tracker", "email": sender_email},
-                    "to": [{"email": user.email}], 
-                    "subject": "Job Application Reminder",
-                    "htmlContent": f"""
-                    <html>
-                        <body>
-                            <p>{email_body_text.replace('\n', '<br>')}</p>
-                        </body>
-                    </html>
-                    """
+                    "sender": {
+                        "name": "CareerTrack Reminders",
+                        "email": sender_email
+                    },
+                    "to": [
+                        {
+                            "email": user.email
+                        }
+                    ],
+                    "subject": "Reminder Notification",
+                    "textContent": email_body_text
                 }
 
-                jsondata = json.dumps(payload).encode('utf-8')
-                req = urllib.request.Request(api_url, data=jsondata, headers=headers, method="POST")
-                
+                req = urllib.request.Request(
+                    "https://api.brevo.com/v3/smtp/email",
+                    data=json.dumps(payload).encode("utf-8"),
+                    headers=headers,
+                    method="POST"
+                )
+
                 with urllib.request.urlopen(req) as response:
-                    status_code = response.getcode()
+                    print("Brevo Status:", response.getcode())
 
-                if status_code in [200, 201]:
-                    print(f"Background email sent successfully to {user.email}")
-                    
-                    notification = Notification(
-                        reminder_id=reminder.id,
-                        sent_at=datetime.now(),
-                        status="sent",
-                        email=user.email
-                    )
-                    db.session.add(notification)
+            except urllib.error.HTTPError as e:
+                print("Status:", e.code)
+                print(e.read().decode())
+                continue
 
-                if reminder.reminder_type == "applied":
-                    db.session.delete(reminder)
+            notification = Notification(
+                reminder_id=reminder.id,
+                sent_at=datetime.now(timezone.utc),
+                status="sent",
+                email=user.email
+            )
 
-                    db.session.flush() 
-                else:
-                    print(f"Brevo API returned unexpected code {status_code} for user {user.email}")
-                continue    
+            db.session.add(notification)
 
+            if reminder.reminder_type == "applied":
+
+                Notification.query.filter_by(reminder_id=reminder.id).delete()
+
+                db.session.delete(reminder)
+
+            db.session.commit()
+
+            
 def create_app():
     app = Flask(__name__)
     load_dotenv()
