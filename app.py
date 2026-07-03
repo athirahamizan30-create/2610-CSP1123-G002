@@ -699,11 +699,10 @@ def create_app():
         print(date_types)
         print(date_values)
 
-        Notification.query.filter(Notification.reminder_id.in_(
-            db.session.query(Reminder.id).filter_by(job_id=id)
-        )).delete(synchronize_session=False)
+        JobDate.query.filter_by(job_id=id).delete()
 
-        Reminder.query.filter_by(job_id=id).delete(synchronize_session=False)
+        job = NewJob.query.get_or_404(id)
+        db.session.delete(job)
 
         JobDate.query.filter_by(job_id=id).delete()
 
