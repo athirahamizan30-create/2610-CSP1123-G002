@@ -1296,14 +1296,13 @@ def create_app():
                 if not data:
                     return jsonify({"success": False, "message": "No data provided"}), 400
 
+                recipient_email = app.config.get('MAIL_USERNAME')
                 visitor_name = data.get('name')
                 visitor_email = data.get('email')
                 message_content = data.get('message')
 
                 if not visitor_name or not visitor_email or not message_content:
                     return jsonify({"success": False, "message": "All fields are required."}), 400
-
-                recipient_email = app.config.get('MAIL_USERNAME')
 
                 api_key = os.getenv("BREVO_API_KEY")
                 if not api_key:
