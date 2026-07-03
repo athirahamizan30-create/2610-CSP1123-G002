@@ -186,7 +186,7 @@ class Notification(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
 
-    reminder_id = db.Column(db.Integer, db.ForeignKey('reminders.id', ondelete="CASCADE"), nullable=False)
+    reminder_id = db.Column(db.Integer, db.ForeignKey('reminders.id', ondelete="CASCADE"))
 
     sent_at = db.Column(db.DateTime)
 
@@ -704,7 +704,6 @@ def create_app():
         reminders = Reminder.query.filter_by(job_id=id).all()
 
         for r in reminders:
-            Notification.query.filter_by(reminder_id=r.id).delete()
             db.session.delete(r)
 
         for t, v in zip(date_types, date_values):
