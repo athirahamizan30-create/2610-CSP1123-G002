@@ -1449,6 +1449,7 @@ def create_app():
                 payload = {
                     "sender": {"name": "CareerTrack Inquiry", "email": recipient_email},
                     "to": [{"email": recipient_email}],
+                    "replyTo": {"email": visitor_email, "name": visitor_name}, 
                     "subject": f"New Inquiry from {visitor_name}",
                     "htmlContent": f"""
                     <h3>New Inquiry Received</h3>
@@ -1457,6 +1458,7 @@ def create_app():
                     <p>{message_content}</p>
                     """
                 }
+                
 
                 jsondata = json.dumps(payload).encode('utf-8')
                 
