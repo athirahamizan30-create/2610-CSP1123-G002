@@ -119,7 +119,7 @@ class Reminder(db.Model):
     message = db.Column(db.String(255))
 
     created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
-    notifications = db.relationship("Notification", backref="reminder", cascade="all, delete-orphan", passive_deletes=True)
+    notifications = db.relationship("Notification", cascade="all, delete-orphan", passive_deletes=True)
 
     def __repr__(self):
         return f"<Reminder {self.reminder_date}>"
