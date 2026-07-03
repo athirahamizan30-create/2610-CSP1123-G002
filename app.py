@@ -119,7 +119,7 @@ class Reminder(db.Model):
     message = db.Column(db.String(255))
 
     created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
-    notifications = db.relationship("Notification", backref="reminder", cascade="all, delete-orphan")
+    notifications = db.relationship("Notification", backref="reminder", cascade="all, delete-orphan", passive_deletes=True)
 
     def __repr__(self):
         return f"<Reminder {self.reminder_date}>"
@@ -199,6 +199,7 @@ class Notification(db.Model):
 
     error_message = db.Column(db.Text)
 
+<<<<<<< HEAD
 def send_reminders(app):
     with app.app_context():
         MY = ZoneInfo("Asia/Kuala_Lumpur")
@@ -328,6 +329,8 @@ def send_reminders(app):
             db.session.commit()
 
             
+=======
+>>>>>>> main
 def create_app():
     app = Flask(__name__)
     load_dotenv()
@@ -828,7 +831,11 @@ def create_app():
 
         JobDate.query.filter_by(job_id=id).delete()
 
-        Reminder.query.filter_by(job_id=id).delete()
+        reminders = Reminder.query.filter_by(job_id=id).all()
+
+        for r in reminders:
+            Notification.query.filter_by(reminder_id=r.id).delete()
+            db.session.delete(r)
 
         for t, v in zip(date_types, date_values):
 
