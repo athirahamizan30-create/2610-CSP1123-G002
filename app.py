@@ -186,7 +186,7 @@ class Notification(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
 
-    reminder_id = db.Column(db.Integer, db.ForeignKey('reminders.id', ondelete="CASCADE"))
+    reminder_id = db.Column(db.Integer, db.ForeignKey('reminders.id', ondelete="CASCADE"), nullable=False)
 
     sent_at = db.Column(db.DateTime)
 
