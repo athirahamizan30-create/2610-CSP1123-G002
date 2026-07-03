@@ -119,7 +119,7 @@ class Reminder(db.Model):
     message = db.Column(db.String(255))
 
     created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
-    notifications = db.relationship("Notification", backref="reminder", cascade="all, delete-orphan", passive_deletes=True)
+    notifications = db.relationship("Notification",backref="reminder", cascade="all, delete-orphan", passive_deletes=True)
 
     def __repr__(self):
         return f"<Reminder {self.reminder_date}>"
@@ -699,11 +699,10 @@ def create_app():
 
         JobDate.query.filter_by(job_id=id).delete()
 
-        reminders = Reminder.query.filter_by(job_id=id).all()
+        job = NewJob.query.get_or_404(id)
+        db.session.delete(job)
 
-        for r in reminders:
-            Notification.query.filter_by(reminder_id=r.id).delete()
-            db.session.delete(r)
+        JobDate.query.filter_by(job_id=id).delete()
 
         for t, v in zip(date_types, date_values):
 

@@ -70,19 +70,18 @@ Event Date:
             try:
                 msg = MIMEText(email_body_text)
                 msg["Subject"] = "CareerTrack Reminder"
-                msg["From"] = os.environ["MAIL_USERNAME"]
+                msg["From"] = os.getenv("MAIL_USERNAME")
                 msg["To"] = user.email
 
-                server = smtplib.SMTP("smtp.gmail.com", 587)
-                server.starttls()
+                with smtplib.SMTP("smtp.gmail.com", 587) as server:
+                    server.starttls()
 
-                server.login(
-                    os.environ["MAIL_USERNAME"],
-                    os.environ["MAIL_PASSWORD"]
-                )
+                    server.login(
+                        os.getenv("MAIL_USERNAME"),
+                        os.getenv("MAIL_PASSWORD")
+                    )
 
-                server.send_message(msg)
-                server.quit()
+                    server.send_message(msg)
 
                 print("Email sent:", user.email)
 
@@ -98,9 +97,6 @@ Event Date:
             )
 
             db.session.add(notification)
-
-            if reminder.reminder_type == "applied":
-                db.session.delete(reminder)
 
             db.session.commit()
 
