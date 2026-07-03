@@ -29,7 +29,7 @@
     width: 100%;
     transform: none;
     padding: 40px;
-    text-align: center;
+
 }
 
 /* Disable all animation */
@@ -44,19 +44,24 @@
 }
 
 .login .form-group {
-    width: 100%;
     margin-bottom: 15px;
+    width: 100%;
 }
 
-.login label {
+
+.form-group label {
     display: block;
     text-align: left;
     margin-bottom: 6px;
+
 }
 
-.login input {
-    width: 100%;
+.form-group input:not([type="checkbox"]) {
+    display: block;
+    width: 100%;   
+    box-sizing: border-box; /* Prevents padding from breaking the width alignment */
 }
+
 
 .login .remember-me {
     width: 100%;
@@ -83,8 +88,9 @@
 
 .login-panel {
     width: 100%;
-    padding: 40px;
+    padding: 40px 10px;
     text-align: center;
+    box-sizing: border-box;
 }
 
 .error {
@@ -108,3 +114,11 @@
     text-align: center;
     font-size: 13px;
 }
+
+
+.login-form .form-group {
+    width: 90% ;
+}
+
+
+
