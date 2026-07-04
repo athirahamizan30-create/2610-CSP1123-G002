@@ -101,12 +101,12 @@ body {
 #chat-title {
     margin: 0;
 
-    font-size: 30px;   /* size */
+    font-size: 30px;  
     font-weight: 600;
 
     color: var(--primary);
 
-    text-align: left;  /* left, center, right */
+    text-align: left;  
 }
 
 .message { 
@@ -302,4 +302,8 @@ body {
     opacity: 0.7;
     text-align: right;
     margin-top: 4px;
+}
+
+#ai-chatbot-wrapper {
+    display: none !important;
 }
