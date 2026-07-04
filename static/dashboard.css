@@ -198,7 +198,7 @@ h1{
 }
 
 /* --- Direct Single-Line Error Box Styling --- */
-.error-message{
+.error-message {
     width: 100%;
     margin: 10px 0;
     background-color: #f8d7da;
@@ -208,4 +208,10 @@ h1{
     padding: 10px;
     text-align: center;
     font-size: 13px;
+    box-sizing: border-box; /* Ensures padding doesn't cause overflow layout issues */
+}
+
+/* Automatically hides the error container if there is no text inside it */
+.error-message:empty {
+    display: none;
 }

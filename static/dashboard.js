@@ -61,6 +61,9 @@ function openEditModal(id, company, position, location, status, type, dates) {
 
     document.getElementById("editModal").style.display = "block";
 
+    const errorBox = document.getElementById("edit-error");
+    if (errorBox) errorBox.textContent = "";
+
     document.getElementById("edit_id").value = id;
     document.getElementById("edit_company").value = company;
     document.getElementById("edit_position").value = position;
@@ -84,6 +87,9 @@ function openEditModal(id, company, position, location, status, type, dates) {
 
 function closeEditModal() {
     document.getElementById("editModal").style.display = "none";
+
+    const errorBox = document.getElementById("edit-error");
+    if (errorBox) errorBox.textContent = "";
 }
 
 function outsideClick(event) {
