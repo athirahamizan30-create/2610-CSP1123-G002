@@ -126,61 +126,61 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (stage1 && applied && stage1 < applied) {
             e.preventDefault();
-            errorBox.textContent = "❌ Stage 1 cannot be earlier than Applied.";
+            errorBox.textContent = "Stage 1 cannot be earlier than Applied.";
             return;
         }
 
         if (stage2 && stage1 && stage2 < stage1) {
             e.preventDefault();
-            errorBox.textContent = "❌ Stage 2 cannot be earlier than Stage 1.";
+            errorBox.textContent = "Stage 2 cannot be earlier than Stage 1.";
             return;
         }
 
         if (stage2 && applied && stage2 < applied) {
             e.preventDefault();
-            errorBox.textContent = "❌ Stage 2 cannot be earlier than Applied.";
+            errorBox.textContent = "Stage 2 cannot be earlier than Applied.";
             return;
         }
 
         if (interview && stage2 && interview < stage2) {
             e.preventDefault();
-            errorBox.textContent = "❌ Interview cannot be earlier than Stage 2.";
+            errorBox.textContent = "Interview cannot be earlier than Stage 2.";
             return;
         }
 
         if (interview && stage1 && interview < stage1) {
             e.preventDefault();
-            errorBox.textContent = "❌ Interview cannot be earlier than Stage 1.";
+            errorBox.textContent = "Interview cannot be earlier than Stage 1.";
             return;
         }
 
         if (interview && applied && interview < applied) {
             e.preventDefault();
-            errorBox.textContent = "❌ Interview cannot be earlier than Applied.";
+            errorBox.textContent = "Interview cannot be earlier than Applied.";
             return;
         }
 
         if (offer && interview && offer < interview) {
             e.preventDefault();
-            errorBox.textContent = "❌ Offer cannot be earlier than Interview.";
+            errorBox.textContent = "Offer cannot be earlier than Interview.";
             return;
         }
 
         if (offer && stage1 && offer < stage1) {
             e.preventDefault();
-            errorBox.textContent = "❌ Offer cannot be earlier than Stage 1.";
+            errorBox.textContent = "Offer cannot be earlier than Stage 1.";
             return;
         }
 
         if (offer && stage2 && offer < stage2) {
             e.preventDefault();
-            errorBox.textContent = "❌ Offer cannot be earlier than Stage 2.";
+            errorBox.textContent = "Offer cannot be earlier than Stage 2.";
             return;
         }
 
         if (offer && applied && offer < applied) {
             e.preventDefault();
-            errorBox.textContent = "❌ Offer cannot be earlier than Applied.";
+            errorBox.textContent = "Offer cannot be earlier than Applied.";
             return;
         }
     });

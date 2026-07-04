@@ -207,7 +207,7 @@ h1{
     border-radius: 8px;
     padding: 10px;
     text-align: center;
-    font-size: 13px;
+    font-size: 16px;
     box-sizing: border-box; /* Ensures padding doesn't cause overflow layout issues */
 }
 
