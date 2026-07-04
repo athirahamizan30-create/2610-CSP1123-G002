@@ -201,6 +201,25 @@ class Notification(db.Model):
 
 def send_reminders(app):
     with app.app_context():
+
+        def format_stage_label(text: str) -> str:
+            if not text:
+                return text
+
+            text = text.strip().lower()
+
+            mapping = {
+                "stage1": "Stage 1",
+                "stage2": "Stage 2",
+                "stage3": "Stage 3",
+                "interview": "Interview",
+                "offer": "Offer",
+                "deadline": "Deadline",
+                "applied": "Applied",
+            }
+
+            return mapping.get(text, text.title())
+        
         MY = ZoneInfo("Asia/Kuala_Lumpur")
 
         print("CRON STARTED")
@@ -221,6 +240,16 @@ def send_reminders(app):
 
         for reminder in reminders:
 
+            job = db.session.get(NewJob, reminder.job_id)
+            user = db.session.get(User, reminder.user_id)
+
+            if not job or not user:
+                continue
+
+            event_type = None
+            if " - " in reminder.message:
+                event_type = reminder.message.split(" - ")[0].strip().lower()
+
             if reminder.reminder_type == "applied":
                 timing_text = "Your application has been submitted successfully."
 
@@ -233,12 +262,14 @@ def send_reminders(app):
             else:
                 timing_text = "You have an upcoming event."
 
-            event_type = reminder.message.split(" - ")[0].strip().lower()
+            display_type = format_stage_label(event_type or "")
 
-            job_date = JobDate.query.filter_by(
-                job_id=reminder.job_id,
-                date_type=event_type
-            ).first()
+            job_date = None
+            if event_type:
+                job_date = JobDate.query.filter_by(
+                    job_id=reminder.job_id,
+                    date_type=event_type
+                ).first()
 
             if job_date:
                 event_date = job_date.date_value.astimezone(MY).strftime("%d %b %Y %I:%M %p")
@@ -248,13 +279,10 @@ def send_reminders(app):
 
             already_sent = Notification.query.filter_by(
                 reminder_id=reminder.id,
-                status="sent"
             ).first()
 
             if already_sent:
                 continue
-
-            user = db.session.get(User, reminder.user_id)
 
             if reminder.reminder_type == "applied":
                 email_body_text = f"""
@@ -270,7 +298,7 @@ def send_reminders(app):
 
             {timing_text}
 
-            {reminder.message}
+            {display_type} - {job.job_position} at {job.company_name}
 
             Event Date:
             {event_date}
