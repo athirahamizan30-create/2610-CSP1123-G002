@@ -233,7 +233,7 @@ def send_reminders(app):
             else:
                 timing_text = "You have an upcoming event."
 
-            job_date = JobDate.query.filter_by(job_id=reminder.job_id).first()
+            job_date = JobDate.query.get(reminder.job_date_id)
 
             already_sent = Notification.query.filter_by(
                 reminder_id=reminder.id,
