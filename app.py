@@ -265,8 +265,9 @@ def send_reminders(app):
                     "Content-Type": "application/json"
                 }
                 
-                # Convert text message linebreaks securely into safe basic paragraph views for HTML delivery
-                html_body = f"<p>{email_body_text.replace('\n', '<br>')}</p>"
+                formatted_body = email_body_text.replace("\n", "<br>")
+
+                html_body = f"<p>{formatted_body}</p>"
 
                 payload = {
                     "sender": {"name": "CareerTrack Reminders", "email": recipient_email},
