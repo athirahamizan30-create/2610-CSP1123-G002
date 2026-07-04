@@ -120,7 +120,6 @@
         const subMenu = document.getElementById("subMenu");
         const menuBtn = document.getElementById("profile-icon");
 
-        // Global function assignments to keep 'onclick' HTML triggers working
         window.toggleSidebar = function () {
             sidebar.classList.toggle("active");
             overlay.classList.toggle("active");
@@ -142,12 +141,10 @@
             subMenu.classList.toggle("open-menu");
         }
 
-        // Attach click listener to overlay to close sidebar on click
         if (overlay) {
             overlay.addEventListener("click", window.toggleSidebar);
         }
 
-        // Close Popup when clicking outside the form area
         if (popup) {
             popup.addEventListener("click", function (event) {
                 if (event.target === popup) {
@@ -156,7 +153,6 @@
             });
         }
 
-        // Close profile sub-menu when clicking anywhere outside it
         document.addEventListener("click", function(event) {
             if (subMenu && subMenu.classList.contains("open-menu")) {
                 if (!subMenu.contains(event.target) && !menuBtn.contains(event.target)) {
@@ -174,8 +170,8 @@
                 chatbotId: "chatbot_2rk5i3h8xmqrjlq2y3lno",
                 theme: {
                     button: {
-                        size: 'large',
-                        bottom: 40,
+                        size: 'medium',
+                        bottom: 30,
                         right: 40,
                         color: '#abc17c'
                     }
