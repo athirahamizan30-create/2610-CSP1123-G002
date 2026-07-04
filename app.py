@@ -789,16 +789,13 @@ def create_app():
         for dtype, dvalue in zip(date_types, date_values):
             if dtype and dvalue:
                 dt = datetime.strptime(dvalue, "%Y-%m-%dT%H:%M")
-
-                if dtype not in date_dict:
-                    date_dict[dtype] = dt
+                date_dict[dtype] = dt
 
         applied = date_dict.get("applied")
         stage1 = date_dict.get("stage1")
         stage2 = date_dict.get("stage2")
         interview = date_dict.get("interview")
         offer = date_dict.get("offer")
-        deadline = date_dict.get("deadline")
 
         errors = []
 
@@ -829,67 +826,48 @@ def create_app():
         job.job_status = request.form.get("job_status")
         job.job_type = request.form.get("job_type")
 
-        date_types = request.form.getlist("date_type[]")
-        date_values = request.form.getlist("date_value[]")
-
-        print(date_types)
-        print(date_values)
-
         JobDate.query.filter_by(job_id=id).delete()
-
-        job = NewJob.query.get_or_404(id)
-        db.session.delete(job)
-
-        JobDate.query.filter_by(job_id=id).delete()
+        Reminder.query.filter_by(job_id=id).delete()
 
         for t, v in zip(date_types, date_values):
+            if not v:
+                continue
 
-            if v:
+            local_time = datetime.fromisoformat(v).replace(tzinfo=MY)
+            parsed_date = local_time.astimezone(timezone.utc)
 
-                local_time = datetime.fromisoformat(v).replace(tzinfo=MY)
+            db.session.add(JobDate(
+                job_id=id,
+                user_id=current_user.id,
+                date_type=t,
+                date_value=parsed_date
+            ))
 
-                parsed_date = local_time.astimezone(timezone.utc)
-
-                new_date = JobDate(
-                    job_id=id,
+            if t.lower() == "applied":
+                db.session.add(Reminder(
                     user_id=current_user.id,
-                    date_type=t,
-                    date_value=parsed_date
-                )
-                db.session.add(new_date)
+                    job_id=id,
+                    reminder_date=datetime.now(timezone.utc),
+                    reminder_type="applied",
+                    message=f"You have applied for {job.job_position} at {job.company_name}"
+                ))
 
-                if t.lower() == "applied":
+            else:
+                db.session.add(Reminder(
+                    user_id=current_user.id,
+                    job_id=id,
+                    reminder_date=parsed_date - timedelta(days=2),
+                    reminder_type="2_days_before",
+                    message=f"{t.title()} - {job.job_position} at {job.company_name}"
+                ))
 
-                    reminder = Reminder(
-                        user_id=current_user.id,
-                        job_id=job.id,
-                        reminder_date=datetime.now(timezone.utc),
-                        reminder_type="applied",
-                        message=f"You have applied for {job.job_position} at {job.company_name}"
-                    )
-
-                    db.session.add(reminder)
-
-                else:
-
-                    reminder_2days = Reminder(
-                        user_id=current_user.id,
-                        job_id=job.id,
-                        reminder_date=parsed_date - timedelta(days=2),
-                        reminder_type="2_days_before",
-                        message=f"{t.title()} - {job.job_position} at {job.company_name}"
-                    )
-
-                    reminder_1hour = Reminder(
-                        user_id=current_user.id,
-                        job_id=job.id,
-                        reminder_date=parsed_date - timedelta(hours=1),
-                        reminder_type="1_hour_before",
-                        message=f"{t.title()} - {job.job_position} at {job.company_name}"
-                    )
-
-                    db.session.add(reminder_2days)
-                    db.session.add(reminder_1hour)
+                db.session.add(Reminder(
+                    user_id=current_user.id,
+                    job_id=id,
+                    reminder_date=parsed_date - timedelta(hours=1),
+                    reminder_type="1_hour_before",
+                    message=f"{t.title()} - {job.job_position} at {job.company_name}"
+                ))
 
         db.session.commit()
 
