@@ -200,3 +200,16 @@ h1{
 .flash-message.hide{
     opacity:0;
 }
+
+/* --- Direct Single-Line Error Box Styling --- */
+.error{
+    width: 100%;
+    margin: 10px 0;
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c2c7;
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+    font-size: 13px;
+}
