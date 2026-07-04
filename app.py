@@ -119,7 +119,7 @@ class Reminder(db.Model):
     message = db.Column(db.String(255))
 
     created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
-    notifications = db.relationship("Notification", backref="reminder", cascade="all, delete-orphan", passive_deletes=True)
+    notifications = db.relationship("Notification",backref="reminder", cascade="all, delete-orphan", passive_deletes=True)
 
     def __repr__(self):
         return f"<Reminder {self.reminder_date}>"
@@ -198,134 +198,6 @@ class Notification(db.Model):
     email = db.Column(db.String(120))
 
     error_message = db.Column(db.Text)
-
-def send_reminders(app):
-    with app.app_context():
-        MY = ZoneInfo("Asia/Kuala_Lumpur")
-
-        print("CRON STARTED")
-
-        now = datetime.now(timezone.utc)
-
-        print("CURRENT TIME:", now)
-
-        reminders = Reminder.query.filter(Reminder.reminder_date <= now).all()
-
-        print("REMINDERS FOUND:", len(reminders))
-
-        all_reminders = Reminder.query.all()
-        for r in all_reminders:
-            print("DB:", r.reminder_date)
-
-        print("FOUND:", reminders)
-
-        for reminder in reminders:
-
-            if reminder.reminder_type == "applied":
-                timing_text = "Your application has been submitted successfully."
-
-            elif reminder.reminder_type == "2_days_before":
-                timing_text = "This event is coming up in 2 days."
-
-            elif reminder.reminder_type == "1_hour_before":
-                timing_text = "This event starts in 1 hour."
-
-            else:
-                timing_text = "You have an upcoming event."
-
-            job_date = JobDate.query.filter_by(job_id=reminder.job_id).first()
-
-            already_sent = Notification.query.filter_by(
-                reminder_id=reminder.id,
-                status="sent"
-            ).first()
-
-            if already_sent:
-                continue
-
-            user = db.session.get(User, reminder.user_id)
-
-            if reminder.reminder_type == "applied":
-                email_body_text = f"""
-            Hello {user.username},
-
-            {timing_text}
-
-            {reminder.message}
-            """
-            else:
-                email_body_text = f"""
-            Hello {user.username},
-
-            {timing_text}
-
-            {reminder.message}
-
-            Event Date:
-            {job_date.date_value.astimezone(MY).strftime('%d %b %Y %I:%M %p')}
-            """
-
-            print("TRY SEND TO:", user.email)
-
-            try:
-                
-                api_key = os.getenv("BREVO_API_KEY")
-
-                print("API key exists:", api_key is not None)
-                print("API key starts with:", api_key[:10] if api_key else "None")
-                sender_email = app.config["MAIL_USERNAME"]
-
-                headers = {
-                    "Accept": "application/json",
-                    "api-key": api_key,
-                    "Content-Type": "application/json"
-                }
-
-                payload = {
-                    "sender": {
-                        "name": "CareerTrack Reminders",
-                        "email": sender_email
-                    },
-                    "to": [
-                        {
-                            "email": user.email
-                        }
-                    ],
-                    "subject": "Reminder Notification",
-                    "textContent": email_body_text
-                }
-
-                req = urllib.request.Request(
-                    "https://api.brevo.com/v3/smtp/email",
-                    data=json.dumps(payload).encode("utf-8"),
-                    headers=headers,
-                    method="POST"
-                )
-
-                with urllib.request.urlopen(req) as response:
-                    print("Brevo Status:", response.getcode())
-
-            except urllib.error.HTTPError as e:
-                print("Status:", e.code)
-                print(e.read().decode())
-                continue
-
-            notification = Notification(
-                reminder_id=reminder.id,
-                sent_at=datetime.now(timezone.utc),
-                status="sent",
-                email=user.email
-            )
-
-            db.session.add(notification)
-
-            if reminder.reminder_type == "applied":
-
-                Notification.query.filter_by(reminder_id=reminder.id).delete()
-
-                db.session.delete(reminder)
-
-            db.session.commit()
 
 def create_app():
     app = Flask(__name__)
@@ -658,7 +530,6 @@ def create_app():
             password_reset_link = url_for("reset_password", reset_id=new_password_reset_id.reset_id , _external=True)
             db.session.commit()
 
-            # --- BREVO HTTP API SENDING FOR PASSWORD RESET ---
             try:
                 recipient_email = app.config.get('MAIL_USERNAME')
                 api_key = os.getenv("BREVO_API_KEY")
@@ -678,7 +549,7 @@ def create_app():
                 
                 payload = {
                     "sender": {"name": "CareerTrack", "email": recipient_email},
-                    "to": [{"email": email}], # Sends it directly to the user requesting the reset
+                    "to": [{"email": email}], 
                     "subject": "Reset your password",
                     "htmlContent": f"""
                     <h3>Password Reset Request</h3>
@@ -692,7 +563,6 @@ def create_app():
                     """
                 }
 
-                # Encode to bytes and execute the request
                 jsondata = json.dumps(payload).encode('utf-8')
                 req = urllib.request.Request(api_url, data=jsondata, headers=headers, method="POST")
                 
@@ -829,11 +699,10 @@ def create_app():
 
         JobDate.query.filter_by(job_id=id).delete()
 
-        reminders = Reminder.query.filter_by(job_id=id).all()
+        job = NewJob.query.get_or_404(id)
+        db.session.delete(job)
 
-        for r in reminders:
-            Notification.query.filter_by(reminder_id=r.id).delete()
-            db.session.delete(r)
+        JobDate.query.filter_by(job_id=id).delete()
 
         for t, v in zip(date_types, date_values):
 
@@ -999,7 +868,7 @@ def create_app():
             db.session.delete(doc)
             db.session.commit()
         
-            return redirect(url_for('document')) # Redirect back to your files page
+            return redirect(url_for('document'))  
 
         except Exception as e:
             print(f"Error: {e}")
@@ -1131,7 +1000,6 @@ def create_app():
             logger.error(f"Connection error: {str(e)}")
             return False
         
-    #disconnect from session
     @socketio.event
     def disconnect():
         try:
@@ -1228,10 +1096,8 @@ def create_app():
                 receiver = User.query.filter_by(username=target_user).first()
                 is_online = any(user_data["username"] == target_user for user_data in active_users.values())
 
-            # If the receiver exists and isn't online in the chat, alert them via email
                 if receiver and not is_online:
                 
-                # --- BREVO HTTP API SENDING FOR PRIVATE MESSAGES ---
                     try:
                         recipient_email = app.config.get('MAIL_USERNAME')
                         api_key = os.getenv("BREVO_API_KEY")
@@ -1429,6 +1295,7 @@ def create_app():
                 if not data:
                     return jsonify({"success": False, "message": "No data provided"}), 400
 
+                recipient_email = app.config.get('MAIL_USERNAME')
                 visitor_name = data.get('name')
                 visitor_email = data.get('email')
                 message_content = data.get('message')
@@ -1436,10 +1303,6 @@ def create_app():
                 if not visitor_name or not visitor_email or not message_content:
                     return jsonify({"success": False, "message": "All fields are required."}), 400
 
-                # Safely get your verified email address from the Flask Config object
-                recipient_email = app.config.get('MAIL_USERNAME')
-
-                # 1. Fetch and verify the API key string exists
                 api_key = os.getenv("BREVO_API_KEY")
                 if not api_key:
                     if 'logger' in globals():
@@ -1448,7 +1311,6 @@ def create_app():
                         print("Inquiry failed: BREVO_API_KEY environment variable is missing!")
                     return jsonify({"success": False, "message": "Server mail configuration error."}), 500
 
-                # --- BREVO HTTP API SENDING VIA BUILT-IN URLLIB ---
                 api_url = "https://api.brevo.com/v3/smtp/email"
                 
                 headers = {
@@ -1458,9 +1320,9 @@ def create_app():
                 }
                 
                 payload = {
-                    # Ensure email matches your authenticated Brevo sender profile
                     "sender": {"name": "CareerTrack Inquiry", "email": recipient_email},
                     "to": [{"email": recipient_email}],
+                    "replyTo": {"email": visitor_email, "name": visitor_name}, 
                     "subject": f"New Inquiry from {visitor_name}",
                     "htmlContent": f"""
                     <h3>New Inquiry Received</h3>
@@ -1469,14 +1331,12 @@ def create_app():
                     <p>{message_content}</p>
                     """
                 }
+                
 
-                # Convert data to bytes safely
                 jsondata = json.dumps(payload).encode('utf-8')
                 
-                # Build the network request
                 req = urllib.request.Request(api_url, data=jsondata, headers=headers, method="POST")
                 
-                # Execute the request avoiding gevent/eventlet monkey-patches
                 with urllib.request.urlopen(req) as response:
                     status_code = response.getcode()
                     
