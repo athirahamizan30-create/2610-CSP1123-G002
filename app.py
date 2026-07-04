@@ -303,11 +303,11 @@ def send_reminders(app):
                     print(f"Brevo API returned unexpected code {status_code} for user {user.email}")
 
             except Exception as e:
-                if 'logger' in globals():
-                    logger.error(f"Background reminder email failed: {str(e)}")
-                else:
-                    print(f"Background reminder email failed: {str(e)}")
-                # Continue running the loop to let other reminders process if one fails
+                print("EMAIL ERROR:", repr(e))
+
+                if hasattr(e, "read"):
+                    print(e.read().decode())
+
                 continue
 
 def create_app():
