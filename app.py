@@ -233,7 +233,18 @@ def send_reminders(app):
             else:
                 timing_text = "You have an upcoming event."
 
-            job_date = JobDate.query.get(reminder.job_date_id)
+            event_type = reminder.message.split(" - ")[0].strip().lower()
+
+            job_date = JobDate.query.filter_by(
+                job_id=reminder.job_id,
+                date_type=event_type
+            ).first()
+
+            if job_date:
+                event_date = job_date.date_value.astimezone(MY).strftime("%d %b %Y %I:%M %p")
+            else:
+                print(f"No JobDate found for job_id={reminder.job_id}, event_type={event_type}")
+                event_date = "Unknown"
 
             already_sent = Notification.query.filter_by(
                 reminder_id=reminder.id,
@@ -262,7 +273,7 @@ def send_reminders(app):
             {reminder.message}
 
             Event Date:
-            {job_date.date_value.astimezone(MY).strftime('%d %b %Y %I:%M %p')}
+            {event_date}
             """
 
             print("TRY SEND TO:", user.email)
