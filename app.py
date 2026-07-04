@@ -199,6 +199,116 @@ class Notification(db.Model):
 
     error_message = db.Column(db.Text)
 
+def send_reminders(app):
+    with app.app_context():
+
+        MY = ZoneInfo("Asia/Kuala_Lumpur")
+        now = datetime.now(timezone.utc)
+
+        print("NOW:", now)
+
+        reminders = Reminder.query.filter(Reminder.reminder_date <= now).all()
+        
+        all_reminders = Reminder.query.all()
+        for r in all_reminders:
+            print("DB:", r.reminder_date)
+
+        print("FOUND:", reminders)
+
+        for reminder in reminders:
+
+            if reminder.reminder_type == "applied":
+                timing_text = "Your application has been submitted successfully."
+
+            elif reminder.reminder_type == "2_days_before":
+                timing_text = "This event is coming up in 2 days."
+
+            elif reminder.reminder_type == "1_hour_before":
+                timing_text = "This event starts in 1 hour."
+            else:
+                timing_text = "You have an upcoming event."
+
+            job_date = JobDate.query.filter_by(job_id=reminder.job_id).first()
+
+            already_sent = Notification.query.filter_by(
+                reminder_id=reminder.id,
+                status="sent"
+            ).first()
+
+            if already_sent:
+                continue
+
+            user = db.session.get(User, reminder.user_id)
+
+            if reminder.reminder_type == "applied":
+                email_body_text = f"Hello {user.username},\n\n{timing_text}\n\n{reminder.message}"
+            else:
+                formatted_date = job_date.date_value.strftime('%d %b %Y %I:%M %p') if job_date else "N/A"
+                email_body_text = f"Hello {user.username},\n\n{timing_text}\n\n{reminder.message}\n\nEvent Date:\n{formatted_date}"
+
+            print("TRY SEND TO:", user.email)
+
+            # --- BREVO HTTP API BACKGROUND EMAIL SENDING ---
+            try:
+                recipient_email = app.config.get('MAIL_USERNAME')
+                api_key = os.getenv("BREVO_API_KEY")
+
+                if not api_key:
+                    print("Background Scheduler Error: BREVO_API_KEY environment variable is missing!")
+                    continue  # Skip this reminder if config is broken
+
+                api_url = "https://api.brevo.com/v3/smtp/email"
+                
+                headers = {
+                    "Accept": "application/json",
+                    "api-key": api_key,
+                    "Content-Type": "application/json"
+                }
+                
+                # Convert text message linebreaks securely into safe basic paragraph views for HTML delivery
+                html_body = f"<p>{email_body_text.replace('\n', '<br>')}</p>"
+
+                payload = {
+                    "sender": {"name": "CareerTrack Reminders", "email": recipient_email},
+                    "to": [{"email": user.email}],
+                    "subject": "Reminder Notification",
+                    "htmlContent": html_body
+                }
+
+                # Encode to bytes and execute the request securely
+                jsondata = json.dumps(payload).encode('utf-8')
+                req = urllib.request.Request(api_url, data=jsondata, headers=headers, method="POST")
+                
+                with urllib.request.urlopen(req) as response:
+                    status_code = response.getcode()
+
+                if status_code in [200, 201]:
+                    print(f"Background email sent successfully to {user.email}")
+                    
+                    # Log the successful notification in the database
+                    notification = Notification(
+                        reminder_id=reminder.id,
+                        sent_at=datetime.now(timezone.utc),
+                        status="sent",
+                        email=user.email
+                    )
+                    db.session.add(notification)
+
+                    if reminder.reminder_type == "applied":
+                        db.session.delete(reminder)
+
+                    db.session.commit()
+                else:
+                    print(f"Brevo API returned unexpected code {status_code} for user {user.email}")
+
+            except Exception as e:
+                if 'logger' in globals():
+                    logger.error(f"Background reminder email failed: {str(e)}")
+                else:
+                    print(f"Background reminder email failed: {str(e)}")
+                # Continue running the loop to let other reminders process if one fails
+                continue
+
 def create_app():
     app = Flask(__name__)
     load_dotenv()
@@ -697,10 +807,13 @@ def create_app():
         print(date_types)
         print(date_values)
 
-        JobDate.query.filter_by(job_id=id).delete()
-
         job = NewJob.query.get_or_404(id)
-        db.session.delete(job)
+
+        job.company_name = request.form.get("company_name")
+        job.job_position = request.form.get("job_position")
+        job.location = request.form.get("location")
+        job.job_status = request.form.get("job_status")
+        job.job_type = request.form.get("job_type")
 
         JobDate.query.filter_by(job_id=id).delete()
 
