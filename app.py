@@ -94,7 +94,7 @@ class NewJob(db.Model):
     job_status = db.Column(db.String(50))
     job_type = db.Column(db.String(50))
 
-    created_at = db.Column(db.DateTime(timezone=True), nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True),default=lambda: datetime.now(timezone.utc),nullable=False)
     dates = db.relationship('JobDate', backref='job', cascade="all, delete")
     reminders = db.relationship('Reminder', backref='job', cascade="all, delete-orphan", passive_deletes=True)
 
@@ -1457,6 +1457,8 @@ def create_app():
 
                 if not visitor_name or not visitor_email or not message_content:
                     return jsonify({"success": False, "message": "All fields are required."}), 400
+
+                recipient_email = app.config.get('MAIL_USERNAME')
 
                 api_key = os.getenv("BREVO_API_KEY")
                 if not api_key:
