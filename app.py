@@ -119,7 +119,7 @@ class Reminder(db.Model):
     message = db.Column(db.String(255))
 
     created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
-    notifications = db.relationship("Notification", backref="reminder", cascade="all, delete-orphan", passive_deletes=True)
+    notifications = db.relationship("Notification",backref="reminder", cascade="all, delete-orphan", passive_deletes=True)
 
     def __repr__(self):
         return f"<Reminder {self.reminder_date}>"
@@ -201,6 +201,25 @@ class Notification(db.Model):
 
 def send_reminders(app):
     with app.app_context():
+
+        def format_stage_label(text: str) -> str:
+            if not text:
+                return text
+
+            text = text.strip().lower()
+
+            mapping = {
+                "stage1": "Stage 1",
+                "stage2": "Stage 2",
+                "stage3": "Stage 3",
+                "interview": "Interview",
+                "offer": "Offer",
+                "deadline": "Deadline",
+                "applied": "Applied",
+            }
+
+            return mapping.get(text, text.title())
+        
         MY = ZoneInfo("Asia/Kuala_Lumpur")
 
         print("CRON STARTED")
@@ -221,6 +240,16 @@ def send_reminders(app):
 
         for reminder in reminders:
 
+            job = db.session.get(NewJob, reminder.job_id)
+            user = db.session.get(User, reminder.user_id)
+
+            if not job or not user:
+                continue
+
+            event_type = None
+            if " - " in reminder.message:
+                event_type = reminder.message.split(" - ")[0].strip().lower()
+
             if reminder.reminder_type == "applied":
                 timing_text = "Your application has been submitted successfully."
 
@@ -233,17 +262,27 @@ def send_reminders(app):
             else:
                 timing_text = "You have an upcoming event."
 
-            job_date = JobDate.query.filter_by(job_id=reminder.job_id).first()
+            display_type = format_stage_label(event_type or "")
+
+            job_date = None
+            if event_type:
+                job_date = JobDate.query.filter_by(
+                    job_id=reminder.job_id,
+                    date_type=event_type
+                ).first()
+
+            if job_date:
+                event_date = job_date.date_value.astimezone(MY).strftime("%d %b %Y %I:%M %p")
+            else:
+                print(f"No JobDate found for job_id={reminder.job_id}, event_type={event_type}")
+                event_date = "Unknown"
 
             already_sent = Notification.query.filter_by(
                 reminder_id=reminder.id,
-                status="sent"
             ).first()
 
             if already_sent:
                 continue
-
-            user = db.session.get(User, reminder.user_id)
 
             if reminder.reminder_type == "applied":
                 email_body_text = f"""
@@ -259,10 +298,10 @@ def send_reminders(app):
 
             {timing_text}
 
-            {reminder.message}
+            {display_type} - {job.job_position} at {job.company_name}
 
             Event Date:
-            {job_date.date_value.astimezone(MY).strftime('%d %b %Y %I:%M %p')}
+            {event_date}
             """
 
             print("TRY SEND TO:", user.email)
@@ -634,6 +673,16 @@ def create_app():
         db.session.commit()
 
         return redirect(url_for('dashboard'))
+    
+    @app.route("/run-reminders")
+    def run_reminders():
+        key = request.args.get("key")
+
+        if key != os.getenv("CRON_SECRET"):
+            return "Unauthorized", 403
+
+        send_reminders(app)
+        return "Reminders executed", 200
 
     @app.route('/forgot_password', methods=['POST', 'GET'])
     def forgot_password():
@@ -658,7 +707,6 @@ def create_app():
             password_reset_link = url_for("reset_password", reset_id=new_password_reset_id.reset_id , _external=True)
             db.session.commit()
 
-            # --- BREVO HTTP API SENDING FOR PASSWORD RESET ---
             try:
                 recipient_email = app.config.get('MAIL_USERNAME')
                 api_key = os.getenv("BREVO_API_KEY")
@@ -678,7 +726,7 @@ def create_app():
                 
                 payload = {
                     "sender": {"name": "CareerTrack", "email": recipient_email},
-                    "to": [{"email": email}], # Sends it directly to the user requesting the reset
+                    "to": [{"email": email}], 
                     "subject": "Reset your password",
                     "htmlContent": f"""
                     <h3>Password Reset Request</h3>
@@ -692,7 +740,6 @@ def create_app():
                     """
                 }
 
-                # Encode to bytes and execute the request
                 jsondata = json.dumps(payload).encode('utf-8')
                 req = urllib.request.Request(api_url, data=jsondata, headers=headers, method="POST")
                 
@@ -781,16 +828,13 @@ def create_app():
         for dtype, dvalue in zip(date_types, date_values):
             if dtype and dvalue:
                 dt = datetime.strptime(dvalue, "%Y-%m-%dT%H:%M")
-
-                if dtype not in date_dict:
-                    date_dict[dtype] = dt
+                date_dict[dtype] = dt
 
         applied = date_dict.get("applied")
         stage1 = date_dict.get("stage1")
         stage2 = date_dict.get("stage2")
         interview = date_dict.get("interview")
         offer = date_dict.get("offer")
-        deadline = date_dict.get("deadline")
 
         errors = []
 
@@ -821,68 +865,48 @@ def create_app():
         job.job_status = request.form.get("job_status")
         job.job_type = request.form.get("job_type")
 
-        date_types = request.form.getlist("date_type[]")
-        date_values = request.form.getlist("date_value[]")
-
-        print(date_types)
-        print(date_values)
-
         JobDate.query.filter_by(job_id=id).delete()
-
-        reminders = Reminder.query.filter_by(job_id=id).all()
-
-        for r in reminders:
-            Notification.query.filter_by(reminder_id=r.id).delete()
-            db.session.delete(r)
+        Reminder.query.filter_by(job_id=id).delete()
 
         for t, v in zip(date_types, date_values):
+            if not v:
+                continue
 
-            if v:
+            local_time = datetime.fromisoformat(v).replace(tzinfo=MY)
+            parsed_date = local_time.astimezone(timezone.utc)
 
-                local_time = datetime.fromisoformat(v).replace(tzinfo=MY)
+            db.session.add(JobDate(
+                job_id=id,
+                user_id=current_user.id,
+                date_type=t,
+                date_value=parsed_date
+            ))
 
-                parsed_date = local_time.astimezone(timezone.utc)
-
-                new_date = JobDate(
-                    job_id=id,
+            if t.lower() == "applied":
+                db.session.add(Reminder(
                     user_id=current_user.id,
-                    date_type=t,
-                    date_value=parsed_date
-                )
-                db.session.add(new_date)
+                    job_id=id,
+                    reminder_date=datetime.now(timezone.utc),
+                    reminder_type="applied",
+                    message=f"You have applied for {job.job_position} at {job.company_name}"
+                ))
 
-                if t.lower() == "applied":
+            else:
+                db.session.add(Reminder(
+                    user_id=current_user.id,
+                    job_id=id,
+                    reminder_date=parsed_date - timedelta(days=2),
+                    reminder_type="2_days_before",
+                    message=f"{t.title()} - {job.job_position} at {job.company_name}"
+                ))
 
-                    reminder = Reminder(
-                        user_id=current_user.id,
-                        job_id=job.id,
-                        reminder_date=datetime.now(timezone.utc),
-                        reminder_type="applied",
-                        message=f"You have applied for {job.job_position} at {job.company_name}"
-                    )
-
-                    db.session.add(reminder)
-
-                else:
-
-                    reminder_2days = Reminder(
-                        user_id=current_user.id,
-                        job_id=job.id,
-                        reminder_date=parsed_date - timedelta(days=2),
-                        reminder_type="2_days_before",
-                        message=f"{t.title()} - {job.job_position} at {job.company_name}"
-                    )
-
-                    reminder_1hour = Reminder(
-                        user_id=current_user.id,
-                        job_id=job.id,
-                        reminder_date=parsed_date - timedelta(hours=1),
-                        reminder_type="1_hour_before",
-                        message=f"{t.title()} - {job.job_position} at {job.company_name}"
-                    )
-
-                    db.session.add(reminder_2days)
-                    db.session.add(reminder_1hour)
+                db.session.add(Reminder(
+                    user_id=current_user.id,
+                    job_id=id,
+                    reminder_date=parsed_date - timedelta(hours=1),
+                    reminder_type="1_hour_before",
+                    message=f"{t.title()} - {job.job_position} at {job.company_name}"
+                ))
 
         db.session.commit()
 
@@ -999,7 +1023,7 @@ def create_app():
             db.session.delete(doc)
             db.session.commit()
         
-            return redirect(url_for('document')) # Redirect back to your files page
+            return redirect(url_for('document'))  
 
         except Exception as e:
             print(f"Error: {e}")
@@ -1131,7 +1155,6 @@ def create_app():
             logger.error(f"Connection error: {str(e)}")
             return False
         
-    #disconnect from session
     @socketio.event
     def disconnect():
         try:
@@ -1228,10 +1251,8 @@ def create_app():
                 receiver = User.query.filter_by(username=target_user).first()
                 is_online = any(user_data["username"] == target_user for user_data in active_users.values())
 
-            # If the receiver exists and isn't online in the chat, alert them via email
                 if receiver and not is_online:
                 
-                # --- BREVO HTTP API SENDING FOR PRIVATE MESSAGES ---
                     try:
                         recipient_email = app.config.get('MAIL_USERNAME')
                         api_key = os.getenv("BREVO_API_KEY")
@@ -1429,6 +1450,7 @@ def create_app():
                 if not data:
                     return jsonify({"success": False, "message": "No data provided"}), 400
 
+                recipient_email = app.config.get('MAIL_USERNAME')
                 visitor_name = data.get('name')
                 visitor_email = data.get('email')
                 message_content = data.get('message')
@@ -1436,8 +1458,11 @@ def create_app():
                 if not visitor_name or not visitor_email or not message_content:
                     return jsonify({"success": False, "message": "All fields are required."}), 400
 
+<<<<<<< HEAD
                 recipient_email = app.config.get('MAIL_USERNAME')
 
+=======
+>>>>>>> main
                 api_key = os.getenv("BREVO_API_KEY")
                 if not api_key:
                     if 'logger' in globals():
@@ -1457,6 +1482,7 @@ def create_app():
                 payload = {
                     "sender": {"name": "CareerTrack Inquiry", "email": recipient_email},
                     "to": [{"email": recipient_email}],
+                    "replyTo": {"email": visitor_email, "name": visitor_name}, 
                     "subject": f"New Inquiry from {visitor_name}",
                     "htmlContent": f"""
                     <h3>New Inquiry Received</h3>
@@ -1465,6 +1491,7 @@ def create_app():
                     <p>{message_content}</p>
                     """
                 }
+                
 
                 jsondata = json.dumps(payload).encode('utf-8')
                 
