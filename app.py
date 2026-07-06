@@ -94,7 +94,7 @@ class NewJob(db.Model):
     job_status = db.Column(db.String(50))
     job_type = db.Column(db.String(50))
 
-    created_at = db.Column(db.DateTime(timezone=True), nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True),default=lambda: datetime.now(timezone.utc),nullable=False)
     dates = db.relationship('JobDate', backref='job', cascade="all, delete")
     reminders = db.relationship('Reminder', backref='job', cascade="all, delete-orphan", passive_deletes=True)
 
