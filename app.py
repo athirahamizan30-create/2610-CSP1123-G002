@@ -1458,11 +1458,8 @@ def create_app():
                 if not visitor_name or not visitor_email or not message_content:
                     return jsonify({"success": False, "message": "All fields are required."}), 400
 
-<<<<<<< HEAD
                 recipient_email = app.config.get('MAIL_USERNAME')
 
-=======
->>>>>>> main
                 api_key = os.getenv("BREVO_API_KEY")
                 if not api_key:
                     if 'logger' in globals():
